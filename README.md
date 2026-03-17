@@ -4,6 +4,7 @@ Un sistema completo de gestión de inventario diseñado específicamente para li
 
 ## ✨ Características
 
+### Core
 - **📦 Gestión de Productos**: CRUD completo para productos (ron, cerveza, aguardiente, vodka, whisky, etc.)
 - **📊 Control de Inventario**: Sistema de inventario diario con cálculos automáticos de ganancias
 - **💰 Análisis de Ganancias**: Reportes detallados de ganancias por producto
@@ -11,6 +12,15 @@ Un sistema completo de gestión de inventario diseñado específicamente para li
 - **🔐 Autenticación**: Sistema de login básico
 - **🎨 Interfaz Premium**: Diseño moderno con gradientes, animaciones y emojis
 - **📱 Responsive**: Funciona en desktop y dispositivos móviles
+
+### 🆕 Módulos Avanzados (v2.0)
+- **📊 Reportes Avanzados**: Análisis con filtros de rango de fechas, checkboxes, 4 KPIs
+- **📋 Facturación Electrónica**: Gestión de facturas con estados (PENDIENTE → APROBADO → ANULADO)
+- **💳 Cuentas por Pagar**: Gestión de deudas a proveedores con pagos parciales
+- **👥 Control de Usuarios (RBAC)**: 3 roles (Admin, Gerente, Vendedor) con permisos automáticos
+- **🏪 Cierre de Caja**: Cuadre diario automático con detección de diferencias
+- **🛍️ Módulo POS Mejorado**: Interfaz de ventas con búsqueda y carrito
+- **🎯 Dashboard Interactivo**: Calendario mensual + sticky notes
 
 ## 🛠️ Tecnologías
 
@@ -107,6 +117,20 @@ proyecto-siberiano/
 ├── web/                   # Frontend React
 │   ├── src/
 │   │   ├── components/    # Componentes React
+│   │   │   ├── Dashboard.tsx           # 🆕 Calendario + Notas
+│   │   │   ├── POS.tsx                 # 🆕 Módulo de Ventas
+│   │   │   ├── ProductList.tsx         # Gestión de Productos
+│   │   │   ├── ProductForm.tsx         # Formulario de Productos
+│   │   │   ├── Inventario.tsx          # Control de Inventario
+│   │   │   ├── Ganancias.tsx           # Análisis de Ganancias
+│   │   │   ├── Reportes.tsx            # 🆕 Reportes Avanzados
+│   │   │   ├── Facturacion.tsx         # 🆕 Gestión de Facturas
+│   │   │   ├── CuentasPorPagar.tsx    # 🆕 Gestión de Deudas
+│   │   │   ├── GestionUsuarios.tsx    # 🆕 RBAC Usuarios
+│   │   │   ├── CierreCaja.tsx         # 🆕 Cuadre de Caja
+│   │   │   ├── Historial.tsx          # Registros
+│   │   │   ├── Login.tsx              # Autenticación
+│   │   │   └── App.tsx                # Componente Principal
 │   │   ├── services/      # Servicios de API
 │   │   └── types/         # Tipos TypeScript
 │   └── index.html         # HTML principal
@@ -158,6 +182,46 @@ El sistema cuenta con un diseño premium que incluye:
 - Ganancia potencial por producto
 - KPIs principales (total, productos, stock)
 - Tabla ordenada por rentabilidad
+
+### 🆕 Módulos Avanzados
+
+#### Reportes Avanzados
+- Filtros por rango de fechas (desde/hasta)
+- Checkboxes para filtrar movimientos y métodos de pago
+- 4 KPIs: Ingresos, Ganancias, Egresos, Capital Neto
+- Tabla de resumen con totales
+- Botones de exportación (PDF/Excel)
+
+#### Facturación Electrónica
+- Gestión de facturas con estados (PENDIENTE → APROBADO → ANULADO)
+- CRUD completo de facturas
+- Soporte para múltiples items por factura
+- Cálculos automáticos de totales
+- Filtros por estado
+
+#### Cuentas por Pagar
+- Gestión de deudas a proveedores
+- Pagos parciales con historial
+- Barra de progreso visual
+- Estados automáticos: PENDIENTE → PARCIAL → PAGADO
+- Panel de detalles interactivo
+
+#### Control de Usuarios (RBAC)
+- 3 roles predefinidos:
+  - 👑 **Admin**: Acceso total (9 permisos)
+  - 💼 **Gerente**: Acceso moderado (7 permisos)
+  - 🛒 **Vendedor**: Acceso limitado (5 permisos)
+- Asignación automática de permisos por rol
+- Activación/Desactivación de usuarios
+- Cambio de rol dinámico
+
+#### Cierre de Caja
+- Apertura de caja con monto inicial
+- Registro de ingresos y egresos
+- Cuadre automático (esperado vs. contado)
+- Detección de diferencias
+- Histórico de cierres
+- Estados: ABIERTO → CERRADO
 
 ## 🤝 Contribución
 
