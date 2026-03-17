@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    command: npm run start:dev
+    volumes:
+      - ./api:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./api/.env
+    environment:
+      - NODE_ENV=development
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    command: npm run dev -- --host 0.0.0.0
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+    environment:
+      - NODE_ENV=development
