@@ -1,5 +1,13 @@
 import axios from 'axios';
+
 const API_BASE_URL = 'http://localhost:3001/api';
+
+// Create a shared axios instance with a reasonable timeout.
+// If the backend is not running, requests will fail fast instead of hanging indefinitely.
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 5000
+});
 
 export interface Product {
   id: string;
@@ -38,7 +46,7 @@ export interface InventarioItem {
 
 export const productService = {
   async getProducts(): Promise<Product[]> {
-    const res = await axios.get(API_BASE_URL + '/products');
+    const res = await api.get('/products');
     return res.data;
   },
   async createProduct(data: Partial<Product>): Promise<Product> {

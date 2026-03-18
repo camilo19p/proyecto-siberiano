@@ -8,19 +8,15 @@ export class ProductService {
       orderBy: { createdAt: 'desc' }
     });
 
-    return products.map(p => ({
+    return products.map((p: any) => ({
       id: p.id.toString(),
+      codigo: p.codigo,
       name: p.name,
       type: p.type as 'ron' | 'cerveza',
-      price: p.price,
+      precioCompra: p.precioCompra,
+      precioVenta: p.precioVenta,
       stock: p.stock,
-      description: `${p.name} - ${p.type}`,
-      category: 'Licores',
-      brand: p.name,
-      alcoholContent: 0,
-      imageUrl: '',
-      minStock: 5,
-      isActive: true,
+      stockInicial: p.stockInicial,
       createdAt: p.createdAt,
       updatedAt: p.updatedAt
     }));
@@ -36,17 +32,13 @@ export class ProductService {
 
     return {
       id: product.id.toString(),
+      codigo: product.codigo,
       name: product.name,
       type: product.type as 'ron' | 'cerveza',
-      price: product.price,
+      precioCompra: product.precioCompra,
+      precioVenta: product.precioVenta,
       stock: product.stock,
-      description: `${product.name} - ${product.type}`,
-      category: 'Licores',
-      brand: product.name,
-      alcoholContent: 0,
-      imageUrl: '',
-      minStock: 5,
-      isActive: true,
+      stockInicial: product.stockInicial,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt
     };
@@ -56,26 +48,25 @@ export class ProductService {
   async createProduct(productData: CreateProductRequest): Promise<Product> {
     const newProduct = await prisma.product.create({
       data: {
+        codigo: productData.codigo,
         name: productData.name,
         type: productData.type,
-        price: productData.price,
-        stock: productData.stock
+        precioCompra: productData.precioCompra,
+        precioVenta: productData.precioVenta,
+        stock: productData.stock,
+        stockInicial: productData.stockInicial ?? productData.stock
       }
     });
 
     return {
       id: newProduct.id.toString(),
+      codigo: newProduct.codigo,
       name: newProduct.name,
       type: newProduct.type as 'ron' | 'cerveza',
-      price: newProduct.price,
+      precioCompra: newProduct.precioCompra,
+      precioVenta: newProduct.precioVenta,
       stock: newProduct.stock,
-      description: `${newProduct.name} - ${newProduct.type}`,
-      category: 'Licores',
-      brand: newProduct.name,
-      alcoholContent: 0,
-      imageUrl: '',
-      minStock: 5,
-      isActive: true,
+      stockInicial: newProduct.stockInicial,
       createdAt: newProduct.createdAt,
       updatedAt: newProduct.updatedAt
     };
@@ -87,26 +78,25 @@ export class ProductService {
       const product = await prisma.product.update({
         where: { id: parseInt(id) },
         data: {
+          codigo: productData.codigo,
           name: productData.name,
           type: productData.type,
-          price: productData.price,
-          stock: productData.stock
+          precioCompra: productData.precioCompra,
+          precioVenta: productData.precioVenta,
+          stock: productData.stock,
+          stockInicial: productData.stockInicial
         }
       });
 
       return {
         id: product.id.toString(),
+        codigo: product.codigo,
         name: product.name,
         type: product.type as 'ron' | 'cerveza',
-        price: product.price,
+        precioCompra: product.precioCompra,
+        precioVenta: product.precioVenta,
         stock: product.stock,
-        description: `${product.name} - ${product.type}`,
-        category: 'Licores',
-        brand: product.name,
-        alcoholContent: 0,
-        imageUrl: '',
-        minStock: 5,
-        isActive: true,
+        stockInicial: product.stockInicial,
         createdAt: product.createdAt,
         updatedAt: product.updatedAt
       };
@@ -134,19 +124,15 @@ export class ProductService {
       orderBy: { createdAt: 'desc' }
     });
 
-    return products.map(p => ({
+    return products.map((p: any) => ({
       id: p.id.toString(),
+      codigo: p.codigo,
       name: p.name,
       type: p.type as 'ron' | 'cerveza',
-      price: p.price,
+      precioCompra: p.precioCompra,
+      precioVenta: p.precioVenta,
       stock: p.stock,
-      description: `${p.name} - ${p.type}`,
-      category: 'Licores',
-      brand: p.name,
-      alcoholContent: 0,
-      imageUrl: '',
-      minStock: 5,
-      isActive: true,
+      stockInicial: p.stockInicial,
       createdAt: p.createdAt,
       updatedAt: p.updatedAt
     }));
@@ -161,19 +147,15 @@ export class ProductService {
       orderBy: { stock: 'asc' }
     });
 
-    return products.map(p => ({
+    return products.map((p: any) => ({
       id: p.id.toString(),
+      codigo: p.codigo,
       name: p.name,
       type: p.type as 'ron' | 'cerveza',
-      price: p.price,
+      precioCompra: p.precioCompra,
+      precioVenta: p.precioVenta,
       stock: p.stock,
-      description: `${p.name} - ${p.type}`,
-      category: 'Licores',
-      brand: p.name,
-      alcoholContent: 0,
-      imageUrl: '',
-      minStock: 5,
-      isActive: true,
+      stockInicial: p.stockInicial,
       createdAt: p.createdAt,
       updatedAt: p.updatedAt
     }));
