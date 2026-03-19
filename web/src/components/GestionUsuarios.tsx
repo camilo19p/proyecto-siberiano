@@ -1,4 +1,16 @@
 import { useState, useEffect } from 'react';
+import { Database } from 'lucide-react';
+import toast from 'react-hot-toast';
+import axios from 'axios';
+  // Backup manual
+  const hacerBackup = async () => {
+    try {
+      await axios.post('/api/backup');
+      toast.success('Backup creado exitosamente');
+    } catch {
+      toast.error('Error al crear backup');
+    }
+  };
 
 interface User {
   id: string;
@@ -278,6 +290,10 @@ export function GestionUsuarios() {
         marginBottom: '2rem',
         flexWrap: 'wrap'
       }}>
+        <button className="btn btn-ghost" onClick={hacerBackup} style={{display:'inline-flex',alignItems:'center',gap:'0.5rem',border:'1px solid #2e3347',background:'transparent',color:'#f59e0b',fontWeight:600}}>
+          <Database size={16} />
+          Crear Backup
+        </button>
         <button
           onClick={() => setShowForm(!showForm)}
           style={{

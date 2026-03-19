@@ -1,4 +1,5 @@
 
+
 import { useState } from 'react';
 import { Login } from './components/Login';
 import { ProductList } from './components/ProductList';
@@ -13,6 +14,8 @@ import { CuentasPorPagar } from './components/CuentasPorPagar';
 import { GestionUsuarios } from './components/GestionUsuarios';
 import { CierreCaja } from './components/CierreCaja';
 import SiberianoLogo from './assets/Siberiano.png';
+import { Package, ClipboardList, TrendingUp, History, FileText, CreditCard, Users, Landmark, ShoppingCart, BarChart2, LayoutDashboard, LogOut } from 'lucide-react';
+import { Toaster } from 'react-hot-toast';
 
 type Page = 'inicio' | 'pos' | 'productos' | 'inventario' | 'ganancias' | 'facturas' | 'reportes' | 'cuentas_pagar' | 'usuarios' | 'cierre_caja' | 'historial';
 
@@ -29,17 +32,17 @@ export default function App() {
   if (!logged) return <Login onLogin={() => { setLogged(true); setPage('inicio'); }} />;
 
   const nav = [
-    { id: 'inicio' as Page, label: 'Dashboard', icon: '🎯', desc: 'Inicio y calendario' },
-    { id: 'pos' as Page, label: 'Punto de Venta', icon: '🛍️', desc: 'POS - Ventas rápidas' },
-    { id: 'productos' as Page, label: 'Productos', icon: '📦', desc: 'Gestiona el inventario' },
-    { id: 'inventario' as Page, label: 'Inventario', icon: '📋', desc: 'Control diario' },
-    { id: 'ganancias' as Page, label: 'Ganancias', icon: '💰', desc: 'Análisis de ingresos' },
-    { id: 'facturas' as Page, label: 'Facturas', icon: '📄', desc: 'Electrónica' },
-    { id: 'reportes' as Page, label: 'Reportes', icon: '📊', desc: 'Análisis y datos' },
-    { id: 'cuentas_pagar' as Page, label: 'Cuentas por Pagar', icon: '💳', desc: 'Deudas' },
-    { id: 'cierre_caja' as Page, label: 'Cierre de Caja', icon: '🏪', desc: 'Cuadre diario' },
-    { id: 'usuarios' as Page, label: 'Usuarios', icon: '👥', desc: 'Gestión de permisos' },
-    { id: 'historial' as Page, label: 'Historial', icon: '📜', desc: 'Registros anteriores' },
+    { id: 'inicio' as Page, label: 'Dashboard', icon: <LayoutDashboard size={18} />, desc: 'Inicio y calendario' },
+    { id: 'pos' as Page, label: 'Punto de Venta', icon: <ShoppingCart size={18} />, desc: 'POS - Ventas rápidas' },
+    { id: 'productos' as Page, label: 'Productos', icon: <Package size={18} />, desc: 'Gestiona el inventario' },
+    { id: 'inventario' as Page, label: 'Inventario', icon: <ClipboardList size={18} />, desc: 'Control diario' },
+    { id: 'ganancias' as Page, label: 'Ganancias', icon: <TrendingUp size={18} />, desc: 'Análisis de ingresos' },
+    { id: 'facturas' as Page, label: 'Facturas', icon: <FileText size={18} />, desc: 'Electrónica' },
+    { id: 'reportes' as Page, label: 'Reportes', icon: <BarChart2 size={18} />, desc: 'Análisis y datos' },
+    { id: 'cuentas_pagar' as Page, label: 'Cuentas por Pagar', icon: <CreditCard size={18} />, desc: 'Deudas' },
+    { id: 'cierre_caja' as Page, label: 'Cierre de Caja', icon: <Landmark size={18} />, desc: 'Cuadre diario' },
+    { id: 'usuarios' as Page, label: 'Usuarios', icon: <Users size={18} />, desc: 'Gestión de permisos' },
+    { id: 'historial' as Page, label: 'Historial', icon: <History size={18} />, desc: 'Registros anteriores' },
   ];
 
   return (
@@ -137,7 +140,7 @@ export default function App() {
               boxShadow: '0 2px 8px rgba(220, 38, 38, 0.3)'
             }}
           >
-            🚪 Cerrar Sesión
+            <LogOut size={18} /> Cerrar Sesión
           </button>
         </div>
       </aside>
@@ -166,6 +169,18 @@ export default function App() {
           {page === 'historial' && <Historial />}
         </div>
       </main>
-    </div>
+    <Toaster
+      position="top-right"
+      toastOptions={{
+        style: {
+          background: '#1a1d27',
+          color: '#e2e8f0',
+          border: '1px solid #2e3347',
+        },
+        success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },
+        error:   { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
+      }}
+    />
+  </div>
   );
 }
