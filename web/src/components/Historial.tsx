@@ -4,10 +4,25 @@ import { inventarioService, Inventario } from '../services/api';
 export function Historial() {
   const [data, setData] = useState<Inventario[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Inventario|null>(null);
 
   useEffect(() => { load(); }, []);
-  const load = async () => { setLoading(true); setData(await inventarioService.getAllInventarios()); setLoading(false); };
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const invs = await inventarioService.getAllInventarios();
+      setData(invs);
+      if (invs.length > 0) setSelected(invs[0]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error cargando historial');
+      setData([]);
+      setSelected(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '400px' }}>
@@ -15,6 +30,28 @@ export function Historial() {
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
         <p style={{ color: '#6b7280' }}>Cargando historial...</p>
       </div>
+    </div>
+  );
+
+  if (error) return (
+    <div style={{
+      background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+      borderRadius: '20px',
+      padding: '2rem',
+      textAlign: 'center'
+    }}>
+      <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
+      <p style={{ margin: 0, color: '#7f1d1d', fontWeight: 700 }}>No se pudo cargar</p>
+      <p style={{ margin: '0.75rem 0 1.5rem 0', color: '#991b1b' }}>{error}</p>
+      <button onClick={load} style={{
+        padding: '0.75rem 1.25rem',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        border: 'none',
+        borderRadius: '12px',
+        cursor: 'pointer',
+        fontWeight: 700
+      }}>Reintentar</button>
     </div>
   );
 

@@ -12,6 +12,7 @@ import { Facturacion } from './components/Facturacion';
 import { CuentasPorPagar } from './components/CuentasPorPagar';
 import { GestionUsuarios } from './components/GestionUsuarios';
 import { CierreCaja } from './components/CierreCaja';
+import SiberianoLogo from './assets/Siberiano.png';
 
 type Page = 'inicio' | 'pos' | 'productos' | 'inventario' | 'ganancias' | 'facturas' | 'reportes' | 'cuentas_pagar' | 'usuarios' | 'cierre_caja' | 'historial';
 
@@ -19,9 +20,13 @@ export default function App() {
   const [logged, setLogged] = useState(() => !!localStorage.getItem('authToken'));
   const [page, setPage] = useState<Page>('inicio');
 
-  const handleLogout = () => { localStorage.removeItem('authToken'); setLogged(false); };
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userRole');
+    setLogged(false);
+  };
 
-  if (!logged) return <Login onLogin={() => setLogged(true)} />;
+  if (!logged) return <Login onLogin={() => { setLogged(true); setPage('inicio'); }} />;
 
   const nav = [
     { id: 'inicio' as Page, label: 'Dashboard', icon: '🎯', desc: 'Inicio y calendario' },
@@ -56,7 +61,16 @@ export default function App() {
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ fontSize: '2.5rem' }}>🥃</span>
+            <img
+              src={SiberianoLogo}
+              alt="Siberiano"
+              style={{
+                width: '44px',
+                height: '44px',
+                objectFit: 'contain',
+                filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.35))'
+              }}
+            />
             <div>
               <div style={{ fontWeight: 700, fontSize: '1.25rem' }}>SIBERIANO</div>
               <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>Sistema de Control</div>

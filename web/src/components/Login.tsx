@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import SiberianoLogo from '../assets/Siberiano.png';
 
 interface LoginProps { onLogin: () => void; }
 
@@ -6,19 +7,33 @@ export function Login({ onLogin }: LoginProps) {
   const [user, setUser] = useState('');
   const [pass, setPass] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      if (user === 'admin' && pass === 'admin123') {
-        localStorage.setItem('authToken', 'ok');
+    setError(null);
+    
+    // Credenciales válidas
+    const validUser = 'admin';
+    const validPass = 'admin123';
+    
+    try {
+      if (user === validUser && pass === validPass) {
+        try {
+          localStorage.setItem('authToken', 'ok');
+          localStorage.setItem('userRole', 'ADMIN');
+        } catch (err) {
+          console.error('No se pudo guardar sesión en localStorage', err);
+          // Igual permitimos entrar en modo demo aunque el storage esté bloqueado.
+        }
         onLogin();
-      } else {
-        alert('Usuario o contraseña incorrecta');
+        return;
       }
+      setError('Usuario o contraseña incorrecta');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   return (
@@ -70,7 +85,17 @@ export function Login({ onLogin }: LoginProps) {
               inset: 0,
               background: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
             }} />
-            <div style={{ fontSize: '5rem', marginBottom: '1rem', filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.3))' }}>🥃</div>
+            <img
+              src={SiberianoLogo}
+              alt="Siberiano"
+              style={{
+                width: '140px',
+                height: '140px',
+                objectFit: 'contain',
+                marginBottom: '1rem',
+                filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.35))'
+              }}
+            />
             <h1 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '0.5rem', textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}>SIBERIANO</h1>
             <p style={{ fontSize: '1.1rem', opacity: 0.9, textAlign: 'center', maxWidth: '300px' }}>Sistema Profesional de Control de Inventario</p>
             <div style={{ marginTop: '2rem', display: 'flex', gap: '1.5rem' }}>
@@ -100,6 +125,18 @@ export function Login({ onLogin }: LoginProps) {
             <p style={{ color: '#6b7280', marginBottom: '2rem' }}>Ingresa tus credenciales para continuar</p>
             
             <form onSubmit={handleSubmit}>
+              {error && (
+                <div style={{
+                  marginBottom: '1.25rem',
+                  padding: '0.875rem 1rem',
+                  background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+                  borderRadius: '12px',
+                  color: '#7f1d1d',
+                  fontWeight: 700
+                }}>
+                  {error}
+                </div>
+              )}
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Usuario</label>
                 <div style={{ position: 'relative' }}>
@@ -107,7 +144,7 @@ export function Login({ onLogin }: LoginProps) {
                   <input
                     type="text"
                     value={user}
-                    onChange={e => setUser(e.target.value)}
+                    onChange={(e) => setUser(e.target.value)}
                     placeholder="Ingresa tu usuario"
                     style={{
                       width: '100%',
@@ -132,7 +169,7 @@ export function Login({ onLogin }: LoginProps) {
                   <input
                     type="password"
                     value={pass}
-                    onChange={e => setPass(e.target.value)}
+                    onChange={(e) => setPass(e.target.value)}
                     placeholder="Ingresa tu contraseña"
                     style={{
                       width: '100%',

@@ -17,6 +17,8 @@ export function CuentasPorPagar() {
   const [selectedPayable, setSelectedPayable] = useState<Payable | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState<'TODOS' | 'PENDIENTE' | 'PARCIAL' | 'PAGADO'>('TODOS');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [newPayable, setNewPayable] = useState({
     proveedor: '',
@@ -36,58 +38,68 @@ export function CuentasPorPagar() {
   };
 
   const createPayable = () => {
-    if (!newPayable.proveedor || !newPayable.concepto || newPayable.monto <= 0) {
-      alert('Completa todos los campos');
-      return;
+    try {
+      setError(null);
+      if (!newPayable.proveedor || !newPayable.concepto || newPayable.monto <= 0) {
+        setError('Completa todos los campos');
+        return;
+      }
+
+      const payable: Payable = {
+        id: Date.now().toString(),
+        proveedor: newPayable.proveedor,
+        concepto: newPayable.concepto,
+        monto: newPayable.monto,
+        fechaPendiente: new Date().toISOString().split('T')[0],
+        pagado: 0,
+        pendiente: newPayable.monto,
+        estado: 'PENDIENTE',
+        historial: []
+      };
+
+      const updated = [...payables, payable];
+      setPayables(updated);
+      localStorage.setItem('payables', JSON.stringify(updated));
+      
+      setNewPayable({ proveedor: '', concepto: '', monto: 0 });
+      setShowForm(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al crear cuenta por pagar');
     }
-
-    const payable: Payable = {
-      id: Date.now().toString(),
-      proveedor: newPayable.proveedor,
-      concepto: newPayable.concepto,
-      monto: newPayable.monto,
-      fechaPendiente: new Date().toISOString().split('T')[0],
-      pagado: 0,
-      pendiente: newPayable.monto,
-      estado: 'PENDIENTE',
-      historial: []
-    };
-
-    const updated = [...payables, payable];
-    setPayables(updated);
-    localStorage.setItem('payables', JSON.stringify(updated));
-    
-    setNewPayable({ proveedor: '', concepto: '', monto: 0 });
-    setShowForm(false);
   };
 
   const makePayment = () => {
-    if (!selectedPayable || paymentAmount <= 0 || paymentAmount > selectedPayable.pendiente) {
-      alert('Monto inválido');
-      return;
+    try {
+      setError(null);
+      if (!selectedPayable || paymentAmount <= 0 || paymentAmount > selectedPayable.pendiente) {
+        setError('Monto inválido');
+        return;
+      }
+
+      const updated = payables.map(p => {
+        if (p.id !== selectedPayable.id) return p;
+        
+        const newPagado = p.pagado + paymentAmount;
+        const newPendiente = p.monto - newPagado;
+        const newEstado: 'PENDIENTE' | 'PARCIAL' | 'PAGADO' = 
+          newPendiente === 0 ? 'PAGADO' : newPagado === 0 ? 'PENDIENTE' : 'PARCIAL';
+
+        return {
+          ...p,
+          pagado: newPagado,
+          pendiente: newPendiente,
+          estado: newEstado,
+          historial: [...p.historial, { fecha: new Date().toISOString().split('T')[0], monto: paymentAmount }]
+        };
+      });
+
+      setPayables(updated);
+      localStorage.setItem('payables', JSON.stringify(updated));
+      setSelectedPayable(updated.find(p => p.id === selectedPayable.id) || null);
+      setPaymentAmount(0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al procesar pago');
     }
-
-    const updated = payables.map(p => {
-      if (p.id !== selectedPayable.id) return p;
-      
-      const newPagado = p.pagado + paymentAmount;
-      const newPendiente = p.monto - newPagado;
-      const newEstado: 'PENDIENTE' | 'PARCIAL' | 'PAGADO' = 
-        newPendiente === 0 ? 'PAGADO' : newPagado === 0 ? 'PENDIENTE' : 'PARCIAL';
-
-      return {
-        ...p,
-        pagado: newPagado,
-        pendiente: newPendiente,
-        estado: newEstado,
-        historial: [...p.historial, { fecha: new Date().toISOString().split('T')[0], monto: paymentAmount }]
-      };
-    });
-
-    setPayables(updated);
-    localStorage.setItem('payables', JSON.stringify(updated));
-    setSelectedPayable(updated.find(p => p.id === selectedPayable.id) || null);
-    setPaymentAmount(0);
   };
 
   const deletePayable = (id: string) => {

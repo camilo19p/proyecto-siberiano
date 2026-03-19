@@ -10,24 +10,47 @@ export function Inventario() {
   const [tienePrestamo, setTienePrestamo] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [resultado, setResultado] = useState<any>(null);
 
-  useEffect(() => { loadProductos(); }, []);
+  useEffect(() => {
+    let isMounted = true;
+    const load = async () => {
+      await loadProductos();
+      if (isMounted) setLoading(false);
+    };
+    load().catch(err => {
+      if (isMounted) {
+        setError(err instanceof Error ? err.message : 'Error inesperado');
+        setLoading(false);
+      }
+    });
+    return () => { isMounted = false; };
+  }, []);
 
   const loadProductos = async () => {
     setLoading(true);
-    const data = await inventarioService.prepareInventario();
-    setProductos(data);
-    const init: Record<string,number> = {};
-    data.forEach((p: PrepItem) => { init[p.id] = p.stockInicial; });
-    setCantidades(init);
-    setLoading(false);
+    setError(null);
+    try {
+      const data = await inventarioService.prepareInventario();
+      setProductos(data);
+      const init: Record<string,number> = {};
+      data.forEach((p: PrepItem) => { init[p.id] = p.stockInicial; });
+      setCantidades(init);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error cargando inventario');
+      setProductos([]);
+      setCantidades({});
+    } finally {
+      setLoading(false);
+    }
   };
 
   const calcularTotales = () => {
     let totalVendido = 0, ganancias = 0;
     productos.forEach(p => {
-      const salieron = p.stockInicial - (cantidades[p.id]||0);
+      const quedaron = cantidades[p.id] ?? 0;
+      const salieron = Math.max(0, p.stockInicial - quedaron);
       totalVendido += p.precioVenta * salieron;
       ganancias += (p.precioVenta - p.precioCompra) * salieron;
     });
@@ -38,13 +61,28 @@ export function Inventario() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const invalid = productos.some((p) => {
+      const quedaron = cantidades[p.id] ?? 0;
+      return Number.isNaN(quedaron) || quedaron < 0 || quedaron > p.stockInicial;
+    });
+    if (invalid) {
+      setError('Revisa cantidades: "Quedaron" debe estar entre 0 y el valor de "Entraron".');
+      return;
+    }
+
     setSaving(true);
+    setError(null);
     try {
       const items = productos.map(p => ({ productId: p.id, quedaron: cantidades[p.id] || 0 }));
       const res = await inventarioService.createInventario({ prestamo: tienePrestamo ? prestamo : 0, items });
       setResultado(res);
-    } catch (err) { alert('Error al guardar'); }
-    setSaving(false);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Error al guardar';
+      setError(errorMsg);
+      console.error('Error saving inventory:', err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) return (
@@ -53,6 +91,28 @@ export function Inventario() {
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
         <p style={{ color: '#6b7280' }}>Cargando inventario...</p>
       </div>
+    </div>
+  );
+
+  if (error) return (
+    <div style={{
+      background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+      borderRadius: '20px',
+      padding: '2rem',
+      textAlign: 'center'
+    }}>
+      <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
+      <p style={{ margin: 0, color: '#7f1d1d', fontWeight: 700 }}>No se pudo cargar</p>
+      <p style={{ margin: '0.75rem 0 1.5rem 0', color: '#991b1b' }}>{error}</p>
+      <button onClick={loadProductos} style={{
+        padding: '0.75rem 1.25rem',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        border: 'none',
+        borderRadius: '12px',
+        cursor: 'pointer',
+        fontWeight: 700
+      }}>Reintentar</button>
     </div>
   );
 
@@ -162,7 +222,8 @@ export function Inventario() {
             </thead>
             <tbody>
               {productos.map(p => {
-                const salieron = p.stockInicial - (cantidades[p.id] || 0);
+                const quedaron = cantidades[p.id] || 0;
+                const salieron = Math.max(0, p.stockInicial - quedaron);
                 const vendido = p.precioVenta * salieron;
                 const ganancia = (p.precioVenta - p.precioCompra) * salieron;
                 return (
@@ -179,7 +240,13 @@ export function Inventario() {
                     </td>
                     <td style={{ padding: '1rem 1.25rem', textAlign: 'center', color: '#475569', fontWeight: 600 }}>{p.stockInicial}</td>
                     <td style={{ padding: '1rem 1.25rem', textAlign: 'center' }}>
-                      <input type="number" value={cantidades[p.id] || 0} onChange={e => setCantidades({ ...cantidades, [p.id]: +e.target.value })}
+                      <input type="number" value={cantidades[p.id] || 0} onChange={e => {
+                        const value = Number(e.target.value);
+                        const safe = Number.isNaN(value) ? 0 : Math.min(p.stockInicial, Math.max(0, value));
+                        setCantidades({ ...cantidades, [p.id]: safe });
+                      }}
+                        min={0}
+                        max={p.stockInicial}
                         style={{
                           width: '80px',
                           padding: '0.5rem 0.75rem',

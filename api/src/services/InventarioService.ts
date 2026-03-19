@@ -1,8 +1,8 @@
-import { Inventario, InventarioItem, CreateInventarioRequest, PrepareInventarioResponse } from '../models/Inventario';
+import { Inventario, CreateInventarioRequest, PrepareInventarioResponse } from '../models/Inventario';
 import prisma from '../lib/prisma';
 
 export class InventarioService {
-  // Preparar inventario - obtener productos con su stock inicial
+  // Preparar inventario - obtener productos con su stock actual como stockInicial
   async prepareInventario(): Promise<PrepareInventarioResponse[]> {
     const products = await prisma.product.findMany({
       orderBy: { name: 'asc' }
@@ -14,7 +14,7 @@ export class InventarioService {
       name: p.name,
       precioCompra: p.precioCompra,
       precioVenta: p.precioVenta,
-      stockInicial: p.stockInicial
+      stockInicial: p.stock
     }));
   }
 
@@ -25,7 +25,7 @@ export class InventarioService {
       include: {
         items: {
           include: {
-            producto: true
+            product: true
           }
         }
       }
@@ -33,24 +33,24 @@ export class InventarioService {
 
     return inventarios.map(inv => ({
       id: inv.id.toString(),
-      fecha: inv.fecha,
+      fecha: inv.fecha.toISOString(),
       totalVendido: inv.totalVendido,
       ganancias: inv.ganancias,
       prestamo: inv.prestamo,
       deudaRestante: inv.deudaRestante,
       capital: inv.capital,
       observaciones: inv.observaciones || undefined,
-      createdAt: inv.createdAt,
-      items: inv.items.map(item => ({
+      createdAt: inv.createdAt.toISOString(),
+      items: inv.items.map((item: any) => ({
         id: item.id.toString(),
         inventarioId: item.inventarioId.toString(),
         productId: item.productId.toString(),
-        productoNombre: item.producto?.name,
-        entraron: item.entraron,
-        quedaron: item.quedaron,
-        salieron: item.salieron,
-        totalVendido: item.totalVendido,
-        ganancia: item.ganancia
+        productoNombre: item.product?.name || '',
+        entraron: item.entraron ?? 0,
+        quedaron: item.quedaron ?? 0,
+        salieron: item.salieron ?? 0,
+        totalVendido: item.totalVendido ?? 0,
+        ganancia: item.ganancia ?? 0
       }))
     }));
   }
@@ -72,20 +72,20 @@ export class InventarioService {
       const product = productMap.get(parseInt(item.productId));
       if (!product) return null;
 
-      const stockInicial = product.stockInicial;
+      const stockActual = product.stock;
       const quedaron = item.quedaron;
-      const salieron = stockInicial - quedaron;
-      const ventaTotal = product.precioVenta * salieron;
-      const gananciaTotal = (product.precioVenta - product.precioCompra) * salieron;
+      const salidas = Math.max(0, stockActual - quedaron);
+      const ventaTotal = product.precioVenta * salidas;
+      const gananciaTotal = (product.precioVenta - product.precioCompra) * salidas;
 
       totalVendido += ventaTotal;
       ganancias += gananciaTotal;
 
       return {
         productId: parseInt(item.productId),
-        entraron: stockInicial,
+        entraron: stockActual,
         quedaron,
-        salieron,
+        salieron: salidas,
         totalVendido: ventaTotal,
         ganancia: gananciaTotal
       };
@@ -95,10 +95,26 @@ export class InventarioService {
     const deudaRestante = prestamo > 0 ? Math.max(0, prestamo - totalVendido) : 0;
     const capital = prestamo > 0 ? (deudaRestante > 0 ? 0 : totalVendido - prestamo) : totalVendido;
 
-    // Crear inventario en transacción
+    // Obtener primer producto para el campo requerido
+    const firstProductId = productIds[0] || 0;
+    
+    // Calcular cantidad total
+    let totalCantidad = 0;
+    data.items.forEach(item => {
+      const product = productMap.get(parseInt(item.productId));
+      if (product) {
+        totalCantidad += product.stock - item.quedaron;
+      }
+    });
+
+    // Crear inventario
     const inventario = await prisma.inventario.create({
       data: {
         fecha: new Date(),
+        tipo: 'AJUSTE',
+        cantidad: totalCantidad,
+        usuarioId: 1,
+        productoId: firstProductId,
         totalVendido,
         ganancias,
         prestamo,
@@ -119,7 +135,7 @@ export class InventarioService {
       include: {
         items: {
           include: {
-            producto: true
+            product: true
           }
         }
       }
@@ -135,25 +151,21 @@ export class InventarioService {
 
     return {
       id: inventario.id.toString(),
-      fecha: inventario.fecha,
+      fecha: inventario.fecha.toISOString(),
       totalVendido: inventario.totalVendido,
       ganancias: inventario.ganancias,
       prestamo: inventario.prestamo,
       deudaRestante: inventario.deudaRestante,
       capital: inventario.capital,
       observaciones: inventario.observaciones || undefined,
-      createdAt: inventario.createdAt,
-      items: inventario.items.map(item => ({
-        id: item.id.toString(),
-        inventarioId: item.inventarioId.toString(),
-        productId: item.productId.toString(),
-        productoNombre: item.producto?.name,
-        entraron: item.entraron,
-        quedaron: item.quedaron,
-        salieron: item.salieron,
-        totalVendido: item.totalVendido,
-        ganancia: item.ganancia
-      }))
+      createdAt: inventario.createdAt.toISOString()
     };
+  }
+
+  // Eliminar inventario
+  async deleteInventario(id: number): Promise<void> {
+    await prisma.inventario.delete({
+      where: { id }
+    });
   }
 }

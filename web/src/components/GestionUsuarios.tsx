@@ -15,6 +15,8 @@ export function GestionUsuarios() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState<'TODOS' | 'ADMIN' | 'VENDEDOR' | 'GERENTE'>('TODOS');
+  const [error, setError] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const [newUser, setNewUser] = useState({
     nombre: '',
@@ -22,6 +24,10 @@ export function GestionUsuarios() {
     rol: 'VENDEDOR' as const,
     password: ''
   });
+
+  const generateId = () => {
+    return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  };
 
   const rolePermissions = {
     ADMIN: [
@@ -80,27 +86,33 @@ export function GestionUsuarios() {
   };
 
   const createUser = () => {
-    if (!newUser.nombre || !newUser.email || !newUser.password) {
-      alert('Completa todos los campos');
-      return;
+    try {
+      setError(null);
+      if (!newUser.nombre || !newUser.email || !newUser.password) {
+        setError('Completa todos los campos requeridos');
+        return;
+      }
+
+      const user: User = {
+        id: generateId(),
+        nombre: newUser.nombre,
+        email: newUser.email,
+        rol: newUser.rol,
+        estado: 'ACTIVO',
+        permisos: rolePermissions[newUser.rol],
+        fechaCreacion: new Date().toISOString().split('T')[0]
+      };
+
+      const updated = [...users, user];
+      setUsers(updated);
+      localStorage.setItem('users', JSON.stringify(updated));
+      
+      setNewUser({ nombre: '', email: '', rol: 'VENDEDOR', password: '' });
+      setShowForm(false);
+    } catch (err) {
+      setError('Error al crear el usuario. Intenta de nuevo.');
+      console.error('Error creating user:', err);
     }
-
-    const user: User = {
-      id: Date.now().toString(),
-      nombre: newUser.nombre,
-      email: newUser.email,
-      rol: newUser.rol,
-      estado: 'ACTIVO',
-      permisos: rolePermissions[newUser.rol],
-      fechaCreacion: new Date().toISOString().split('T')[0]
-    };
-
-    const updated = [...users, user];
-    setUsers(updated);
-    localStorage.setItem('users', JSON.stringify(updated));
-    
-    setNewUser({ nombre: '', email: '', rol: 'VENDEDOR', password: '' });
-    setShowForm(false);
   };
 
   const updateUserStatus = (id: string, newStatus: 'ACTIVO' | 'INACTIVO') => {
@@ -126,11 +138,15 @@ export function GestionUsuarios() {
   };
 
   const deleteUser = (id: string) => {
-    if (window.confirm('¿Eliminar este usuario?')) {
+    setConfirmDeleteId(null);
+    try {
       const updated = users.filter(u => u.id !== id);
       setUsers(updated);
       localStorage.setItem('users', JSON.stringify(updated));
       setSelectedUser(null);
+    } catch (err) {
+      setError('Error al eliminar el usuario. Intenta de nuevo.');
+      console.error('Error deleting user:', err);
     }
   };
 
@@ -165,6 +181,37 @@ export function GestionUsuarios() {
   return (
     <div>
       <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: '#1e293b' }}>👥 Gestión de Usuarios</h1>
+
+      {error && (
+        <div style={{
+          background: '#fee2e2',
+          color: '#dc2626',
+          padding: '1rem',
+          borderRadius: '12px',
+          marginBottom: '1.5rem',
+          border: '1px solid #ef4444',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem'
+        }}>
+          <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+          <span>{error}</span>
+          <button
+            onClick={() => setError(null)}
+            style={{
+              marginLeft: 'auto',
+              background: 'none',
+              border: 'none',
+              color: '#dc2626',
+              cursor: 'pointer',
+              fontSize: '1.5rem',
+              padding: '0'
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* Stats */}
       <div style={{
@@ -532,20 +579,55 @@ export function GestionUsuarios() {
               >
                 {selectedUser.estado === 'ACTIVO' ? '✕ Desactivar' : '✓ Activar'}
               </button>
-              <button
-                onClick={() => deleteUser(selectedUser.id)}
-                style={{
-                  padding: '0.75rem',
-                  background: '#f3f4f6',
-                  color: '#6b7280',
-                  border: 'none',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontWeight: 600
-                }}
-              >
-                🗑️ Eliminar
-              </button>
+              {confirmDeleteId === selectedUser.id ? (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => deleteUser(selectedUser.id)}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      background: '#ef4444',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    ✓ Confirmar
+                  </button>
+                  <button
+                    onClick={() => setConfirmDeleteId(null)}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      background: '#f3f4f6',
+                      color: '#6b7280',
+                      border: 'none',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    ✕ Cancelar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmDeleteId(selectedUser.id)}
+                  style={{
+                    padding: '0.75rem',
+                    background: '#f3f4f6',
+                    color: '#6b7280',
+                    border: 'none',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    fontWeight: 600
+                  }}
+                >
+                  🗑️ Eliminar
+                </button>
+              )}
             </div>
           </div>
         )}

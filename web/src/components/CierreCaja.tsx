@@ -26,9 +26,14 @@ export function CierreCaja() {
   const [closings, setClosings] = useState<CashClosing[]>([]);
   const [currentClosing, setCurrentClosing] = useState<CashClosing | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<CashClosing | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const [newMovement, setNewMovement] = useState({
-    tipo: 'INGRESO' as const,
+  const [newMovement, setNewMovement] = useState<{
+    tipo: 'INGRESO' | 'EGRESO';
+    monto: number;
+    concepto: string;
+  }>({
+    tipo: 'INGRESO',
     monto: 0,
     concepto: ''
   });
@@ -37,6 +42,7 @@ export function CierreCaja() {
   const [showInitial, setShowInitial] = useState(false);
   const [countedAmount, setCountedAmount] = useState(0);
   const [showClosing, setShowClosing] = useState(false);
+  const isAdmin = localStorage.getItem('userRole') === 'ADMIN';
 
   useEffect(() => {
     loadClosings();
@@ -57,77 +63,87 @@ export function CierreCaja() {
   };
 
   const startShift = () => {
-    if (initialAmount < 0) {
-      alert('Monto inicial inválido');
-      return;
+    try {
+      setError(null);
+      if (initialAmount < 0) {
+        setError('Monto inicial inválido');
+        return;
+      }
+
+      const newClosing: CashClosing = {
+        id: Date.now().toString(),
+        fecha: new Date().toISOString().split('T')[0],
+        inicio: initialAmount,
+        ingresos: 0,
+        egresos: 0,
+        efectivoContado: 0,
+        diferencia: 0,
+        usuario: 'Admin',
+        estado: 'ABIERTO',
+        movimientos: [
+          {
+            id: Date.now().toString(),
+            hora: new Date().toLocaleTimeString('es-ES'),
+            tipo: 'INGRESO',
+            monto: initialAmount,
+            concepto: 'Apertura de Caja',
+            usuario: 'Admin'
+          }
+        ]
+      };
+
+      setCurrentClosing(newClosing);
+      localStorage.setItem('currentClosing', JSON.stringify(newClosing));
+      setInitialAmount(0);
+      setShowInitial(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al abrir caja');
     }
-
-    const newClosing: CashClosing = {
-      id: Date.now().toString(),
-      fecha: new Date().toISOString().split('T')[0],
-      inicio: initialAmount,
-      ingresos: 0,
-      egresos: 0,
-      efectivoContado: 0,
-      diferencia: 0,
-      usuario: 'Admin',
-      estado: 'ABIERTO',
-      movimientos: [
-        {
-          id: Date.now().toString(),
-          hora: new Date().toLocaleTimeString('es-ES'),
-          tipo: 'INGRESO',
-          monto: initialAmount,
-          concepto: 'Apertura de Caja',
-          usuario: 'Admin'
-        }
-      ]
-    };
-
-    setCurrentClosing(newClosing);
-    localStorage.setItem('currentClosing', JSON.stringify(newClosing));
-    setInitialAmount(0);
-    setShowInitial(false);
   };
 
   const addMovement = () => {
-    if (!currentClosing) {
-      alert('No hay caja abierta');
-      return;
+    try {
+      setError(null);
+      if (!currentClosing) {
+        setError('No hay caja abierta');
+        return;
+      }
+
+      if (newMovement.monto <= 0 || !newMovement.concepto) {
+        setError('Completa todos los campos');
+        return;
+      }
+
+      const movement: CashEntry = {
+        id: Date.now().toString(),
+        hora: new Date().toLocaleTimeString('es-ES'),
+        tipo: newMovement.tipo,
+        monto: newMovement.monto,
+        concepto: newMovement.concepto,
+        usuario: 'Admin'
+      };
+
+      const ingresos = newMovement.tipo === 'INGRESO' 
+        ? currentClosing.ingresos + newMovement.monto 
+        : currentClosing.ingresos;
+      
+      const egresos = newMovement.tipo === 'EGRESO' 
+        ? currentClosing.egresos + newMovement.monto 
+        : currentClosing.egresos;
+
+      const updated = {
+        ...currentClosing,
+        ingresos,
+        egresos,
+        movimientos: [...currentClosing.movimientos, movement]
+      };
+
+      setCurrentClosing(updated);
+      localStorage.setItem('currentClosing', JSON.stringify(updated));
+      setNewMovement({ tipo: 'INGRESO', monto: 0, concepto: '' });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al agregar movimiento');
     }
-
-    if (newMovement.monto <= 0 || !newMovement.concepto) {
-      alert('Completa todos los campos');
-      return;
-    }
-
-    const movement: CashEntry = {
-      id: Date.now().toString(),
-      hora: new Date().toLocaleTimeString('es-ES'),
-      tipo: newMovement.tipo,
-      monto: newMovement.monto,
-      concepto: newMovement.concepto,
-      usuario: 'Admin'
-    };
-
-    const ingresos = newMovement.tipo === 'INGRESO' 
-      ? currentClosing.ingresos + newMovement.monto 
-      : currentClosing.ingresos;
-    
-    const egresos = newMovement.tipo === 'EGRESO' 
-      ? currentClosing.egresos + newMovement.monto 
-      : currentClosing.egresos;
-
-    const updated = {
-      ...currentClosing,
-      ingresos,
-      egresos,
-      movimientos: [...currentClosing.movimientos, movement]
-    };
-
-    setCurrentClosing(updated);
-    localStorage.setItem('currentClosing', JSON.stringify(updated));
-    setNewMovement({ tipo: 'INGRESO', monto: 0, concepto: '' });
   };
 
   const closeShift = () => {
@@ -152,6 +168,15 @@ export function CierreCaja() {
     setSelectedDetail(closed);
     setCountedAmount(0);
     setShowClosing(false);
+  };
+
+  const removeClosingFromHistory = (id: string) => {
+    if (!isAdmin) return;
+    if (!window.confirm('¿Eliminar este cierre del histórico?')) return;
+    const updated = closings.filter(c => c.id !== id);
+    setClosings(updated);
+    localStorage.setItem('closingHistory', JSON.stringify(updated));
+    if (selectedDetail?.id === id) setSelectedDetail(null);
   };
 
   if (!currentClosing) {
@@ -289,7 +314,7 @@ export function CierreCaja() {
                       Total: ${(c.inicio + c.ingresos - c.egresos).toLocaleString()}
                     </p>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
+                  <div style={{ textAlign: 'right', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                     <span style={{
                       display: 'inline-block',
                       padding: '0.5rem 0.75rem',
@@ -302,6 +327,22 @@ export function CierreCaja() {
                     }}>
                       {c.diferencia === 0 ? '✓ Cuadrado' : `⚠ Dif: $${c.diferencia}`}
                     </span>
+                    {isAdmin && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); removeClosingFromHistory(c.id); }}
+                        style={{
+                          padding: '0.45rem 0.65rem',
+                          border: 'none',
+                          borderRadius: '8px',
+                          background: '#fee2e2',
+                          color: '#dc2626',
+                          cursor: 'pointer',
+                          fontWeight: 700
+                        }}
+                      >
+                        🗑
+                      </button>
+                    )}
                   </div>
                 </div>
               ))
@@ -668,7 +709,7 @@ export function CierreCaja() {
 
               <div style={{ padding: '1rem', background: selectedDetail.diferencia === 0 ? '#dcfce7' : '#fee2e2', borderRadius: '10px' }}>
                 <p style={{ margin: 0, fontSize: '0.875rem', color: selectedDetail.diferencia === 0 ? '#16a34a' : '#dc2626', fontWeight: 600 }}>DIFERENCIA</p>
-                <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.25rem', fontWeight: 700', color: selectedDetail.diferencia === 0 ? '#16a34a' : '#dc2626' }}>
+                <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.25rem', fontWeight: 700, color: selectedDetail.diferencia === 0 ? '#16a34a' : '#dc2626' }}>
                   ${selectedDetail.diferencia.toLocaleString()}
                 </p>
               </div>

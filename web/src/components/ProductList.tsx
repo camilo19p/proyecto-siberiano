@@ -5,6 +5,7 @@ import { ProductForm } from './ProductForm';
 export function ProductList() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [search, setSearch] = useState('');
@@ -13,14 +14,25 @@ export function ProductList() {
 
   const loadProducts = async () => {
     setLoading(true);
-    setProducts(await productService.getProducts());
-    setLoading(false);
+    setError(null);
+    try {
+      setProducts(await productService.getProducts());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error cargando productos');
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (confirm('¿Eliminar este producto?')) {
-      await productService.deleteProduct(id);
-      loadProducts();
+      try {
+        await productService.deleteProduct(id);
+        loadProducts();
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Error eliminando producto');
+      }
     }
   };
 
@@ -37,6 +49,28 @@ export function ProductList() {
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
         <p style={{ color: '#6b7280' }}>Cargando productos...</p>
       </div>
+    </div>
+  );
+
+  if (error) return (
+    <div style={{
+      background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+      borderRadius: '20px',
+      padding: '2rem',
+      textAlign: 'center'
+    }}>
+      <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
+      <p style={{ margin: 0, color: '#7f1d1d', fontWeight: 700 }}>No se pudo cargar</p>
+      <p style={{ margin: '0.75rem 0 1.5rem 0', color: '#991b1b' }}>{error}</p>
+      <button onClick={loadProducts} style={{
+        padding: '0.75rem 1.25rem',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        border: 'none',
+        borderRadius: '12px',
+        cursor: 'pointer',
+        fontWeight: 700
+      }}>Reintentar</button>
     </div>
   );
 

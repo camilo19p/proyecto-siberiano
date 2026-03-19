@@ -6,6 +6,7 @@ interface ProductFormProps { product?: Product | null; onClose: () => void; }
 export function ProductForm({ product, onClose }: ProductFormProps) {
   const [form, setForm] = useState({ codigo: '', name: '', type: 'ron', precioCompra: 0, precioVenta: 0, stock: 0 });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (product) setForm({ codigo: product.codigo, name: product.name, type: product.type, precioCompra: product.precioCompra, precioVenta: product.precioVenta, stock: product.stock });
@@ -13,12 +14,17 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setLoading(true);
     try {
       if (product) await productService.updateProduct(product.id, form);
       else await productService.createProduct({ ...form, stockInicial: form.stock });
       onClose();
-    } catch (err) { alert('Error al guardar'); }
+    } catch (err) { 
+      const errorMsg = err instanceof Error ? err.message : 'Error al guardar';
+      setError(errorMsg);
+      console.error('Error guardando producto:', err);
+    }
     setLoading(false);
   };
 
@@ -61,6 +67,19 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
         </div>
         
         <form onSubmit={handleSubmit} style={{ padding: '2rem' }}>
+          {error && (
+            <div style={{
+              marginBottom: '1rem',
+              padding: '0.875rem 1rem',
+              background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+              borderRadius: '12px',
+              color: '#7f1d1d',
+              fontWeight: 600,
+              fontSize: '0.875rem'
+            }}>
+              ⚠️ {error}
+            </div>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Código *</label>

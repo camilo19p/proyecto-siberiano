@@ -12,6 +12,8 @@ export function Reportes() {
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [filterMovements, setFilterMovements] = useState(true);
   const [filterPayments, setFilterPayments] = useState(true);
+  const [closingHistory, setClosingHistory] = useState<any[]>([]);
+  const isAdmin = localStorage.getItem('userRole') === 'ADMIN';
 
   useEffect(() => {
     loadData();
@@ -19,9 +21,26 @@ export function Reportes() {
 
   const loadData = async () => {
     setLoading(true);
-    const inventarios = await inventarioService.getAllInventarios();
-    setData(inventarios);
-    setLoading(false);
+    try {
+      const inventarios = await inventarioService.getAllInventarios();
+      setData(inventarios);
+      const closings = localStorage.getItem('closingHistory');
+      setClosingHistory(closings ? JSON.parse(closings) : []);
+    } catch (error) {
+      console.error('Error cargando reportes:', error);
+      setData([]);
+      setClosingHistory([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const removeClosing = (id: string) => {
+    if (!isAdmin) return;
+    if (!window.confirm('¿Eliminar este cierre del histórico?')) return;
+    const updated = closingHistory.filter((c) => c.id !== id);
+    setClosingHistory(updated);
+    localStorage.setItem('closingHistory', JSON.stringify(updated));
   };
 
   const filteredData = data.filter(inv => {
@@ -290,6 +309,52 @@ export function Reportes() {
           📊 Exportar Excel
         </button>
       </div>
+
+      {isAdmin && (
+        <div style={{
+          marginTop: '2rem',
+          background: 'white',
+          borderRadius: '20px',
+          padding: '1.5rem',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.08)'
+        }}>
+          <h3 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>🧾 Histórico de Cierres (Admin)</h3>
+          {closingHistory.length === 0 ? (
+            <p style={{ margin: 0, color: '#6b7280' }}>No hay cierres para eliminar.</p>
+          ) : (
+            <div style={{ display: 'grid', gap: '0.75rem' }}>
+              {closingHistory.map((c) => (
+                <div key={c.id} style={{
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  padding: '0.75rem 1rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#1e293b' }}>{new Date(c.fecha).toLocaleDateString('es-ES')}</div>
+                    <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
+                      Esperado: ${(c.inicio + c.ingresos - c.egresos).toLocaleString()} | Diferencia: ${Number(c.diferencia || 0).toLocaleString()}
+                    </div>
+                  </div>
+                  <button onClick={() => removeClosing(c.id)} style={{
+                    padding: '0.55rem 0.85rem',
+                    border: 'none',
+                    borderRadius: '10px',
+                    background: '#fee2e2',
+                    color: '#dc2626',
+                    cursor: 'pointer',
+                    fontWeight: 700
+                  }}>
+                    🗑 Eliminar
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

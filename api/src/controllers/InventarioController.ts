@@ -30,4 +30,14 @@ export class InventarioController {
       return next(err);
     }
   }
+
+  async deleteInventario(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      await inventarioService.deleteInventario(parseInt(id));
+      return res.json({ success: true });
+    } catch (err) {
+      return next(err);
+    }
+  }
 }

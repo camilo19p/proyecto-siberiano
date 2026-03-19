@@ -4,22 +4,27 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    command: npm run start:dev
+    command: npm run dev
     volumes:
       - ./api:/app
       - /app/node_modules
     ports:
-      - "3000:3000"
+      - "3001:3001"
     env_file:
       - ./api/.env
     environment:
       - NODE_ENV=development
+      - PORT=3001
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   web:
     build:
       context: ./web
-      dockerfile: Dockerfile
-    command: npm run dev -- --host 0.0.0.0
+      dockerfile: Dockerfile.dev
     volumes:
       - ./web:/app
       - /app/node_modules
@@ -29,3 +34,5 @@ services:
       - api
     environment:
       - NODE_ENV=development
+      - DOCKER_ENV=true
+      - API_URL=http://api:3001

@@ -1,13 +1,13 @@
 export interface Inventario {
   id: string;
-  fecha: Date;
+  fecha: string;
   totalVendido: number;
   ganancias: number;
   prestamo: number;
   deudaRestante: number;
   capital: number;
   observaciones?: string;
-  createdAt: Date;
+  createdAt: string;
   items?: InventarioItem[];
 }
 

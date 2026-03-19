@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react';
-import { inventarioService } from '../services/api';
+import { facturaService, clienteService, productService, Factura } from '../services/api';
 
 interface Invoice {
   id: string;
   numero: string;
   fecha: string;
-  cliente: string;
-  total: number;
-  estado: 'PENDIENTE' | 'APROBADO' | 'ANULADO';
-  items: {
-    producto: string;
+  cliente_id: string;
+  cliente?: string;
+  monto_total: number;
+  estado: string;
+  items?: {
+    producto_id: string;
+    producto?: string;
     cantidad: number;
     precio: number;
-    subtotal: number;
+    subtotal?: number;
   }[];
 }
 
@@ -22,10 +24,11 @@ export function Facturacion() {
   const [filter, setFilter] = useState<'TODOS' | 'PENDIENTE' | 'APROBADO' | 'ANULADO'>('TODOS');
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [newInvoice, setNewInvoice] = useState({
-    cliente: '',
-    items: [{ producto: '', cantidad: 1, precio: 0 }]
+    cliente_id: '',
+    items: [{ producto_id: '', cantidad: 1, precio: 0 }]
   });
 
   useEffect(() => {
@@ -33,11 +36,17 @@ export function Facturacion() {
   }, []);
 
   const loadInvoices = async () => {
-    // Simular carga de facturas desde localStorage
-    const saved = localStorage.getItem('invoices');
-    if (saved) {
-      setInvoices(JSON.parse(saved));
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await facturaService.getFacturas();
+      setInvoices(data);
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : 'Error al cargar facturas';
+      setError(errorMsg);
+      console.error('Error loading invoices:', e);
     }
+    setLoading(false);
   };
 
   const generateInvoiceNumber = () => {
@@ -46,48 +55,60 @@ export function Facturacion() {
     return String(lastNum + 1).padStart(6, '0');
   };
 
-  const createInvoice = () => {
-    if (!newInvoice.cliente || newInvoice.items.some(i => !i.producto || i.cantidad <= 0 || i.precio <= 0)) {
-      alert('Por favor completa todos los datos');
+  const createInvoice = async () => {
+    if (!newInvoice.cliente_id || newInvoice.items.some(i => !i.producto_id || i.cantidad <= 0 || i.precio <= 0)) {
+      setError('Por favor completa todos los datos requeridos');
       return;
     }
 
-    const total = newInvoice.items.reduce((sum, item) => sum + (item.cantidad * item.precio), 0);
-    const invoice: Invoice = {
-      id: Date.now().toString(),
-      numero: generateInvoiceNumber(),
-      fecha: new Date().toISOString().split('T')[0],
-      cliente: newInvoice.cliente,
-      total,
-      estado: 'PENDIENTE',
-      items: newInvoice.items
-    };
+    try {
+      setError(null);
+      const monto_total = newInvoice.items.reduce((sum, item) => sum + (item.cantidad * item.precio), 0);
+      
+      const invoiceData = {
+        numero: `FAC-${generateInvoiceNumber()}`,
+        cliente_id: newInvoice.cliente_id,
+        monto_total,
+        estado: 'PENDIENTE',
+        items: newInvoice.items
+      };
 
-    const updated = [...invoices, invoice];
-    setInvoices(updated);
-    localStorage.setItem('invoices', JSON.stringify(updated));
-    
-    setNewInvoice({ cliente: '', items: [{ producto: '', cantidad: 1, precio: 0 }] });
-    setShowForm(false);
-  };
-
-  const updateInvoiceStatus = (id: string, newStatus: 'PENDIENTE' | 'APROBADO' | 'ANULADO') => {
-    const updated = invoices.map(inv => 
-      inv.id === id ? { ...inv, estado: newStatus } : inv
-    );
-    setInvoices(updated);
-    localStorage.setItem('invoices', JSON.stringify(updated));
-    if (selectedInvoice?.id === id) {
-      setSelectedInvoice({ ...selectedInvoice, estado: newStatus });
+      await facturaService.createFactura(invoiceData);
+      await loadInvoices();
+      
+      setNewInvoice({ cliente_id: '', items: [{ producto_id: '', cantidad: 1, precio: 0 }] });
+      setShowForm(false);
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : 'Error al crear factura';
+      setError(errorMsg);
     }
   };
 
-  const deleteInvoice = (id: string) => {
+  const updateInvoiceStatus = async (id: string, newStatus: string) => {
+    try {
+      setError(null);
+      await facturaService.updateFactura(id, { estado: newStatus });
+      await loadInvoices();
+      if (selectedInvoice?.id === id) {
+        setSelectedInvoice({ ...selectedInvoice, estado: newStatus });
+      }
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : 'Error al actualizar estado';
+      setError(errorMsg);
+    }
+  };
+
+  const deleteInvoice = async (id: string) => {
     if (window.confirm('¿Eliminar esta factura?')) {
-      const updated = invoices.filter(inv => inv.id !== id);
-      setInvoices(updated);
-      localStorage.setItem('invoices', JSON.stringify(updated));
-      setSelectedInvoice(null);
+      try {
+        setError(null);
+        await facturaService.deleteFactura(id);
+        await loadInvoices();
+        setSelectedInvoice(null);
+      } catch (e) {
+        const errorMsg = e instanceof Error ? e.message : 'Error al eliminar factura';
+        setError(errorMsg);
+      }
     }
   };
 

@@ -21,9 +21,15 @@ export function POS() {
 
   const loadProducts = async () => {
     setLoading(true);
-    const data = await productService.getProducts();
-    setProducts(data);
-    setLoading(false);
+    try {
+      const data = await productService.getProducts();
+      setProducts(data);
+    } catch (error) {
+      console.error('Error cargando productos:', error);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filteredProducts = products.filter(p =>
