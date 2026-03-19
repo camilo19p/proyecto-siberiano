@@ -1,3 +1,29 @@
+// --- BACKUP AUTOMÁTICO DE SQLITE (físico) ---
+const SQLITE_DB_PATH = path.resolve(__dirname, '../../prisma/dev.db');
+const SQLITE_BACKUP_DIR = path.resolve(__dirname, '../../backups');
+const SQLITE_MAX_BACKUPS = 30; // últimos 30 días
+
+export function crearBackup() {
+  if (!fs.existsSync(SQLITE_BACKUP_DIR)) {
+    fs.mkdirSync(SQLITE_BACKUP_DIR, { recursive: true });
+  }
+  const fecha = new Date().toISOString().replace(/[:.]/g, '-');
+  const destino = path.join(SQLITE_BACKUP_DIR, `backup-${fecha}.db`);
+  fs.copyFileSync(SQLITE_DB_PATH, destino);
+  console.log(`[Backup] Copia creada: ${destino}`);
+  // Eliminar backups viejos si hay más de SQLITE_MAX_BACKUPS
+  const archivos = fs.readdirSync(SQLITE_BACKUP_DIR)
+    .filter(f => f.endsWith('.db'))
+    .map(f => ({ nombre: f, tiempo: fs.statSync(path.join(SQLITE_BACKUP_DIR, f)).mtimeMs }))
+    .sort((a, b) => a.tiempo - b.tiempo);
+  while (archivos.length > SQLITE_MAX_BACKUPS) {
+    const viejo = archivos.shift();
+    if (viejo) {
+      fs.unlinkSync(path.join(SQLITE_BACKUP_DIR, viejo.nombre));
+      console.log(`[Backup] Eliminado backup antiguo: ${viejo.nombre}`);
+    }
+  }
+}
 import { Router, Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
