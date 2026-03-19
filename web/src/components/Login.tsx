@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import SiberianoLogo from '../assets/Siberiano.png';
+import { useState, useRef } from 'react';
+import { Wine, User, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 interface LoginProps { onLogin: () => void; }
 
@@ -8,215 +8,248 @@ export function Login({ onLogin }: LoginProps) {
   const [pass, setPass] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPass, setShowPass] = useState(false);
+  const userInputRef = useRef<HTMLInputElement>(null);
+
+  // Autofocus usuario al montar
+  React.useEffect(() => {
+    userInputRef.current?.focus();
+  }, []);
+
+  // Submit con Enter en cualquier campo
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleSubmit(e as any);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
-    // Credenciales válidas
-    const validUser = 'admin';
-    const validPass = 'admin123';
-    
-    try {
+    setTimeout(() => {
+      // Simulación de login (reemplazar por API real)
+      const validUser = 'admin';
+      const validPass = 'admin123';
       if (user === validUser && pass === validPass) {
         try {
           localStorage.setItem('authToken', 'ok');
           localStorage.setItem('userRole', 'ADMIN');
-        } catch (err) {
-          console.error('No se pudo guardar sesión en localStorage', err);
-          // Igual permitimos entrar en modo demo aunque el storage esté bloqueado.
-        }
+        } catch {}
         onLogin();
-        return;
+      } else {
+        setError('Usuario o contraseña incorrecta');
       }
-      setError('Usuario o contraseña incorrecta');
-    } finally {
       setLoading(false);
-    }
+    }, 900);
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)',
-      fontFamily: "'Segoe UI', system-ui, sans-serif",
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
-      {/* Partículas decorativas */}
-      <div style={{
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-        background: 'radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 177, 66, 0.2) 0%, transparent 50%)'
-      }} />
-      
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '100%',
-        padding: '2rem'
-      }}>
-        <div style={{
-          display: 'flex',
-          maxWidth: '900px',
-          width: '100%',
-          borderRadius: '24px',
-          overflow: 'hidden',
-          boxShadow: '0 25px 80px rgba(0, 0, 0, 0.5)'
-        }}>
-          {/* Panel izquierdo - Branding */}
-          <div style={{
-            flex: 1,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            padding: '3rem',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            color: 'white',
-            position: 'relative'
-          }}>
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
-            }} />
-            <img
-              src={SiberianoLogo}
-              alt="Siberiano"
-              style={{
-                width: '140px',
-                height: '140px',
-                objectFit: 'contain',
-                marginBottom: '1rem',
-                filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.35))'
-              }}
-            />
-            <h1 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '0.5rem', textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}>SIBERIANO</h1>
-            <p style={{ fontSize: '1.1rem', opacity: 0.9, textAlign: 'center', maxWidth: '300px' }}>Sistema Profesional de Control de Inventario</p>
-            <div style={{ marginTop: '2rem', display: 'flex', gap: '1.5rem' }}>
-              {['📊', '💰', '📦'].map((icon, i) => (
-                <div key={i} style={{
-                  background: 'rgba(255,255,255,0.15)',
-                  padding: '1rem 1.5rem',
-                  borderRadius: '16px',
-                  backdropFilter: 'blur(10px)'
-                }}>
-                  <span style={{ fontSize: '1.5rem' }}>{icon}</span>
-                </div>
-              ))}
-            </div>
+    <div className="login-bg">
+      <div className="login-center">
+        <div className="login-card animate-in">
+          <div className="login-logo">
+            <Wine size={64} color="var(--color-primary)" strokeWidth={1.5} />
           </div>
-          
-          {/* Panel derecho - Login */}
-          <div style={{
-            flex: 1,
-            background: 'white',
-            padding: '3rem',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center'
-          }}>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#1a1a2e', marginBottom: '0.5rem' }}>Bienvenido</h2>
-            <p style={{ color: '#6b7280', marginBottom: '2rem' }}>Ingresa tus credenciales para continuar</p>
-            
-            <form onSubmit={handleSubmit}>
-              {error && (
-                <div style={{
-                  marginBottom: '1.25rem',
-                  padding: '0.875rem 1rem',
-                  background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
-                  borderRadius: '12px',
-                  color: '#7f1d1d',
-                  fontWeight: 700
-                }}>
-                  {error}
-                </div>
-              )}
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Usuario</label>
-                <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }}>👤</span>
-                  <input
-                    type="text"
-                    value={user}
-                    onChange={(e) => setUser(e.target.value)}
-                    placeholder="Ingresa tu usuario"
-                    style={{
-                      width: '100%',
-                      padding: '1rem 1rem 1rem 3rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '12px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = '#667eea'}
-                    onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-                  />
-                </div>
+          <h1 className="login-title">Siberiano</h1>
+          <p className="login-subtitle">Sistema de Inventario</p>
+          <form className="login-form" onSubmit={handleSubmit} autoComplete="off">
+            {error && (
+              <div className="login-error">
+                <AlertCircle size={20} style={{marginRight:8}} /> {error}
               </div>
-              
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Contraseña</label>
-                <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }}>🔒</span>
-                  <input
-                    type="password"
-                    value={pass}
-                    onChange={(e) => setPass(e.target.value)}
-                    placeholder="Ingresa tu contraseña"
-                    style={{
-                      width: '100%',
-                      padding: '1rem 1rem 1rem 3rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '12px',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = '#667eea'}
-                    onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-                  />
-                </div>
-              </div>
-              
+            )}
+            <div className="login-input-group">
+              <span className="login-input-icon"><User size={20} /></span>
+              <input
+                ref={userInputRef}
+                type="text"
+                className="login-input"
+                value={user}
+                onChange={e => setUser(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Usuario"
+                autoFocus
+                autoComplete="username"
+                spellCheck={false}
+                required
+              />
+            </div>
+            <div className="login-input-group">
+              <span className="login-input-icon"><Lock size={20} /></span>
+              <input
+                type={showPass ? 'text' : 'password'}
+                className="login-input"
+                value={pass}
+                onChange={e => setPass(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Contraseña"
+                autoComplete="current-password"
+                required
+              />
               <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '1rem',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-                  transform: loading ? 'scale(0.98)' : 'scale(1)'
-                }}
+                type="button"
+                className="login-eye-btn"
+                tabIndex={-1}
+                aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                onClick={() => setShowPass(v => !v)}
               >
-                {loading ? '⏳ Verificando...' : '🚀 Iniciar Sesión'}
+                {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
-            </form>
-            
-            <div style={{ marginTop: '2rem', padding: '1rem', background: '#f3f4f6', borderRadius: '12px', textAlign: 'center' }}>
-              <p style={{ margin: 0, fontSize: '0.875rem', color: '#6b7280' }}>
-                <strong style={{ color: '#374151' }}>Demo:</strong> admin / admin123
-              </p>
             </div>
-          </div>
+            <button
+              type="submit"
+              className="login-btn"
+              disabled={loading}
+              style={{opacity: loading ? 0.7 : 1}}
+            >
+              {loading ? <span className="login-spinner" /> : 'Iniciar sesión'}
+            </button>
+          </form>
         </div>
       </div>
+      <style>{`
+        .login-bg {
+          min-height: 100vh;
+          background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface) 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .login-center {
+          width: 100vw;
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .login-card {
+          background: var(--color-surface);
+          border-radius: var(--radius-xl);
+          box-shadow: var(--shadow-lg);
+          padding: 2.5rem 2.2rem 2.2rem 2.2rem;
+          min-width: 340px;
+          max-width: 370px;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          animation: fadeSlideIn 0.7s cubic-bezier(.4,1.2,.4,1) both;
+        }
+        .login-logo {
+          margin-bottom: 1.2rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .login-title {
+          font-size: 2.2rem;
+          font-weight: 800;
+          color: var(--color-primary);
+          margin-bottom: 0.2rem;
+          letter-spacing: 0.01em;
+        }
+        .login-subtitle {
+          color: var(--color-text-muted);
+          font-size: 1.05rem;
+          margin-bottom: 2.2rem;
+        }
+        .login-form {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 1.2rem;
+        }
+        .login-input-group {
+          position: relative;
+          width: 100%;
+        }
+        .login-input-icon {
+          position: absolute;
+          left: 1rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: var(--color-primary);
+          opacity: 0.85;
+          pointer-events: none;
+        }
+        .login-input {
+          width: 100%;
+          padding: 0.85rem 2.7rem 0.85rem 2.7rem;
+          border: 1.5px solid var(--color-border);
+          border-radius: var(--radius-lg);
+          font-size: 1.05rem;
+          background: var(--color-surface-2);
+          color: var(--color-text);
+          outline: none;
+          transition: border-color 0.2s;
+        }
+        .login-input:focus {
+          border-color: var(--color-primary);
+        }
+        .login-eye-btn {
+          position: absolute;
+          right: 0.7rem;
+          top: 50%;
+          transform: translateY(-50%);
+          background: none;
+          border: none;
+          color: var(--color-text-muted);
+          cursor: pointer;
+          padding: 0.2rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .login-btn {
+          width: 100%;
+          padding: 0.95rem 0;
+          background: var(--color-primary);
+          color: #fff;
+          border: none;
+          border-radius: var(--radius-lg);
+          font-size: 1.1rem;
+          font-weight: 700;
+          box-shadow: var(--shadow-md);
+          cursor: pointer;
+          transition: background 0.18s, transform 0.18s;
+        }
+        .login-btn:active {
+          transform: scale(0.98);
+        }
+        .login-btn:disabled {
+          background: var(--color-primary-light);
+          cursor: not-allowed;
+        }
+        .login-error {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: rgba(239,68,68,0.12);
+          color: var(--color-danger);
+          border-radius: var(--radius-md);
+          padding: 0.7rem 1rem;
+          font-size: 1rem;
+          font-weight: 600;
+          margin-bottom: 0.2rem;
+        }
+        .login-spinner {
+          display: inline-block;
+          width: 1.3em;
+          height: 1.3em;
+          border: 3px solid var(--color-primary-light);
+          border-top: 3px solid var(--color-primary);
+          border-radius: 50%;
+          animation: spin 0.7s linear infinite;
+          vertical-align: middle;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes fadeSlideIn {
+          0% { opacity: 0; transform: translateY(40px) scale(0.98); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
     </div>
   );
 }
