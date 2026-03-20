@@ -33,14 +33,14 @@ export function Ganancias() {
 
   if (error) return (
     <div style={{
-      background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+      background: '#fee2e2',
       borderRadius: '20px',
       padding: '2rem',
       textAlign: 'center'
     }}>
       <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
-      <p style={{ margin: 0, color: '#7f1d1d', fontWeight: 700 }}>No se pudo cargar</p>
-      <p style={{ margin: '0.75rem 0 1.5rem 0', color: '#991b1b' }}>{error}</p>
+      <p style={{ margin: 0, color: '#450a0a', fontWeight: 700 }}>No se pudo cargar</p>
+      <p style={{ margin: '0.75rem 0 1.5rem 0', color: '#450a0a', fontWeight: 700 }}>{error}</p>
       <button onClick={load} style={{
         padding: '0.75rem 1.25rem',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -64,10 +64,11 @@ export function Ganancias() {
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         <div style={{
-          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+          background: '#dcfce7',
           borderRadius: '16px',
           padding: '1.5rem',
-          color: 'white',
+          color: '#052e16',
+          fontWeight: 700,
           boxShadow: '0 10px 40px rgba(16, 185, 129, 0.3)',
           transition: 'transform 0.3s'
         }}>
@@ -79,10 +80,11 @@ export function Ganancias() {
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+          background: '#0ea5e9',
           borderRadius: '16px',
           padding: '1.5rem',
-          color: 'white',
+          color: '#0c1a3d',
+          fontWeight: 700,
           boxShadow: '0 10px 40px rgba(59, 130, 246, 0.3)',
           transition: 'transform 0.3s'
         }}>
@@ -94,11 +96,12 @@ export function Ganancias() {
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+          background: '#f5c800',
           borderRadius: '16px',
           padding: '1.5rem',
-          color: 'white',
-          boxShadow: '0 10px 40px rgba(245, 158, 11, 0.3)',
+          color: '#1a1000',
+          fontWeight: 700,
+          boxShadow: '0 10px 40px rgba(245, 200, 0, 0.3)',
           transition: 'transform 0.3s'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
@@ -109,10 +112,11 @@ export function Ganancias() {
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+          background: '#fee2e2',
           borderRadius: '16px',
           padding: '1.5rem',
-          color: 'white',
+          color: '#450a0a',
+          fontWeight: 700,
           boxShadow: '0 10px 40px rgba(139, 92, 246, 0.3)',
           transition: 'transform 0.3s'
         }}>
