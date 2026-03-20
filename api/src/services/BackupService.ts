@@ -1,3 +1,6 @@
+
+import fs from 'fs';
+import path from 'path';
 // --- BACKUP AUTOMÁTICO DE SQLITE (físico) ---
 const SQLITE_DB_PATH = path.resolve(__dirname, '../../prisma/dev.db');
 const SQLITE_BACKUP_DIR = path.resolve(__dirname, '../../backups');
@@ -25,8 +28,6 @@ export function crearBackup() {
   }
 }
 import { Router, Request, Response } from 'express';
-import fs from 'fs';
-import path from 'path';
 import prisma from '../lib/prisma';
 
 const router = Router();
@@ -34,12 +35,11 @@ const router = Router();
 // Obtener todos los datos para backup
 router.get('/full', async (req: Request, res: Response) => {
   try {
-    const [products, clients, sales, users, notes] = await Promise.all([
+    const [products, clients, sales, users] = await Promise.all([
       prisma.product.findMany(),
       prisma.client.findMany(),
       prisma.sale.findMany(),
-      prisma.user.findMany(),
-      prisma.note.findMany()
+      prisma.user.findMany()
     ]);
 
     const backup = {
@@ -49,15 +49,13 @@ router.get('/full', async (req: Request, res: Response) => {
         products,
         clients,
         sales,
-        users,
-        notes
+        users
       },
       estadisticas: {
         totalProductos: products.length,
         totalClientes: clients.length,
         totalVentas: sales.length,
-        totalUsuarios: users.length,
-        totalNotas: notes.length
+        totalUsuarios: users.length
       }
     };
 
@@ -80,7 +78,6 @@ router.post('/restore', async (req: Request, res: Response) => {
     // Limpiar tablas existentes
     await prisma.$transaction([
       prisma.sale.deleteMany(),
-      prisma.note.deleteMany(),
       prisma.client.deleteMany(),
       prisma.product.deleteMany()
     ]);
@@ -100,10 +97,7 @@ router.post('/restore', async (req: Request, res: Response) => {
       await prisma.sale.createMany({ data: datos.sales });
     }
 
-    // Restaurar notas
-    if (datos.notes?.length > 0) {
-      await prisma.note.createMany({ data: datos.notes });
-    }
+    // Notas eliminadas (modelo note no existe)
 
     res.json({ mensaje: 'Restauración completada exitosamente' });
   } catch (error) {
@@ -115,18 +109,17 @@ router.post('/restore', async (req: Request, res: Response) => {
 // Guardar backup en archivo
 router.post('/save-file', async (req: Request, res: Response) => {
   try {
-    const [products, clients, sales, users, notes] = await Promise.all([
+    const [products, clients, sales, users] = await Promise.all([
       prisma.product.findMany(),
       prisma.client.findMany(),
       prisma.sale.findMany(),
-      prisma.user.findMany(),
-      prisma.note.findMany()
+      prisma.user.findMany()
     ]);
 
     const backup = {
       fecha: new Date().toISOString(),
       version: '1.0.0',
-      datos: { products, clients, sales, users, notes }
+      datos: { products, clients, sales, users }
     };
 
     const backupsDir = path.join(__dirname, '../../backups');
