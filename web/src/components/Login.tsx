@@ -47,7 +47,12 @@ export function Login({ onLogin }: LoginProps) {
       <div className="login-center">
         <div className="login-card animate-in">
           <div className="login-logo">
-            <img src="/logo.png" alt="Siberiano" style={{width: 90, height: 90, objectFit: 'contain', borderRadius: '12px'}} />
+            <img 
+              src="/logo.png" 
+              alt="Siberiano"
+              onError={(e) => { e.currentTarget.style.display='none' }}
+              style={{width:90, height:90, objectFit:'contain', display:'block', margin:'0 auto'}} 
+            />
           </div>
           <h1 className="login-title">Siberiano</h1>
           <p className="login-subtitle">Sistema de Inventario</p>

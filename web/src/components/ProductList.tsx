@@ -79,8 +79,9 @@ export function ProductList() {
       {/* Header con estadísticas */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         <div style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: '#1a1a1a',
           borderRadius: '20px',
+          borderLeft: '4px solid #f5c800',
           padding: '1.5rem',
           color: 'white',
           boxShadow: '0 10px 40px rgba(102, 126, 234, 0.3)'
@@ -93,13 +94,13 @@ export function ProductList() {
             </div>
           </div>
         </div>
-        
         <div style={{
-          background: stockBajo > 0 ? 'linear-gradient(135deg, #f43f5e 0%, #ec4899 100%)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+          background: '#1a1a1a',
           borderRadius: '20px',
+          borderLeft: '4px solid #ef4444',
           padding: '1.5rem',
           color: 'white',
-          boxShadow: stockBajo > 0 ? '0 10px 40px rgba(244, 63, 94, 0.3)' : '0 10px 40px rgba(16, 185, 129, 0.3)'
+          boxShadow: '0 10px 40px rgba(244, 63, 94, 0.3)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <span style={{ fontSize: '2.5rem' }}>{stockBajo > 0 ? '⚠️' : '✅'}</span>
@@ -109,10 +110,10 @@ export function ProductList() {
             </div>
           </div>
         </div>
-        
         <div style={{
-          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+          background: '#1a1a1a',
           borderRadius: '20px',
+          borderLeft: '4px solid #22c55e',
           padding: '1.5rem',
           color: 'white',
           boxShadow: '0 10px 40px rgba(245, 158, 11, 0.3)'
@@ -200,12 +201,12 @@ export function ProductList() {
                 }}>
                   <td style={{ padding: '1rem 1.25rem' }}>
                     <code style={{
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      background: '#1a1000',
+                      color: '#f5c800',
+                      fontWeight: 600,
+                      borderRadius: '6px',
                       padding: '0.375rem 0.75rem',
-                      borderRadius: '8px',
-                      color: 'white',
-                      fontSize: '0.875rem',
-                      fontWeight: 500
+                      fontSize: '0.875rem'
                     }}>{p.codigo}</code>
                   </td>
                   <td style={{ padding: '1rem 1.25rem' }}>
