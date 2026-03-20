@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Wine, User, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 interface LoginProps { onLogin: () => void; }
@@ -47,7 +47,7 @@ export function Login({ onLogin }: LoginProps) {
       <div className="login-center">
         <div className="login-card animate-in">
           <div className="login-logo">
-            <Wine size={64} color="var(--color-primary)" strokeWidth={1.5} />
+            <img src="/logo.png" alt="Siberiano" style={{width: 80, height: 80, objectFit: 'contain'}} />
           </div>
           <h1 className="login-title">Siberiano</h1>
           <p className="login-subtitle">Sistema de Inventario</p>

@@ -121,7 +121,7 @@ export function Facturacion() {
     pendientes: invoices.filter(i => i.estado === 'PENDIENTE').length,
     aprobadas: invoices.filter(i => i.estado === 'APROBADO').length,
     anuladas: invoices.filter(i => i.estado === 'ANULADO').length,
-    totalMonto: invoices.filter(i => i.estado !== 'ANULADO').reduce((s, i) => s + i.total, 0)
+    totalMonto: invoices.filter(i => i.estado !== 'ANULADO').reduce((s, i) => s + i.monto_total, 0)
   };
 
   const getStatusColor = (status: string) => {
@@ -250,9 +250,9 @@ export function Facturacion() {
             </label>
             <input
               type="text"
-              value={newInvoice.cliente}
-              onChange={e => setNewInvoice({ ...newInvoice, cliente: e.target.value })}
-              placeholder="Nombre del cliente"
+              value={newInvoice.cliente_id}
+              onChange={e => setNewInvoice({ ...newInvoice, cliente_id: e.target.value })}
+              placeholder="ID del cliente"
               style={{
                 width: '100%',
                 padding: '0.75rem',
@@ -273,11 +273,11 @@ export function Facturacion() {
                 <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '1rem', alignItems: 'end' }}>
                   <input
                     type="text"
-                    placeholder="Producto"
-                    value={item.producto}
+                    placeholder="ID Producto"
+                    value={item.producto_id}
                     onChange={e => {
                       const updated = [...newInvoice.items];
-                      updated[idx].producto = e.target.value;
+                      updated[idx].producto_id = e.target.value;
                       setNewInvoice({ ...newInvoice, items: updated });
                     }}
                     style={{
@@ -341,7 +341,7 @@ export function Facturacion() {
               <button
                 onClick={() => setNewInvoice({
                   ...newInvoice,
-                  items: [...newInvoice.items, { producto: '', cantidad: 1, precio: 0 }]
+                  items: [...newInvoice.items, { producto_id: '', cantidad: 1, precio: 0 }]
                 })}
                 style={{
                   padding: '0.75rem 1rem',
@@ -427,7 +427,7 @@ export function Facturacion() {
                         <td style={{ padding: '1rem', fontWeight: 600, color: '#1e293b' }}>{inv.numero}</td>
                         <td style={{ padding: '1rem', color: '#475569' }}>{inv.cliente}</td>
                         <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: '#1e293b' }}>
-                          ${inv.total.toLocaleString()}
+                          ${inv.monto_total.toLocaleString()}
                         </td>
                         <td style={{ padding: '1rem', textAlign: 'center' }}>
                           <span style={{
@@ -466,7 +466,7 @@ export function Facturacion() {
             <div style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #f1f5f9' }}>
               <p style={{ margin: '0.5rem 0', color: '#475569' }}><strong>Cliente:</strong> {selectedInvoice.cliente}</p>
               <p style={{ margin: '0.5rem 0', color: '#475569' }}><strong>Fecha:</strong> {new Date(selectedInvoice.fecha).toLocaleDateString('es-ES')}</p>
-              <p style={{ margin: '0.5rem 0', color: '#475569' }}><strong>Total:</strong> <span style={{ fontSize: '1.25rem', color: '#667eea', fontWeight: 700 }}>${selectedInvoice.total.toLocaleString()}</span></p>
+              <p style={{ margin: '0.5rem 0', color: '#475569' }}><strong>Total:</strong> <span style={{ fontSize: '1.25rem', color: '#667eea', fontWeight: 700 }}>${selectedInvoice.monto_total.toLocaleString()}</span></p>
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>

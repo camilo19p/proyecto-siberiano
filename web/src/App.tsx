@@ -46,22 +46,23 @@ export default function App() {
   ];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f1f5f9' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
       {/* Sidebar */}
       <aside style={{
         width: '280px',
-        background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
-        color: 'white',
+        background: 'var(--color-bg)',
+        color: 'var(--color-text)',
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
-        padding: '0'
+        boxShadow: '0 10px 40px rgba(0,0,0,0.7)',
+        padding: '0',
+        borderRight: '1px solid var(--color-border)'
       }}>
         {/* Logo Section */}
         <div style={{
           padding: '2rem 1.5rem',
-          borderBottom: '1px solid rgba(255,255,255,0.1)',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+          borderBottom: '1px solid var(--color-border)',
+          background: 'var(--color-surface)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <img
@@ -75,8 +76,8 @@ export default function App() {
               }}
             />
             <div>
-              <div style={{ fontWeight: 700, fontSize: '1.25rem' }}>SIBERIANO</div>
-              <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>Sistema de Control</div>
+              <div style={{ fontWeight: 700, fontSize: '1.25rem', color: 'var(--color-primary)' }}>SIBERIANO</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Sistema de Control</div>
             </div>
           </div>
         </div>
@@ -97,19 +98,21 @@ export default function App() {
                 border: 'none',
                 borderRadius: '12px',
                 cursor: 'pointer',
-                background: page === n.id ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'rgba(255,255,255,0.05)',
-                color: 'white',
+                background: page === n.id ? 'var(--color-primary)' : 'var(--color-surface-2)',
+                color: page === n.id ? '#000' : 'var(--color-text)',
                 textAlign: 'left',
                 transition: 'all 0.3s',
-                boxShadow: page === n.id ? '0 4px 15px rgba(102, 126, 234, 0.4)' : 'none',
+                boxShadow: page === n.id ? '0 4px 15px rgba(245, 200, 0, 0.25)' : 'none',
                 fontSize: '0.95rem',
-                fontWeight: page === n.id ? 600 : 500
+                fontWeight: page === n.id ? 700 : 500,
+                borderLeft: page === n.id ? '6px solid var(--color-primary)' : '6px solid transparent',
+                outline: page === n.id ? '2px solid var(--color-primary-light)' : 'none',
               }}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1rem' }}>
                 {n.icon} {n.label}
               </span>
-              <span style={{ fontSize: '0.75rem', opacity: 0.7, paddingLeft: '1.75rem' }}>{n.desc}</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', paddingLeft: '1.75rem' }}>{n.desc}</span>
             </button>
           ))}
         </nav>
@@ -117,8 +120,8 @@ export default function App() {
         {/* Logout Button */}
         <div style={{
           padding: '1.5rem',
-          borderTop: '1px solid rgba(255,255,255,0.1)',
-          background: 'rgba(0,0,0,0.2)'
+          borderTop: '1px solid var(--color-border)',
+          background: 'var(--color-surface-2)'
         }}>
           <button
             onClick={handleLogout}
@@ -131,13 +134,13 @@ export default function App() {
               border: 'none',
               borderRadius: '12px',
               cursor: 'pointer',
-              background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-              color: 'white',
+              background: 'var(--color-primary-dark)',
+              color: '#000',
               textAlign: 'center',
               transition: 'all 0.3s',
-              fontWeight: 600,
+              fontWeight: 700,
               fontSize: '0.95rem',
-              boxShadow: '0 2px 8px rgba(220, 38, 38, 0.3)'
+              boxShadow: '0 2px 8px rgba(245, 200, 0, 0.15)'
             }}
           >
             <LogOut size={18} /> Cerrar Sesión
@@ -150,7 +153,7 @@ export default function App() {
         flex: 1,
         padding: '2rem',
         overflow: 'auto',
-        background: '#f1f5f9'
+        background: 'var(--color-surface)'
       }}>
         <div style={{
           maxWidth: '1400px',
