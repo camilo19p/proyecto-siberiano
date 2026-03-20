@@ -55,14 +55,15 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
               alignItems: 'center',
               gap: '0.75rem',
               background: notif.type === 'success' ? '#dcfce7' :
-                         notif.type === 'error' ? '#fee2e2' :
-                         notif.type === 'warning' ? '#fef3c7' : '#dbeafe',
-              color: notif.type === 'success' ? '#166534' :
-                     notif.type === 'error' ? '#dc2626' :
-                     notif.type === 'warning' ? '#92400e' : '#1e40af',
+                    notif.type === 'error' ? '#fee2e2' :
+                    notif.type === 'warning' ? '#f5c800' : '#dbeafe',
+              color: notif.type === 'success' ? '#052e16' :
+                notif.type === 'error' ? '#450a0a' :
+                notif.type === 'warning' ? '#1a1000' : '#0c1a3d',
+              fontWeight: 700,
               border: `1px solid ${notif.type === 'success' ? '#86efac' :
-                                   notif.type === 'error' ? '#fecaca' :
-                                   notif.type === 'warning' ? '#fde68a' : '#bfdbfe'}`
+                    notif.type === 'error' ? '#fecaca' :
+                    notif.type === 'warning' ? '#f5c800' : '#bfdbfe'}`
             }}
           >
             <span style={{ fontSize: '1.25rem' }}>

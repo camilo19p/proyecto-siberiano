@@ -174,9 +174,9 @@ export function GestionUsuarios() {
 
   const getRoleColor = (role: string) => {
     switch(role) {
-      case 'ADMIN': return { bg: '#fecaca', text: '#dc2626', border: '#ef4444' };
-      case 'GERENTE': return { bg: '#fed7aa', text: '#ea580c', border: '#f97316' };
-      case 'VENDEDOR': return { bg: '#fbbf24', text: '#92400e', border: '#f59e0b' };
+      case 'ADMIN': return { bg: '#fee2e2', text: '#450a0a', border: '#ef4444' };
+      case 'GERENTE': return { bg: '#f5c800', text: '#1a1000', border: '#f5c800' };
+      case 'VENDEDOR': return { bg: '#dcfce7', text: '#052e16', border: '#22c55e' };
       default: return { bg: '#f1f5f9', text: '#64748b', border: '#cbd5e1' };
     }
   };
@@ -490,7 +490,7 @@ export function GestionUsuarios() {
                             color: roleColor.text,
                             border: `2px solid ${roleColor.border}`,
                             borderRadius: '6px',
-                            fontWeight: 600,
+                            fontWeight: 700,
                             fontSize: '0.75rem'
                           }}>
                             {getRoleIcon(u.rol)} {u.rol}
@@ -501,10 +501,10 @@ export function GestionUsuarios() {
                             display: 'inline-block',
                             padding: '0.5rem 0.75rem',
                             background: u.estado === 'ACTIVO' ? '#dcfce7' : '#fee2e2',
-                            color: u.estado === 'ACTIVO' ? '#16a34a' : '#dc2626',
+                            color: u.estado === 'ACTIVO' ? '#052e16' : '#450a0a',
                             border: `2px solid ${u.estado === 'ACTIVO' ? '#22c55e' : '#ef4444'}`,
                             borderRadius: '6px',
-                            fontWeight: 600,
+                            fontWeight: 700,
                             fontSize: '0.75rem'
                           }}>
                             {u.estado === 'ACTIVO' ? '✓ ACTIVO' : '✕ INACTIVO'}
