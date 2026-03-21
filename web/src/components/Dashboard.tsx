@@ -1,7 +1,7 @@
 
 
 import { useState, useEffect } from 'react';
-import { fetchUltimoInventario, fetchInventarioPorFecha } from '../services/inventario';
+import axios from 'axios';
 
 
 interface Note {
@@ -13,35 +13,42 @@ interface Note {
 export function Dashboard() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<number>(new Date().getDate());
-  const [notes, setNotes] = useState<Note[]>(() => {
-    const saved = localStorage.getItem('siberiano_notes');
-    return saved ? JSON.parse(saved) : [];
-  });
   const [newNote, setNewNote] = useState('');
-  const [inventarioPreview, setInventarioPreview] = useState<any | null>(null);
+  const [notasPorDia, setNotasPorDia] = useState<{ [key: string]: string }>(() => {
+    const all = {};
+    for (let i = 1; i <= 31; i++) {
+      const key = `nota-${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+      const val = localStorage.getItem(key);
+      if (val) all[key] = val;
+    }
+    return all;
+  });
+  const [inventarios, setInventarios] = useState<any[]>([]);
   const [inventarioSelected, setInventarioSelected] = useState<any | null>(null);
-  const [inventarioLoading, setInventarioLoading] = useState(true);
 
-  // Solo cargar el inventario más reciente una vez
+  // Cargar todos los inventarios una vez
   useEffect(() => {
-    setInventarioLoading(true);
-    fetchUltimoInventario().then(data => {
-      setInventarioPreview(data);
-      setInventarioLoading(false);
+    axios.get('/api/inventario').then(res => {
+      setInventarios(Array.isArray(res.data) ? res.data : res.data.value || []);
     });
   }, []);
 
-  // Buscar inventario por día seleccionado
+  // Filtrar inventario por día seleccionado
   useEffect(() => {
-    const fecha = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
-    fetchInventarioPorFecha(fecha).then(data => {
-      setInventarioSelected(data);
+    const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay);
+    const found = inventarios.find(inv => {
+      const invDate = new Date(inv.fecha);
+      return invDate.toDateString() === selectedDate.toDateString();
     });
-  }, [currentDate, selectedDay]);
+    setInventarioSelected(found || null);
+  }, [inventarios, currentDate, selectedDay]);
 
-  useEffect(() => {
-    localStorage.setItem('siberiano_notes', JSON.stringify(notes));
-  }, [notes]);
+  // Guardar nota en localStorage
+  const handleSaveNote = () => {
+    const key = `nota-${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
+    localStorage.setItem(key, newNote);
+    setNotasPorDia({ ...notasPorDia, [key]: newNote });
+  };
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -68,9 +75,6 @@ export function Dashboard() {
   // Si se requiere agregar notas por día, restaurar la lógica aquí
   const handleAddNote = () => {};
 
-  const handleDeleteNote = (id: string) => {
-    setNotes(notes.filter(n => n.id !== id));
-  };
 
   const daysInMonth = getDaysInMonth(currentDate);
   const firstDay = getFirstDayOfMonth(currentDate);
@@ -80,6 +84,8 @@ export function Dashboard() {
   const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
+  const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay);
+  const selectedKey = `nota-${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '16px', alignItems: 'start', minHeight: '100vh' }}>
       {/* Columna izquierda: Calendario */}
@@ -107,8 +113,10 @@ export function Dashboard() {
             <div key={`empty-${i}`} />
           ))}
           {days.map(day => {
-            const isToday = day === 21 && currentDate.getMonth() === 2 && currentDate.getFullYear() === 2026;
+            const isToday = day === new Date().getDate() && currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
             const isSelected = day === selectedDay;
+            const key = `nota-${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const hasNote = !!notasPorDia[key];
             return (
               <div
                 key={day}
@@ -122,13 +130,42 @@ export function Dashboard() {
                   fontWeight: isSelected || isToday ? 700 : 500,
                   border: isSelected ? '2px solid #f5c800' : '1px solid var(--color-border)',
                   cursor: 'pointer',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  position: 'relative'
                 }}
               >
                 {day}
+                {hasNote && (
+                  <span style={{
+                    display: 'block',
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: '#f5c800',
+                    margin: '4px auto 0',
+                  }} />
+                )}
               </div>
             );
           })}
+        </div>
+
+        {/* Input de nota por día */}
+        <div style={{ marginTop: 20, display: 'flex', gap: 8 }}>
+          <input
+            type="text"
+            value={notasPorDia[selectedKey] ?? newNote}
+            placeholder={`Agregar nota para ${selectedDate.toLocaleDateString('es-CO')}...`}
+            onChange={e => setNewNote(e.target.value)}
+            style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid var(--color-border)', fontSize: 15 }}
+          />
+          <button
+            onClick={handleSaveNote}
+            style={{ background: '#f5c800', color: '#0a0a0a', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 20, width: 40, height: 40, cursor: 'pointer' }}
+            title="Guardar nota"
+          >
+            +
+          </button>
         </div>
       </div>
 
@@ -137,45 +174,9 @@ export function Dashboard() {
         {/* Notas & Recordatorios */}
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 20, padding: 24 }}>
           <h3 style={{ margin: '0 0 1rem 0', color: 'var(--color-text)', fontSize: 18, fontWeight: 700 }}>📝 Notas & Recordatorios</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 300, overflowY: 'auto' }}>
-            {notes.length === 0 ? (
-              <p style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem 0' }}>
-                Sin notas aún 📭
-              </p>
-            ) : (
-              notes.map(note => (
-                <div key={note.id} style={{
-                  padding: 12,
-                  background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-                  borderRadius: 12,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  gap: 12
-                }}>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, color: '#78350f', fontSize: 13, fontWeight: 600 }}>
-                      {note.date}
-                    </p>
-                    <p style={{ margin: '0.25rem 0 0 0', color: '#1f2937' }}>
-                      {note.text}
-                    </p>
-                  </div>
-                  <button onClick={() => handleDeleteNote(note.id)} style={{
-                    padding: '2px 8px',
-                    background: '#fee2e2',
-                    color: '#dc2626',
-                    border: 'none',
-                    borderRadius: 6,
-                    cursor: 'pointer',
-                    fontSize: 13
-                  }}>
-                    ✕
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
+            <div style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem 0' }}>
+              Usa el calendario para agregar notas por día.
+            </div>
         </div>
 
         {/* Acceso Rápido */}
@@ -197,7 +198,7 @@ export function Dashboard() {
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 20, padding: 24, marginTop: 0 }}>
           {/* Título dinámico */}
           {(() => {
-            const fechaSel = `${String(selectedDay).padStart(2, '0')}/${String(currentDate.getMonth() + 1).padStart(2, '0')}/${currentDate.getFullYear()}`;
+            const fechaSel = selectedDate.toLocaleDateString('es-CO', { weekday: 'short', year: 'numeric', month: 'short', day: '2-digit' });
             if (inventarioSelected) {
               return <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 16, color: 'var(--color-text)' }}>Último registro — {fechaSel}</div>;
             } else {
@@ -205,7 +206,7 @@ export function Dashboard() {
             }
           })()}
           {/* KPIs en una sola fila */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
             {/* VENDIDO */}
             <div style={{ background: '#dbeafe', color: '#1e3a5f', borderRadius: 12, padding: 12, textAlign: 'center' }}>
               <div style={{ fontSize: 12, textTransform: 'uppercase', fontWeight: 700, marginBottom: 4 }}>VENDIDO</div>
