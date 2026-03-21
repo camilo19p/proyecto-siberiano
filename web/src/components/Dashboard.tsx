@@ -48,6 +48,17 @@ export function Dashboard() {
     const key = `nota-${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
     localStorage.setItem(key, newNote);
     setNotasPorDia({ ...notasPorDia, [key]: newNote });
+    setNewNote('');
+  };
+
+  // Borrar nota del día seleccionado
+  const handleDeleteNote = () => {
+    const key = `nota-${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
+    localStorage.removeItem(key);
+    const updated = { ...notasPorDia };
+    delete updated[key];
+    setNotasPorDia(updated);
+    setNewNote('');
   };
 
   const getDaysInMonth = (date: Date) => {
@@ -150,22 +161,34 @@ export function Dashboard() {
           })}
         </div>
 
-        {/* Input de nota por día */}
-        <div style={{ marginTop: 20, display: 'flex', gap: 8 }}>
+        {/* Input de nota por día y mostrar nota guardada con botón borrar */}
+        <div style={{ marginTop: 20, display: 'flex', gap: 8, alignItems: 'center' }}>
           <input
             type="text"
             value={notasPorDia[selectedKey] ?? newNote}
             placeholder={`Agregar nota para ${selectedDate.toLocaleDateString('es-CO')}...`}
             onChange={e => setNewNote(e.target.value)}
             style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid var(--color-border)', fontSize: 15 }}
+            disabled={!!notasPorDia[selectedKey]}
           />
-          <button
-            onClick={handleSaveNote}
-            style={{ background: '#f5c800', color: '#0a0a0a', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 20, width: 40, height: 40, cursor: 'pointer' }}
-            title="Guardar nota"
-          >
-            +
-          </button>
+          {!notasPorDia[selectedKey] && (
+            <button
+              onClick={handleSaveNote}
+              style={{ background: '#f5c800', color: '#0a0a0a', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 20, width: 40, height: 40, cursor: 'pointer' }}
+              title="Guardar nota"
+            >
+              +
+            </button>
+          )}
+          {notasPorDia[selectedKey] && (
+            <button
+              onClick={handleDeleteNote}
+              style={{ background: 'transparent', color: '#d32f2f', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 22, width: 40, height: 40, cursor: 'pointer' }}
+              title="Borrar nota"
+            >
+              ×
+            </button>
+          )}
         </div>
       </div>
 
@@ -200,47 +223,44 @@ export function Dashboard() {
           {(() => {
             const fechaSel = selectedDate.toLocaleDateString('es-CO', { weekday: 'short', year: 'numeric', month: 'short', day: '2-digit' });
             if (inventarioSelected) {
-              return <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 16, color: 'var(--color-text)' }}>Último registro — {fechaSel}</div>;
+              return <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 16, color: 'var(--color-text)' }}>Último registro de inventario — {fechaSel}</div>;
             } else {
-              return <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 16, color: 'var(--color-text)' }}>Sin registro para {fechaSel}</div>;
+              return <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 16, color: 'var(--color-text)' }}>Sin registro de inventario para {fechaSel}</div>;
             }
           })()}
           {/* KPIs en una sola fila */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(5, 1fr)',
+              gap: '6px',
+              width: '100%'
+            }}
+          >
             {/* VENDIDO */}
-            <div style={{ background: '#dbeafe', color: '#1e3a5f', borderRadius: 12, padding: 12, textAlign: 'center' }}>
-              <div style={{ fontSize: 12, textTransform: 'uppercase', fontWeight: 700, marginBottom: 4 }}>VENDIDO</div>
-              <div style={{ fontSize: 20, fontWeight: 700 }}>
-                ${inventarioSelected?.totalVendido?.toLocaleString('es-CO') ?? '0'}
-              </div>
+            <div style={{ padding: '8px 4px', borderRadius: '10px', textAlign: 'center', minWidth: 0, overflow: 'hidden', background: '#dbeafe', color: '#1e3a5f' }}>
+              <div style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>VENDIDO</div>
+              <div style={{ fontSize: '13px', fontWeight: 700 }}>${inventarioSelected?.totalVendido?.toLocaleString('es-CO') ?? '0'}</div>
             </div>
             {/* GANANCIAS */}
-            <div style={{ background: '#dcfce7', color: '#052e16', borderRadius: 12, padding: 12, textAlign: 'center' }}>
-              <div style={{ fontSize: 12, textTransform: 'uppercase', fontWeight: 700, marginBottom: 4 }}>GANANCIAS</div>
-              <div style={{ fontSize: 20, fontWeight: 700 }}>
-                ${inventarioSelected?.ganancias?.toLocaleString('es-CO') ?? '0'}
-              </div>
+            <div style={{ padding: '8px 4px', borderRadius: '10px', textAlign: 'center', minWidth: 0, overflow: 'hidden', background: '#dcfce7', color: '#052e16' }}>
+              <div style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>GANANCIAS</div>
+              <div style={{ fontSize: '13px', fontWeight: 700 }}>${inventarioSelected?.ganancias?.toLocaleString('es-CO') ?? '0'}</div>
             </div>
             {/* PRÉSTAMO */}
-            <div style={{ background: '#fef9c3', color: '#1a1000', borderRadius: 12, padding: 12, textAlign: 'center' }}>
-              <div style={{ fontSize: 12, textTransform: 'uppercase', fontWeight: 700, marginBottom: 4 }}>PRÉSTAMO</div>
-              <div style={{ fontSize: 20, fontWeight: 700 }}>
-                ${inventarioSelected?.prestamo?.toLocaleString('es-CO') ?? '0'}
-              </div>
+            <div style={{ padding: '8px 4px', borderRadius: '10px', textAlign: 'center', minWidth: 0, overflow: 'hidden', background: '#fef9c3', color: '#1a1000' }}>
+              <div style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>PRÉSTAMO</div>
+              <div style={{ fontSize: '13px', fontWeight: 700 }}>${inventarioSelected?.prestamo?.toLocaleString('es-CO') ?? '0'}</div>
             </div>
             {/* DEUDA REST. */}
-            <div style={{ background: '#fee2e2', color: '#450a0a', borderRadius: 12, padding: 12, textAlign: 'center' }}>
-              <div style={{ fontSize: 12, textTransform: 'uppercase', fontWeight: 700, marginBottom: 4 }}>DEUDA REST.</div>
-              <div style={{ fontSize: 20, fontWeight: 700 }}>
-                ${inventarioSelected?.deudaRestante?.toLocaleString('es-CO') ?? '0'}
-              </div>
+            <div style={{ padding: '8px 4px', borderRadius: '10px', textAlign: 'center', minWidth: 0, overflow: 'hidden', background: '#fee2e2', color: '#450a0a' }}>
+              <div style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>DEUDA REST.</div>
+              <div style={{ fontSize: '13px', fontWeight: 700 }}>${inventarioSelected?.deudaRestante?.toLocaleString('es-CO') ?? '0'}</div>
             </div>
             {/* CAPITAL */}
-            <div style={{ background: '#ede9fe', color: '#1e0a3d', borderRadius: 12, padding: 12, textAlign: 'center' }}>
-              <div style={{ fontSize: 12, textTransform: 'uppercase', fontWeight: 700, marginBottom: 4 }}>CAPITAL</div>
-              <div style={{ fontSize: 20, fontWeight: 700 }}>
-                ${inventarioSelected?.capital?.toLocaleString('es-CO') ?? '0'}
-              </div>
+            <div style={{ padding: '8px 4px', borderRadius: '10px', textAlign: 'center', minWidth: 0, overflow: 'hidden', background: '#ede9fe', color: '#1e0a3d' }}>
+              <div style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>CAPITAL</div>
+              <div style={{ fontSize: '13px', fontWeight: 700 }}>${inventarioSelected?.capital?.toLocaleString('es-CO') ?? '0'}</div>
             </div>
           </div>
         </div>
