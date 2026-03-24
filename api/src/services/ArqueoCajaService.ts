@@ -17,46 +17,53 @@ export class ArqueoCajaService {
   static async cierreCaja(data: z.infer<typeof arqueoCajaSchema>) {
     const validated = arqueoCajaSchema.parse(data);
 
-    // Calcular saldo esperado: (Ventas Efectivo + Base) - Gastos
-    const saldoEsperado = (validated.ventasEfectivo + validated.base) - validated.gastos;
+    const saldoEsperado = validated.ventasEfectivo + validated.base - validated.gastos;
     const diferencia = validated.saldoReal - saldoEsperado;
 
-    // Guardar auditoría
-    const auditoria = await prisma.cajaAudit.create({
-      data: {
-        usuarioId: validated.usuarioId,
-        ventasEfectivo: validated.ventasEfectivo,
-        base: validated.base,
-        gastos: validated.gastos,
-        saldoEsperado,
-        saldoReal: validated.saldoReal,
-        diferencia,
-        observaciones: validated.observaciones,
-      },
-    });
+    if (validated.saldoReal < 0) {
+      throw new Error('El saldo real no puede ser negativo');
+    }
 
-    return {
-      success: true,
-      auditoria,
-      resultado: {
-        ventasEfectivo: validated.ventasEfectivo,
-        base: validated.base,
-        gastos: validated.gastos,
-        saldoEsperado,
-        saldoReal: validated.saldoReal,
-        diferencia,
-        estado: diferencia === 0 ? 'CUADRE' : 'DIFERENCIA',
-      },
-    };
+    try {
+      const auditoria = await prisma.cajaAudit.create({
+        data: {
+          usuarioId: validated.usuarioId,
+          ventasEfectivo: validated.ventasEfectivo,
+          base: validated.base,
+          gastos: validated.gastos,
+          saldoEsperado,
+          saldoReal: validated.saldoReal,
+          diferencia,
+          observaciones: validated.observaciones || null,
+        },
+      });
+
+      return {
+        success: true,
+        auditoria,
+        resultado: {
+          ventasEfectivo: validated.ventasEfectivo,
+          base: validated.base,
+          gastos: validated.gastos,
+          saldoEsperado,
+          saldoReal: validated.saldoReal,
+          diferencia,
+          estado: diferencia === 0 ? 'CUADRE' : 'DIFERENCIA',
+        },
+      };
+    } catch (error) {
+      throw new Error(`Error al cerrar caja: ${(error as Error).message}`);
+    }
   }
 
   /**
    * Obtiene historial de auditoría de caja
    */
   static async obtenerHistorial(limit: number = 10) {
+    const finalLimit = Number.isNaN(limit) || limit <= 0 ? 10 : limit;
     return await prisma.cajaAudit.findMany({
       orderBy: { fecha: 'desc' },
-      take: limit,
+      take: finalLimit,
     });
   }
 
@@ -64,6 +71,15 @@ export class ArqueoCajaService {
    * Obtiene resumen de caja para un período
    */
   static async obtenerResumen(fechaInicio: Date, fechaFin: Date) {
+    if (!(fechaInicio instanceof Date) || !(fechaFin instanceof Date) ||
+        isNaN(fechaInicio.getTime()) || isNaN(fechaFin.getTime())) {
+      throw new Error('Fechas inválidas para el resumen de caja');
+    }
+
+    if (fechaInicio > fechaFin) {
+      throw new Error('fechaInicio debe ser anterior o igual a fechaFin');
+    }
+
     const auditorias = await prisma.cajaAudit.findMany({
       where: {
         fecha: {
@@ -74,11 +90,11 @@ export class ArqueoCajaService {
     });
 
     const resumen = {
-      totalVentas: auditorias.reduce((s: number, a: any) => s + a.ventasEfectivo, 0),
-      totalGastos: auditorias.reduce((s: number, a: any) => s + a.gastos, 0),
-      totalDiferencias: auditorias.reduce((s: number, a: any) => s + Math.abs(a.diferencia), 0),
+      totalVentas: auditorias.reduce((s: number, a: any) => s + Number(a.ventasEfectivo || 0), 0),
+      totalGastos: auditorias.reduce((s: number, a: any) => s + Number(a.gastos || 0), 0),
+      totalDiferencias: auditorias.reduce((s: number, a: any) => s + Math.abs(Number(a.diferencia || 0)), 0),
       cierres: auditorias.length,
-      diferenciasDetectadas: auditorias.filter((a: any) => a.diferencia !== 0).length,
+      diferenciasDetectadas: auditorias.filter((a: any) => Number(a.diferencia || 0) !== 0).length,
     };
 
     return resumen;
