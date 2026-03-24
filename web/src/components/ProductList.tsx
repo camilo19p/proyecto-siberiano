@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Plus } from 'lucide-react';
 import { productService, Product } from '../services/api';
 import { ProductForm } from './ProductForm';
 
@@ -124,50 +125,44 @@ export function ProductList() {
       {/* Header con estadísticas */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         <div style={{
-          background: '#1a1a1a',
+          background: 'var(--color-surface)',
           borderRadius: '20px',
-          borderLeft: '4px solid #f5c800',
-          padding: '1.5rem',
-          color: 'white',
-          boxShadow: '0 10px 40px rgba(102, 126, 234, 0.3)'
+          border: '1px solid var(--color-border)',
+          padding: '1.5rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ fontSize: '2.5rem' }}>📦</span>
+            <span style={{ fontSize: '2.5rem', color: '#f5c800' }}>📦</span>
             <div>
-              <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.8 }}>Total Productos</p>
-              <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700 }}>{totalProductos}</p>
+              <p style={{ margin: 0, fontSize: '0.875rem', color: '#6b7280' }}>Total Productos</p>
+              <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700, color: '#f5c800' }}>{totalProductos}</p>
             </div>
           </div>
         </div>
         <div style={{
-          background: '#1a1a1a',
+          background: 'var(--color-surface)',
           borderRadius: '20px',
-          borderLeft: '4px solid #ef4444',
-          padding: '1.5rem',
-          color: 'white',
-          boxShadow: '0 10px 40px rgba(244, 63, 94, 0.3)'
+          border: '1px solid var(--color-border)',
+          padding: '1.5rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ fontSize: '2.5rem' }}>{stockBajo > 0 ? '⚠️' : '✅'}</span>
+            <span style={{ fontSize: '2.5rem', color: '#ef4444' }}>{stockBajo > 0 ? '⚠️' : '✅'}</span>
             <div>
-              <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.8 }}>Stock Bajo</p>
-              <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700 }}>{stockBajo}</p>
+              <p style={{ margin: 0, fontSize: '0.875rem', color: '#6b7280' }}>Stock Bajo</p>
+              <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700, color: '#ef4444' }}>{stockBajo}</p>
             </div>
           </div>
         </div>
         <div style={{
-          background: '#1a1a1a',
+          background: 'var(--color-surface)',
           borderRadius: '20px',
-          borderLeft: '4px solid #22c55e',
-          padding: '1.5rem',
-          color: 'white',
-          boxShadow: '0 10px 40px rgba(245, 158, 11, 0.3)'
+          border: '1px solid var(--color-border)',
+          padding: '1.5rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ fontSize: '2.5rem' }}>💰</span>
+            <span style={{ fontSize: '2.5rem', color: '#22c55e' }}>💰</span>
             <div>
-              <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.8 }}>Valor Inventario</p>
-              <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>${valorInventario.toLocaleString()}</p>
+              <p style={{ margin: 0, fontSize: '0.875rem', color: '#6b7280' }}>Valor Inventario</p>
+              <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: '#22c55e' }}>${valorInventario.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -203,17 +198,16 @@ export function ProductList() {
             alignItems: 'center',
             gap: '0.5rem',
             padding: '0.875rem 1.5rem',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
+            background: '#f5c800',
+            color: '#0a0a0a',
             border: 'none',
             borderRadius: '16px',
             cursor: 'pointer',
             fontWeight: 600,
             fontSize: '1rem',
-            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-            transition: 'transform 0.3s'
+            transition: 'all 0.2s'
           }}>
-          <span>✨</span> Nuevo Producto
+          <Plus size={20} /> Nuevo Producto
         </button>
       </div>
 
@@ -347,25 +341,33 @@ export function ProductList() {
                         <button onClick={() => { setEditProduct(p); setShowForm(true); }}
                           style={{
                             padding: '0.5rem 0.75rem',
-                            border: 'none',
-                            borderRadius: '10px',
-                            background: '#dbeafe',
-                            color: '#2563eb',
+                            background: 'transparent',
+                            border: '1px solid var(--color-border)',
+                            borderRadius: '6px',
+                            color: '#f5c800',
                             cursor: 'pointer',
                             fontSize: '0.875rem',
+                            fontWeight: 600,
                             transition: 'all 0.2s'
-                          }}>✏️</button>
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.background = '#f5c800'; e.currentTarget.style.color = '#0a0a0a'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#f5c800'; }}
+                        >✏️ Editar</button>
                         <button onClick={() => handleDelete(p.id)}
                           style={{
                             padding: '0.5rem 0.75rem',
-                            border: 'none',
-                            borderRadius: '10px',
-                            background: '#fee2e2',
-                            color: '#dc2626',
+                            background: 'transparent',
+                            border: '1px solid #ef4444',
+                            borderRadius: '6px',
+                            color: '#ef4444',
                             cursor: 'pointer',
                             fontSize: '0.875rem',
+                            fontWeight: 600,
                             transition: 'all 0.2s'
-                          }}>🗑️</button>
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = 'white'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#ef4444'; }}
+                        >🗑️ Eliminar</button>
                       </div>
                     </td>
                   </tr>
