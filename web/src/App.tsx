@@ -22,11 +22,21 @@ type Page = 'inicio' | 'pos' | 'productos' | 'inventario' | 'ganancias' | 'factu
 export default function App() {
   const [logged, setLogged] = useState(() => !!localStorage.getItem('authToken'));
   const [page, setPage] = useState<Page>('inicio');
+  const userRole = localStorage.getItem('userRole') || 'VENDEDOR';
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userRole');
     setLogged(false);
+  };
+
+  // Validar acceso por rol
+  const handlePageChange = (newPage: Page) => {
+    if ((newPage === 'ganancias' || newPage === 'reportes') && userRole !== 'ADMIN') {
+      setPage('inicio'); // Redirigir a Dashboard si no es ADMIN
+      return;
+    }
+    setPage(newPage);
   };
 
   if (!logged) return <Login onLogin={() => { setLogged(true); setPage('inicio'); }} />;
@@ -36,12 +46,12 @@ export default function App() {
     { id: 'pos' as Page, label: 'Punto de Venta', icon: <ShoppingCart size={18} />, desc: 'POS - Ventas rápidas' },
     { id: 'productos' as Page, label: 'Productos', icon: <Package size={18} />, desc: 'Gestiona el inventario' },
     { id: 'inventario' as Page, label: 'Inventario', icon: <ClipboardList size={18} />, desc: 'Control diario' },
-    { id: 'ganancias' as Page, label: 'Ganancias', icon: <TrendingUp size={18} />, desc: 'Análisis de ingresos' },
+    ...(userRole === 'ADMIN' ? [{ id: 'ganancias' as Page, label: 'Ganancias', icon: <TrendingUp size={18} />, desc: 'Análisis de ingresos' }] : []),
     { id: 'facturas' as Page, label: 'Facturas', icon: <FileText size={18} />, desc: 'Electrónica' },
-    { id: 'reportes' as Page, label: 'Reportes', icon: <BarChart2 size={18} />, desc: 'Análisis y datos' },
+    ...(userRole === 'ADMIN' ? [{ id: 'reportes' as Page, label: 'Reportes', icon: <BarChart2 size={18} />, desc: 'Análisis y datos' }] : []),
     { id: 'cuentas_pagar' as Page, label: 'Cuentas por Pagar', icon: <CreditCard size={18} />, desc: 'Deudas' },
     { id: 'cierre_caja' as Page, label: 'Cierre de Caja', icon: <Landmark size={18} />, desc: 'Cuadre diario' },
-    { id: 'usuarios' as Page, label: 'Usuarios', icon: <Users size={18} />, desc: 'Gestión de permisos' },
+    ...(userRole === 'ADMIN' ? [{ id: 'usuarios' as Page, label: 'Usuarios', icon: <Users size={18} />, desc: 'Gestión de permisos' }] : []),
     { id: 'historial' as Page, label: 'Historial', icon: <History size={18} />, desc: 'Registros anteriores' },
   ];
 
@@ -87,7 +97,7 @@ export default function App() {
           {nav.map(n => (
             <button
               key={n.id}
-              onClick={() => setPage(n.id)}
+              onClick={() => handlePageChange(n.id)}
               style={{
                 display: 'flex',
                 flexDirection: 'column',

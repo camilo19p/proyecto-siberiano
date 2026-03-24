@@ -13,6 +13,7 @@ export function Inventario() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resultado, setResultado] = useState<any>(null);
+  const [stockCritico, setStockCritico] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     let isMounted = true;
@@ -232,8 +233,12 @@ export function Inventario() {
                 const salieron = Math.max(0, p.stockInicial - quedaron);
                 const vendido = p.precioVenta * salieron;
                 const ganancia = (p.precioVenta - p.precioCompra) * salieron;
+                const esStockCritico = quedaron < 5 && quedaron > 0;
                 return (
-                  <tr key={p.id} style={{ borderTop: '1px solid #f1f5f9', transition: 'background 0.2s' }}>
+                  <tr key={p.id} style={{ 
+                    borderTop: '1px solid #f1f5f9', 
+                    transition: 'background 0.2s'
+                  }} title={esStockCritico ? 'Stock Crítico: menos de 5 unidades' : ''}>
                     <td style={{ padding: '1rem 1.25rem', fontWeight: 500 }}>
                       <span style={{
                         background: '#1a1000',
@@ -257,10 +262,10 @@ export function Inventario() {
                           width: '80px',
                           padding: '0.5rem 0.75rem',
                           textAlign: 'center',
-                          border: '2px solid var(--color-border)',
+                          border: esStockCritico ? '2px solid #ef4444' : '2px solid var(--color-border)',
                           borderRadius: '10px',
                           background: 'var(--color-surface-2)',
-                          color: 'var(--color-text)',
+                          color: esStockCritico ? '#ef4444' : 'var(--color-text)',
                           fontWeight: 600,
                           boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.05)'
                         }} />

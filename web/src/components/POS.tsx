@@ -42,11 +42,30 @@ export function POS() {
   const [amountReceived, setAmountReceived] = useState<number>(0);
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
     loadProducts();
     loadTodaysSales();
   }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F2' || e.key === 'f2') {
+        e.preventDefault();
+        if (cart.length > 0) setShowConfirmation(true);
+      } else if (e.key === 'F4' || e.key === 'f4') {
+        e.preventDefault();
+        const searchInput = document.querySelector('input[placeholder="Nombre o código..."]') as HTMLInputElement;
+        searchInput?.focus();
+      } else if (e.key === 'Escape' && cart.length > 0) {
+        handleClearCart();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cart]);
 
   const loadProducts = async () => {
     setLoading(true);
@@ -147,6 +166,13 @@ export function POS() {
   const handleClearCart = () => {
     setCart([]);
     setAmountReceived(0);
+    setShowConfirmation(false);
+  };
+
+  // Modal de confirmación
+  const handleConfirmSale = () => {
+    handleCheckout();
+    setShowConfirmation(false);
   };
 
   if (loading) {
@@ -588,6 +614,94 @@ export function POS() {
           </div>
         )}
       </div>
+
+      {/* Modal de Confirmación */}
+      {showConfirmation && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }} onClick={() => setShowConfirmation(false)}>
+          <div style={{
+            background: 'var(--color-surface)',
+            borderRadius: '20px',
+            padding: '2.5rem',
+            maxWidth: '450px',
+            boxShadow: '0 25px 80px rgba(0, 0, 0, 0.3)'
+          }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text)' }}>
+              ✅ Confirmar Venta
+            </h2>
+            
+            <div style={{ marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '2px solid var(--color-border)' }}>
+              <div style={{ display: 'grid', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#6b7280' }}>Subtotal:</span>
+                  <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{formatNum(total)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#6b7280' }}>Ganancia Est.:</span>
+                  <span style={{ fontWeight: 600, color: '#22c55e' }}>{formatNum(totalProfit)}</span>
+                </div>
+              </div>
+
+              {paymentMethod === 'cash' && (
+                <div style={{ background: 'rgba(245,200,0,0.1)', borderLeft: '4px solid #f5c800', padding: '1rem', borderRadius: '8px' }}>
+                  <p style={{ margin: 0, fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Monto recibido:</p>
+                  <p style={{ margin: '0.25rem 0 0.75rem 0', fontSize: '1.5rem', fontWeight: 700, color: '#f5c800' }}>
+                    {formatNum(amountReceived)}
+                  </p>
+                  <div style={{ borderTop: '1px solid #f5c800', paddingTop: '0.75rem' }}>
+                    <p style={{ margin: 0, fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Cambio a entregar:</p>
+                    <p style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700, color: '#16a34a' }}>
+                      {formatNum(change)}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <button
+                onClick={() => setShowConfirmation(false)}
+                style={{
+                  padding: '0.875rem',
+                  background: 'transparent',
+                  border: '2px solid var(--color-border)',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  color: 'var(--color-text)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmSale}
+                style={{
+                  padding: '0.875rem',
+                  background: '#22c55e',
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  color: '#0a0a0a',
+                  boxShadow: '0 4px 15px rgba(34, 197, 94, 0.4)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Confirmar Pago
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
