@@ -233,17 +233,19 @@ export function GestionUsuarios() {
         marginBottom: '2rem'
       }}>
         <div style={{
-          background: 'linear-gradient(135deg, #bfdbfe 0%, #dbeafe 100%)',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
           textAlign: 'center'
         }}>
-          <p style={{ margin: 0, color: '#1e40af', fontWeight: 600, fontSize: '0.875rem' }}>TOTAL</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#1e40af' }}>{stats.total}</p>
+          <p style={{ margin: 0, color: 'var(--color-text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>TOTAL</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#f5c800' }}>{stats.total}</p>
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, #fecaca 0%, #fed7aa 100%)',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
           textAlign: 'center'
@@ -253,7 +255,8 @@ export function GestionUsuarios() {
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, #fed7aa 0%, #fbb040 100%)',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
           textAlign: 'center'
@@ -263,7 +266,8 @@ export function GestionUsuarios() {
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
           textAlign: 'center'
@@ -273,7 +277,8 @@ export function GestionUsuarios() {
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
           textAlign: 'center'
@@ -298,14 +303,14 @@ export function GestionUsuarios() {
           onClick={() => setShowForm(!showForm)}
           style={{
             padding: '0.75rem 1.5rem',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
+            background: '#f5c800',
+            color: '#0a0a0a',
             border: 'none',
             borderRadius: '12px',
             cursor: 'pointer',
             fontWeight: 600,
             fontSize: '0.95rem',
-            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
+            boxShadow: '0 4px 15px rgba(245,200,0,0.25)',
             transition: 'all 0.2s'
           }}
         >
@@ -318,8 +323,8 @@ export function GestionUsuarios() {
             onClick={() => setFilter(f as any)}
             style={{
               padding: '0.75rem 1.5rem',
-              background: filter === f ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f1f5f9',
-              color: filter === f ? 'white' : '#475569',
+              background: filter === f ? '#f5c800' : '#f1f5f9',
+              color: filter === f ? '#0a0a0a' : '#475569',
               border: 'none',
               borderRadius: '12px',
               cursor: 'pointer',
@@ -423,8 +428,8 @@ export function GestionUsuarios() {
             onClick={createUser}
             style={{
               padding: '0.75rem 1.5rem',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
+              background: '#f5c800',
+              color: '#0a0a0a',
               border: 'none',
               borderRadius: '10px',
               cursor: 'pointer',

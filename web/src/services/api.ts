@@ -9,6 +9,25 @@ const api = axios.create({
   timeout: 5000
 });
 
+// Añadir token de auth desde localStorage a cada petición (si existe)
+if (typeof window !== 'undefined') {
+  api.interceptors.request.use((config) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        if (!config.headers) (config as any).headers = {};
+        // No sobrescribir si ya está presente
+        if (!(config.headers as any).Authorization && !(config.headers as any).authorization) {
+          (config.headers as any).Authorization = `Bearer ${token}`;
+        }
+      }
+    } catch (e) {
+      // ignore (por ejemplo si localStorage no está disponible)
+    }
+    return config;
+  }, (error) => Promise.reject(error));
+}
+
 function toErrorMessage(err: unknown): string {
   if (axios.isAxiosError(err)) {
     const data = err.response?.data as any;

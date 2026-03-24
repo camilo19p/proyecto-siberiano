@@ -171,11 +171,11 @@ export function Reportes() {
         marginBottom: '2rem'
       }}>
         <div style={{
-          background: 'var(--color-surface-2)',
+          background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
-          boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+          boxShadow: '0 4px 15px rgba(0,0,0,0.06)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
             <DollarSign size={18} style={{ color: 'var(--color-primary)' }} />
@@ -187,11 +187,11 @@ export function Reportes() {
         </div>
 
         <div style={{
-          background: 'var(--color-surface-2)',
+          background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
-          boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+          boxShadow: '0 4px 15px rgba(0,0,0,0.06)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
             <TrendingUp size={18} style={{ color: 'var(--color-success)' }} />
@@ -203,11 +203,11 @@ export function Reportes() {
         </div>
 
         <div style={{
-          background: 'var(--color-surface-2)',
+          background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
-          boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+          boxShadow: '0 4px 15px rgba(0,0,0,0.06)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
             <TrendingDown size={18} style={{ color: 'var(--color-danger)' }} />
@@ -219,11 +219,11 @@ export function Reportes() {
         </div>
 
         <div style={{
-          background: 'var(--color-surface-2)',
+          background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
-          boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+          boxShadow: '0 4px 15px rgba(0,0,0,0.06)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
             <Building2 size={18} style={{ color: 'var(--color-primary)' }} />

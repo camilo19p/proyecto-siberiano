@@ -104,7 +104,7 @@ export function Historial() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', fontSize: '0.875rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: '#6b7280' }}>Vendido:</span>
-                    <span style={{ fontWeight: 600, color: '#1e40af' }}>${inv.totalVendido.toLocaleString()}</span>
+                    <span style={{ fontWeight: 600, color: '#f5c800' }}>${inv.totalVendido.toLocaleString()}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: '#6b7280' }}>Ganancia:</span>
@@ -135,48 +135,53 @@ export function Historial() {
               {/* Cards de resumen */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
                 <div style={{
-                  background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '12px',
                   padding: '1rem',
                   textAlign: 'center'
                 }}>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#1e40af', fontWeight: 600 }}>VENDIDO</p>
-                  <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#1e40af' }}>${selected.totalVendido.toLocaleString()}</p>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>VENDIDO</p>
+                  <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#f5c800' }}>${selected.totalVendido.toLocaleString()}</p>
                 </div>
                 <div style={{
-                  background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '12px',
                   padding: '1rem',
                   textAlign: 'center'
                 }}>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>GANANCIAS</p>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>GANANCIAS</p>
                   <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#16a34a' }}>${selected.ganancias.toLocaleString()}</p>
                 </div>
                 <div style={{
-                  background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '12px',
                   padding: '1rem',
                   textAlign: 'center'
                 }}>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#d97706', fontWeight: 600 }}>PRÉSTAMO</p>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>PRÉSTAMO</p>
                   <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#d97706' }}>${selected.prestamo.toLocaleString()}</p>
                 </div>
                 <div style={{
-                  background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '12px',
                   padding: '1rem',
                   textAlign: 'center'
                 }}>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#dc2626', fontWeight: 600 }}>DEUDA REST.</p>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>DEUDA REST.</p>
                   <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#dc2626' }}>${selected.deudaRestante.toLocaleString()}</p>
                 </div>
                 <div style={{
-                  background: 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)',
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
                   borderRadius: '12px',
                   padding: '1rem',
                   textAlign: 'center'
                 }}>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#7c3aed', fontWeight: 600 }}>CAPITAL</p>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>CAPITAL</p>
                   <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#7c3aed' }}>${selected.capital.toLocaleString()}</p>
                 </div>
               </div>
@@ -204,7 +209,7 @@ export function Historial() {
                             <td style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>{item.entraron}</td>
                             <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: '#2563eb' }}>{item.quedaron}</td>
                             <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: '#f59e0b' }}>{item.salieron}</td>
-                            <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: '#1e40af' }}>${item.totalVendido.toLocaleString()}</td>
+                            <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: '#f5c800' }}>${item.totalVendido.toLocaleString()}</td>
                             <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 700, color: '#16a34a' }}>${item.ganancia.toLocaleString()}</td>
                           </tr>
                         ))}

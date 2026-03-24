@@ -7,6 +7,7 @@ interface PrepItem { id: string; codigo: string; name: string; precioCompra: num
 export function Inventario() {
   const [productos, setProductos] = useState<PrepItem[]>([]);
   const [cantidades, setCantidades] = useState<Record<string,number>>({});
+  const [invalidQuedaron, setInvalidQuedaron] = useState<Record<string, boolean>>({});
   const [prestamo, setPrestamo] = useState(0);
   const [tienePrestamo, setTienePrestamo] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -37,8 +38,12 @@ export function Inventario() {
       const data = await inventarioService.prepareInventario();
       setProductos(data);
       const init: Record<string,number> = {};
-      data.forEach((p: PrepItem) => { init[p.id] = p.stockInicial; });
+      const initInvalid: Record<string,boolean> = {};
+      const initCritico: Record<string,boolean> = {};
+      data.forEach((p: PrepItem) => { init[p.id] = p.stockInicial; initInvalid[p.id] = false; initCritico[p.id] = p.stockInicial < 5 && p.stockInicial > 0; });
       setCantidades(init);
+      setInvalidQuedaron(initInvalid);
+      setStockCritico(initCritico);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error cargando inventario');
       setProductos([]);
@@ -234,6 +239,7 @@ export function Inventario() {
                 const vendido = p.precioVenta * salieron;
                 const ganancia = (p.precioVenta - p.precioCompra) * salieron;
                 const esStockCritico = quedaron < 5 && quedaron > 0;
+                const isInvalid = !!invalidQuedaron[p.id];
                 return (
                   <tr key={p.id} style={{ 
                     borderTop: '1px solid #f1f5f9', 
@@ -252,9 +258,13 @@ export function Inventario() {
                     <td style={{ padding: '1rem 1.25rem', textAlign: 'center', color: '#475569', fontWeight: 600 }}>{p.stockInicial}</td>
                     <td style={{ padding: '1rem 1.25rem', textAlign: 'center' }}>
                       <input type="number" value={cantidades[p.id] || 0} onChange={e => {
-                        const value = Number(e.target.value);
-                        const safe = Number.isNaN(value) ? 0 : Math.min(p.stockInicial, Math.max(0, value));
+                        const valStr = e.target.value;
+                        const parsed = Number(valStr);
+                        const isInv = valStr === '' || Number.isNaN(parsed) || parsed < 0 || parsed > p.stockInicial;
+                        const safe = Number.isNaN(parsed) ? 0 : Math.min(p.stockInicial, Math.max(0, parsed));
                         setCantidades({ ...cantidades, [p.id]: safe });
+                        setInvalidQuedaron({ ...invalidQuedaron, [p.id]: isInv });
+                        setStockCritico({ ...stockCritico, [p.id]: parsed < 5 && parsed > 0 });
                       }}
                         min={0}
                         max={p.stockInicial}
@@ -262,7 +272,7 @@ export function Inventario() {
                           width: '80px',
                           padding: '0.5rem 0.75rem',
                           textAlign: 'center',
-                          border: esStockCritico ? '2px solid #ef4444' : '2px solid var(--color-border)',
+                          border: isInvalid ? '1px solid #ef4444' : '1px solid var(--color-border)',
                           borderRadius: '10px',
                           background: 'var(--color-surface-2)',
                           color: esStockCritico ? '#ef4444' : 'var(--color-text)',

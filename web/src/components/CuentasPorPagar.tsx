@@ -145,7 +145,7 @@ export function CuentasPorPagar() {
         marginBottom: '2rem'
       }}>
         <div style={{
-          background: 'var(--color-surface-2)',
+          background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
@@ -158,7 +158,7 @@ export function CuentasPorPagar() {
         </div>
 
         <div style={{
-          background: 'var(--color-surface-2)',
+          background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
@@ -171,7 +171,7 @@ export function CuentasPorPagar() {
         </div>
 
         <div style={{
-          background: 'var(--color-surface-2)',
+          background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
@@ -184,7 +184,7 @@ export function CuentasPorPagar() {
         </div>
 
         <div style={{
-          background: 'var(--color-surface-2)',
+          background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
@@ -265,7 +265,7 @@ export function CuentasPorPagar() {
               transition: 'all 0.2s'
             }}
           >
-            {f === 'TODOS' ? '📊 Todos' : f === 'PENDIENTE' ? '⏳ Pendientes' : f === 'PARCIAL' ? '📌 Parciales' : '✅ Pagadas'}
+            {f === 'TODOS' ? '\uD83D\uDCCA Todos' : f === 'PENDIENTE' ? '\u23F3 Pendientes' : f === 'PARCIAL' ? '\uD83D\uDCCC Parciales' : '\u2705 Pagadas'}
           </button>
         ))}
       </div>
