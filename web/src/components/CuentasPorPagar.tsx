@@ -144,7 +144,7 @@ export function CuentasPorPagar() {
         gap: '1.5rem',
         marginBottom: '2rem'
       }}>
-        <div style={{
+        <div className="kpi-card" style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
@@ -157,7 +157,7 @@ export function CuentasPorPagar() {
           </p>
         </div>
 
-        <div style={{
+        <div className="kpi-card" style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
@@ -170,7 +170,7 @@ export function CuentasPorPagar() {
           </p>
         </div>
 
-        <div style={{
+        <div className="kpi-card" style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
@@ -183,7 +183,7 @@ export function CuentasPorPagar() {
           </p>
         </div>
 
-        <div style={{
+        <div className="kpi-card" style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',

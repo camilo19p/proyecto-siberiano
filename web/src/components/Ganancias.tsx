@@ -26,7 +26,6 @@ export function Ganancias() {
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '400px' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
         <p style={{ color: '#6b7280' }}>Cargando análisis de ganancias...</p>
       </div>
     </div>
@@ -39,7 +38,6 @@ export function Ganancias() {
       padding: '2rem',
       textAlign: 'center'
     }}>
-      <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
       <p style={{ margin: 0, color: '#450a0a', fontWeight: 700 }}>No se pudo cargar</p>
       <p style={{ margin: '0.75rem 0 1.5rem 0', color: '#450a0a', fontWeight: 700 }}>{error}</p>
       <button onClick={load} style={{
@@ -67,47 +65,21 @@ export function Ganancias() {
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-        <div style={{
-          background: '#dcfce7',
-          borderRadius: '16px',
-          padding: '1.5rem',
-          color: '#052e16',
-          fontWeight: 700,
-          boxShadow: '0 10px 40px rgba(16, 185, 129, 0.3)',
-          transition: 'transform 0.3s'
-        }}>
+        <div className="kpi-card" style={{ background: '#dcfce7', color: '#052e16', fontWeight: 700, boxShadow: '0 10px 40px rgba(16, 185, 129, 0.3)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '1.5rem' }}>💰</span>
             <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.8 }}>Ganancia Potencial</p>
           </div>
           <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700 }}>${total.toLocaleString()}</p>
         </div>
 
-        <div style={{
-          background: '#0ea5e9',
-          borderRadius: '16px',
-          padding: '1.5rem',
-          color: '#0c1a3d',
-          fontWeight: 700,
-          boxShadow: '0 10px 40px rgba(59, 130, 246, 0.3)',
-          transition: 'transform 0.3s'
-        }}>
+        <div className="kpi-card" style={{ background: '#0ea5e9', color: '#0c1a3d', fontWeight: 700, boxShadow: '0 10px 40px rgba(59, 130, 246, 0.3)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '1.5rem' }}>📦</span>
             <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.8 }}>Productos</p>
           </div>
           <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700 }}>{data.length}</p>
         </div>
 
-        <div style={{
-          background: '#f5c800',
-          borderRadius: '16px',
-          padding: '1.5rem',
-          color: '#1a1000',
-          fontWeight: 700,
-          boxShadow: '0 10px 40px rgba(245, 200, 0, 0.3)',
-          transition: 'transform 0.3s'
-        }}>
+        <div className="kpi-card" style={{ background: '#f5c800', color: '#1a1000', fontWeight: 700, boxShadow: '0 10px 40px rgba(245, 200, 0, 0.3)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
             <BarChart2 size={20} />
             <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.8 }}>Stock Total</p>
@@ -115,17 +87,8 @@ export function Ganancias() {
           <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700 }}>{stockTotal}</p>
         </div>
 
-        <div style={{
-          background: '#fee2e2',
-          borderRadius: '16px',
-          padding: '1.5rem',
-          color: '#450a0a',
-          fontWeight: 700,
-          boxShadow: '0 10px 40px rgba(139, 92, 246, 0.3)',
-          transition: 'transform 0.3s'
-        }}>
+        <div className="kpi-card" style={{ background: '#fee2e2', color: '#450a0a', fontWeight: 700, boxShadow: '0 10px 40px rgba(139, 92, 246, 0.3)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '1.5rem' }}>📈</span>
             <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.8 }}>Promedio</p>
           </div>
           <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700 }}>${promedio.toLocaleString()}</p>
@@ -147,8 +110,8 @@ export function Ganancias() {
                 <th style={{ padding: '1.25rem', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>CÓDIGO</th>
                 <th style={{ padding: '1.25rem', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>PRODUCTO</th>
                 <th style={{ padding: '1.25rem', textAlign: 'center', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>STOCK</th>
-                <th style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>GANANCIA/U</th>
-                <th style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>POTENCIAL</th>
+                <th className="align-right" style={{ padding: '1.25rem', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>GANANCIA/U</th>
+                <th className="align-right" style={{ padding: '1.25rem', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>POTENCIAL</th>
               </tr>
             </thead>
             <tbody>
@@ -185,15 +148,13 @@ export function Ganancias() {
                       color: g.stock === 0 ? '#ef4444' : g.stock > 10 ? '#16a34a' : g.stock > 5 ? '#d97706' : '#dc2626'
                     }}>{g.stock}</span>
                   </td>
-                  <td style={{
+                  <td className="align-right" style={{
                     padding: '1rem 1.25rem',
-                    textAlign: 'right',
                     fontWeight: 600,
                     color: '#22c55e'
                   }}>${g.gananciaUnitaria.toLocaleString()}</td>
-                  <td style={{
+                  <td className="align-right" style={{
                     padding: '1rem 1.25rem',
-                    textAlign: 'right',
                     fontWeight: 700,
                     color: '#f5c800',
                     fontSize: '1.0625rem'

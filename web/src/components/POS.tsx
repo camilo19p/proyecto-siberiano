@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { productService, Product } from '../services/api';
 
 interface CartItem {
@@ -44,9 +44,14 @@ export function POS() {
   const [loading, setLoading] = useState(true);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
+  const searchRef = useRef<HTMLInputElement | null>(null);
+  const amountRef = useRef<HTMLInputElement | null>(null);
+
   useEffect(() => {
     loadProducts();
     loadTodaysSales();
+    // focus search on mount
+    setTimeout(() => searchRef.current?.focus(), 50);
   }, []);
 
   // Keyboard shortcuts
@@ -57,8 +62,7 @@ export function POS() {
         if (cart.length > 0) setShowConfirmation(true);
       } else if (e.key === 'F4' || e.key === 'f4') {
         e.preventDefault();
-        const searchInput = document.querySelector('input[placeholder="Nombre o código..."]') as HTMLInputElement;
-        searchInput?.focus();
+        searchRef.current?.focus();
       } else if (e.key === 'Escape' && cart.length > 0) {
         handleClearCart();
       }
@@ -66,6 +70,15 @@ export function POS() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [cart]);
+
+  // Focus amount when confirmation modal opens
+  useEffect(() => {
+    if (showConfirmation) {
+      setTimeout(() => {
+        amountRef.current?.focus();
+      }, 80);
+    }
+  }, [showConfirmation]);
 
   const loadProducts = async () => {
     setLoading(true);
@@ -179,7 +192,7 @@ export function POS() {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '400px' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}></div>
           <p style={{ color: '#6b7280' }}>Cargando...</p>
         </div>
       </div>
@@ -202,15 +215,17 @@ export function POS() {
         display: 'flex',
         flexDirection: 'column'
       }}>
-        <h2 style={{ margin: '0 0 1.5rem 0', color: 'var(--color-text)', fontSize: '1.25rem' }}>🔍 Buscar Productos</h2>
+        <h2 style={{ margin: '0 0 1.5rem 0', color: 'var(--color-text)', fontSize: '1.25rem' }}>Buscar Productos</h2>
 
         <div style={{ position: 'relative', marginBottom: '2rem' }}>
           <input
+            ref={searchRef}
             type="text"
             placeholder="Nombre o código..."
             value={search}
             onChange={e => { setSearch(e.target.value); setShowDropdown(true); }}
             onFocus={() => setShowDropdown(true)}
+            autoFocus
             style={{
               width: '100%',
               padding: '1rem',
@@ -312,7 +327,7 @@ export function POS() {
           border: `1px solid var(--color-border)`
         }}>
           <h3 style={{ margin: 0, color: 'var(--color-text)', fontSize: '0.875rem', fontWeight: 600, marginBottom: '1rem' }}>
-            📦 INFORMACIÓN
+            INFORMACIÓN
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -380,7 +395,7 @@ export function POS() {
               color: '#94a3b8',
               fontSize: '1rem'
             }}>
-              Carrito vacío 📭
+              Carrito vacío
             </div>
           ) : (
             <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
@@ -483,6 +498,7 @@ export function POS() {
             <div style={{ marginTop: '1rem', borderTop: `2px solid var(--color-border)`, paddingTop: '1rem' }}>
               <label style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: 600 }}>Monto recibido</label>
               <input
+                ref={amountRef}
                 type="number"
                 value={amountReceived || ''}
                 onChange={e => setAmountReceived(parseFloat(e.target.value) || 0)}
@@ -500,7 +516,7 @@ export function POS() {
               />
               {isAmountInsufficient ? (
                 <p style={{ margin: '0.5rem 0 0 0', color: '#dc2626', fontWeight: 600, fontSize: '0.875rem' }}>
-                  ❌ Monto insuficiente
+                  Monto insuficiente
                 </p>
               ) : amountReceived > 0 && change > 0 ? (
                 <p style={{ margin: '0.5rem 0 0 0', color: '#16a34a', fontWeight: 600, fontSize: '1rem' }}>
@@ -508,7 +524,7 @@ export function POS() {
                 </p>
               ) : amountReceived >= total ? (
                 <p style={{ margin: '0.5rem 0 0 0', color: '#16a34a', fontWeight: 600, fontSize: '0.875rem' }}>
-                  ✅ Monto completo recibido
+                  Monto completo recibido
                 </p>
               ) : null}
             </div>

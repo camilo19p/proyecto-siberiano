@@ -59,7 +59,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
           borderRadius: '24px 24px 0 0'
         }}>
           <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: '#f5c800' }}>
-            {product ? '✏️ Editar Producto' : '✨ Nuevo Producto'}
+            {product ? 'Editar Producto' : 'Nuevo Producto'}
           </h3>
           <p style={{ margin: '0.5rem 0 0 0', color: 'var(--color-text)', opacity: 0.7 }}>
             {product ? 'Actualiza la información del producto' : 'Completa los datos del nuevo producto'}
@@ -77,7 +77,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
               fontWeight: 600,
               fontSize: '0.875rem'
             }}>
-              ⚠️ {error}
+              {error}
             </div>
           )}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -91,12 +91,12 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Tipo *</label>
               <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
                 style={{ width: '100%', padding: '0.875rem', border: '2px solid var(--color-border)', borderRadius: '12px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}>
-                <option value="ron">🥃 Ron</option>
-                <option value="cerveza">🍺 Cerveza</option>
-                <option value="aguardiente">🍸 Aguardiente</option>
-                <option value="vodka">🍾 Vodka</option>
-                <option value="whisky">🥃 Whisky</option>
-                <option value="otro">📦 Otro</option>
+                <option value="ron">Ron</option>
+                <option value="cerveza">Cerveza</option>
+                <option value="aguardiente">Aguardiente</option>
+                <option value="vodka">Vodka</option>
+                <option value="whisky">Whisky</option>
+                <option value="otro">Otro</option>
               </select>
             </div>
           </div>
@@ -132,7 +132,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
             textAlign: 'center',
             border: ganancia > 0 ? '2px solid #10b981' : ganancia < 0 ? '2px solid #ef4444' : '2px solid #e5e7eb'
           }}>
-            <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>💰 Ganancia por unidad: </span>
+            <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Ganancia por unidad: </span>
             <span style={{ fontWeight: 'bold', fontSize: '1.5rem', color: ganancia > 0 ? '#059669' : ganancia < 0 ? '#dc2626' : '#6b7280' }}>
               ${ganancia.toLocaleString()}
             </span>
@@ -148,11 +148,11 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
           <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
             <button type="button" onClick={onClose}
               style={{ flex: 1, padding: '1rem', border: '2px solid var(--color-border)', borderRadius: '12px', background: 'transparent', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', color: 'var(--color-text)', transition: 'all 0.3s' }}>
-              ❌ Cancelar
+              Cancelar
             </button>
             <button type="submit" disabled={loading}
               style={{ flex: 1, padding: '1rem', background: '#f5c800', color: '#0a0a0a', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', boxShadow: '0 4px 15px rgba(245, 200, 0, 0.4)' }}>
-              {loading ? '⏳ Guardando...' : '💾 Guardar'}
+              {loading ? 'Guardando...' : 'Guardar'}
             </button>
           </div>
         </form>

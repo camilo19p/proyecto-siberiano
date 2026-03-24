@@ -1,6 +1,4 @@
-
-
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Login } from './components/Login';
 import { ProductList } from './components/ProductList';
 import { Inventario } from './components/Inventario';
@@ -120,7 +118,7 @@ export default function App() {
               }}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1rem' }}>
-                {n.icon} {n.label}
+                {React.cloneElement(n.icon as any, { color: page === n.id ? '#f5c800' : undefined })} {n.label}
               </span>
               <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', paddingLeft: '1.75rem' }}>{n.desc}</span>
             </button>
@@ -153,7 +151,7 @@ export default function App() {
               boxShadow: '0 2px 8px rgba(245, 200, 0, 0.15)'
             }}
           >
-            <LogOut size={18} /> Cerrar Sesión
+            {React.cloneElement(<LogOut size={18} /> as any, { color: '#fff' })} Cerrar Sesión
           </button>
         </div>
       </aside>

@@ -144,7 +144,7 @@ export function Facturacion() {
         gap: '1.5rem',
         marginBottom: '2rem'
       }}>
-        <div style={{
+        <div className="kpi-card" style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
@@ -155,7 +155,7 @@ export function Facturacion() {
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#f5c800' }}>{stats.total}</p>
         </div>
 
-        <div style={{
+        <div className="kpi-card" style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
@@ -166,7 +166,7 @@ export function Facturacion() {
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#dc2626' }}>{stats.pendientes}</p>
         </div>
 
-        <div style={{
+        <div className="kpi-card" style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
@@ -177,7 +177,7 @@ export function Facturacion() {
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#16a34a' }}>{stats.aprobadas}</p>
         </div>
 
-        <div style={{
+        <div className="kpi-card" style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
@@ -213,7 +213,7 @@ export function Facturacion() {
             transition: 'all 0.2s'
           }}
         >
-          {showForm ? '✕ Cancelar' : '+ Nueva Factura'}
+          {showForm ? 'Cancelar' : '+ Nueva Factura'}
         </button>
 
         {['TODOS', 'PENDIENTE', 'APROBADO', 'ANULADO'].map(f => (
@@ -232,7 +232,7 @@ export function Facturacion() {
               transition: 'all 0.2s'
             }}
           >
-            {f === 'TODOS' ? '📊 Todos' : f === 'PENDIENTE' ? '⏳ Pendientes' : f === 'APROBADO' ? '✅ Aprobadas' : '❌ Anuladas'}
+            {f === 'TODOS' ? 'Todos' : f === 'PENDIENTE' ? 'Pendientes' : f === 'APROBADO' ? 'Aprobadas' : 'Anuladas'}
           </button>
         ))}
       </div>
@@ -246,7 +246,7 @@ export function Facturacion() {
           marginBottom: '2rem',
           boxShadow: '0 10px 40px rgba(0,0,0,0.08)'
         }}>
-          <h3 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>➕ Nueva Factura</h3>
+          <h3 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>Nueva Factura</h3>
           
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', color: '#475569', fontWeight: 600 }}>
@@ -338,7 +338,7 @@ export function Facturacion() {
                       fontWeight: 600
                     }}
                   >
-                    ✕
+                    Eliminar
                   </button>
                 </div>
               ))}
@@ -358,7 +358,7 @@ export function Facturacion() {
                   fontSize: '0.95rem'
                 }}
               >
-                + Añadir Producto
+                Añadir Producto
               </button>
             </div>
           </div>
@@ -377,7 +377,7 @@ export function Facturacion() {
                 fontSize: '0.95rem'
               }}
             >
-              ✓ Crear Factura
+              Crear Factura
             </button>
           </div>
         </div>
@@ -410,7 +410,7 @@ export function Facturacion() {
                 {filteredInvoices.length === 0 ? (
                   <tr>
                     <td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
-                      Sin facturas 📭
+                      Sin facturas
                     </td>
                   </tr>
                 ) : (
@@ -465,7 +465,7 @@ export function Facturacion() {
             boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
             height: 'fit-content'
           }}>
-            <h3 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>📄 Detalles Factura #{selectedInvoice.numero}</h3>
+            <h3 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>Detalles Factura #{selectedInvoice.numero}</h3>
 
             <div style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #f1f5f9' }}>
               <p style={{ margin: '0.5rem 0', color: '#475569' }}><strong>Cliente:</strong> {selectedInvoice.cliente}</p>
@@ -500,7 +500,7 @@ export function Facturacion() {
                   opacity: selectedInvoice.estado === 'APROBADO' ? 0.6 : 1
                 }}
               >
-                ✓ Aprobar
+                Aprobar
               </button>
               <button
                 onClick={() => updateInvoiceStatus(selectedInvoice.id, 'ANULADO')}
@@ -516,7 +516,7 @@ export function Facturacion() {
                   opacity: selectedInvoice.estado === 'ANULADO' ? 0.6 : 1
                 }}
               >
-                ✕ Anular
+                Anular
               </button>
               <button
                 onClick={() => deleteInvoice(selectedInvoice.id)}
@@ -530,7 +530,7 @@ export function Facturacion() {
                   fontWeight: 600
                 }}
               >
-                🗑️ Eliminar
+                Eliminar
               </button>
             </div>
           </div>

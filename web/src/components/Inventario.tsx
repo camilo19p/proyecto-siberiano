@@ -95,7 +95,6 @@ export function Inventario() {
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '400px' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
         <p style={{ color: '#6b7280' }}>Cargando inventario...</p>
       </div>
     </div>
@@ -108,7 +107,6 @@ export function Inventario() {
       padding: '2rem',
       textAlign: 'center'
     }}>
-      <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
       <p style={{ margin: 0, color: '#7f1d1d', fontWeight: 700 }}>No se pudo cargar</p>
       <p style={{ margin: '0.75rem 0 1.5rem 0', color: '#991b1b' }}>{error}</p>
       <button onClick={loadProductos} style={{
@@ -132,24 +130,23 @@ export function Inventario() {
       marginBottom: '2rem'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-        <span style={{ fontSize: '2.5rem' }}>✅</span>
         <h2 style={{ margin: 0, color: '#065f46', fontSize: '1.875rem' }}>Inventario Guardado Exitosamente</h2>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-        <div style={{ background: 'rgba(255,255,255,0.7)', borderRadius: '15px', padding: '1.5rem', textAlign: 'center', backdropFilter: 'blur(10px)' }}>
+        <div className="kpi-card" style={{ background: 'rgba(255,255,255,0.7)', borderRadius: '15px', textAlign: 'center', backdropFilter: 'blur(10px)' }}>
           <p style={{ margin: 0, fontSize: '0.875rem', color: '#6b7280', fontWeight: 500 }}>Total Vendido</p>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: '#065f46' }}>${resultado.totalVendido?.toLocaleString()}</p>
         </div>
-        <div style={{ background: 'rgba(255,255,255,0.7)', borderRadius: '15px', padding: '1.5rem', textAlign: 'center', backdropFilter: 'blur(10px)' }}>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: '#6b7280', fontWeight: 500 }}>Ganancias 💰</p>
+        <div className="kpi-card" style={{ background: 'rgba(255,255,255,0.7)', borderRadius: '15px', textAlign: 'center', backdropFilter: 'blur(10px)' }}>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: '#6b7280', fontWeight: 500 }}>Ganancias</p>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: '#16a34a' }}>${resultado.ganancias?.toLocaleString()}</p>
         </div>
-        <div style={{ background: 'rgba(255,255,255,0.7)', borderRadius: '15px', padding: '1.5rem', textAlign: 'center', backdropFilter: 'blur(10px)' }}>
+        <div className="kpi-card" style={{ background: 'rgba(255,255,255,0.7)', borderRadius: '15px', textAlign: 'center', backdropFilter: 'blur(10px)' }}>
           <p style={{ margin: 0, fontSize: '0.875rem', color: '#6b7280', fontWeight: 500 }}>Deuda Restante</p>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: '#dc2626' }}>${resultado.deudaRestante?.toLocaleString()}</p>
         </div>
-        <div style={{ background: 'rgba(255,255,255,0.7)', borderRadius: '15px', padding: '1.5rem', textAlign: 'center', backdropFilter: 'blur(10px)' }}>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: '#6b7280', fontWeight: 500 }}>Capital 🏦</p>
+        <div className="kpi-card" style={{ background: 'rgba(255,255,255,0.7)', borderRadius: '15px', textAlign: 'center', backdropFilter: 'blur(10px)' }}>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: '#6b7280', fontWeight: 500 }}>Capital</p>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: '#2563eb' }}>${resultado.capital?.toLocaleString()}</p>
         </div>
       </div>
@@ -166,7 +163,7 @@ export function Inventario() {
           boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
           transition: 'transform 0.3s'
         }}>
-        ➕ Nuevo Inventario
+        Nuevo Inventario
       </button>
     </div>
   );
@@ -181,7 +178,7 @@ export function Inventario() {
       </h1>
       
       {/* Checkbox de préstamo */}
-      <div style={{
+      <div className="kpi-card" style={{
         background: 'rgba(245,200,0,0.1)',
         border: '2px solid #f5c800',
         borderRadius: '16px',
@@ -192,7 +189,7 @@ export function Inventario() {
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', fontWeight: 600, color: 'var(--color-text)' }}>
           <input type="checkbox" checked={tienePrestamo} onChange={e => setTienePrestamo(e.target.checked)} 
             style={{ width: '1.5rem', height: '1.5rem', cursor: 'pointer' }} />
-          <span style={{ fontSize: '1.125rem' }}>💳 ¿Solicitaste un préstamo?</span>
+          <span style={{ fontSize: '1.125rem' }}>¿Solicitaste un préstamo?</span>
         </label>
         {tienePrestamo && (
           <div style={{ marginTop: '1rem' }}>
@@ -225,11 +222,11 @@ export function Inventario() {
             <thead>
               <tr style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
                 <th style={{ padding: '1.25rem', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>PRODUCTO</th>
-                <th style={{ padding: '1.25rem', textAlign: 'center', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>ENTRARON</th>
+                <th className="align-right" style={{ padding: '1.25rem', textAlign: 'center', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>ENTRARON</th>
                 <th style={{ padding: '1.25rem', textAlign: 'center', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>QUEDARON</th>
                 <th style={{ padding: '1.25rem', textAlign: 'center', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>SALIERON</th>
-                <th style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>VENDIDO</th>
-                <th style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>GANANCIA</th>
+                <th className="align-right" style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>VENDIDO</th>
+                <th className="align-right" style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>GANANCIA</th>
               </tr>
             </thead>
             <tbody>
@@ -255,7 +252,7 @@ export function Inventario() {
                         fontWeight: 600
                       }}>{p.name}</span>
                     </td>
-                    <td style={{ padding: '1rem 1.25rem', textAlign: 'center', color: '#475569', fontWeight: 600 }}>{p.stockInicial}</td>
+                    <td className="align-right" style={{ padding: '1rem 1.25rem', textAlign: 'center', color: '#475569', fontWeight: 600 }}>{p.stockInicial}</td>
                     <td style={{ padding: '1rem 1.25rem', textAlign: 'center' }}>
                       <input type="number" value={cantidades[p.id] || 0} onChange={e => {
                         const valStr = e.target.value;
@@ -281,8 +278,8 @@ export function Inventario() {
                         }} />
                     </td>
                     <td style={{ padding: '1rem 1.25rem', textAlign: 'center', fontWeight: 600, color: '#ef4444' }}>{salieron}</td>
-                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: '#f5c800' }}>${vendido.toLocaleString()}</td>
-                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: '#22c55e' }}>${ganancia.toLocaleString()}</td>
+                    <td className="align-right" style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: '#f5c800' }}>${vendido.toLocaleString()}</td>
+                    <td className="align-right" style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: '#22c55e' }}>${ganancia.toLocaleString()}</td>
                   </tr>
                 );
               })}
@@ -293,44 +290,40 @@ export function Inventario() {
 
       {/* Totales */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-        <div style={{
+        <div className="kpi-card" style={{
           background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
           borderRadius: '16px',
-          padding: '1.5rem',
           textAlign: 'center',
           boxShadow: '0 4px 15px rgba(59, 130, 246, 0.2)'
         }}>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: '#1e40af', fontWeight: 500 }}>💵 TOTAL VENDIDO</p>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: '#1e40af', fontWeight: 500 }}>TOTAL VENDIDO</p>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: '#1e40af' }}>${totales.totalVendido.toLocaleString()}</p>
         </div>
-        <div style={{
+        <div className="kpi-card" style={{
           background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
           borderRadius: '16px',
-          padding: '1.5rem',
           textAlign: 'center',
           boxShadow: '0 4px 15px rgba(34, 197, 94, 0.2)'
         }}>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: '#166534', fontWeight: 500 }}>📈 GANANCIAS</p>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: '#166534', fontWeight: 500 }}>GANANCIAS</p>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: '#16a34a' }}>${totales.ganancias.toLocaleString()}</p>
         </div>
-        <div style={{
+        <div className="kpi-card" style={{
           background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
           borderRadius: '16px',
-          padding: '1.5rem',
           textAlign: 'center',
           boxShadow: '0 4px 15px rgba(239, 68, 68, 0.2)'
         }}>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: '#7f1d1d', fontWeight: 500 }}>📉 DEUDA RESTANTE</p>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: '#7f1d1d', fontWeight: 500 }}>DEUDA RESTANTE</p>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: '#dc2626' }}>${totales.deudaRestante.toLocaleString()}</p>
         </div>
-        <div style={{
+        <div className="kpi-card" style={{
           background: 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)',
           borderRadius: '16px',
-          padding: '1.5rem',
           textAlign: 'center',
           boxShadow: '0 4px 15px rgba(168, 85, 247, 0.2)'
         }}>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: '#6b21a8', fontWeight: 500 }}>🏦 CAPITAL</p>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: '#6b21a8', fontWeight: 500 }}>CAPITAL</p>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: '#7c3aed' }}>${totales.capital.toLocaleString()}</p>
         </div>
       </div>
@@ -351,7 +344,7 @@ export function Inventario() {
             transition: 'all 0.3s',
             opacity: saving ? 0.7 : 1
           }}>
-          {saving ? '⏳ Guardando...' : '✅ Guardar Inventario'}
+          {saving ? 'Guardando...' : 'Guardar Inventario'}
         </button>
       </div>
     </div>

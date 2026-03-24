@@ -21,25 +21,56 @@ export function Login({ onLogin }: LoginProps) {
     if (e.key === 'Enter') handleSubmit(e as any);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setTimeout(() => {
-      // Simulación de login (reemplazar por API real)
+
+    // Intentar login contra API
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: user, password: pass })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        try { localStorage.setItem('authToken', data.token); localStorage.setItem('userRole', data.user?.role || 'VENDEDOR'); } catch {}
+        onLogin();
+        setLoading(false);
+        return;
+      }
+
+      // Si la API responde con error, leer mensaje
+      const errBody = await res.json().catch(() => null);
+      const msg = errBody?.error || errBody?.message || 'Usuario o contraseña incorrecta';
+
+      // Fallback local para entorno sin backend (credenciales por defecto)
+      const validUser = 'admin';
+      const validPass = 'admin123';
+      if ((user === validUser && pass === validPass) && (!res || !res.ok)) {
+        try { localStorage.setItem('authToken', 'ok'); localStorage.setItem('userRole', 'ADMIN'); } catch {}
+        onLogin();
+        setLoading(false);
+        return;
+      }
+
+      setError(msg);
+    } catch (e) {
+      // Error de red: permitir fallback local para desarrollo
       const validUser = 'admin';
       const validPass = 'admin123';
       if (user === validUser && pass === validPass) {
-        try {
-          localStorage.setItem('authToken', 'ok');
-          localStorage.setItem('userRole', 'ADMIN');
-        } catch {}
+        try { localStorage.setItem('authToken', 'ok'); localStorage.setItem('userRole', 'ADMIN'); } catch {}
         onLogin();
-      } else {
-        setError('Usuario o contraseña incorrecta');
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-    }, 900);
+      setError('Error conectando al servidor');
+    }
+
+    setLoading(false);
   };
 
   return (

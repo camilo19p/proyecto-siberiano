@@ -1,4 +1,3 @@
-
 :root {
   /* Paleta Siberiano negro/amarillo/verde */
   --color-bg: #0a0a0a;
@@ -16,7 +15,7 @@
   --color-text-muted: #888888;
   --color-text-faint: #555555;
 
-  /* TipografÃ­a */
+  /* Tipografía */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
@@ -159,7 +158,7 @@ th {
   border-bottom: 1px solid var(--color-border);
 }
 td {
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   font-size: 0.875rem;
   border-bottom: 1px solid var(--color-border);
   color: var(--color-text);
@@ -260,7 +259,7 @@ tr:hover td { background: var(--color-surface-2); }
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   white-space: nowrap;
-  z-index: 100;
+  z-index: 99999;
 }
 
 /* Estados estados unificados */
@@ -275,3 +274,23 @@ tr:hover td { background: var(--color-surface-2); }
 .state-cancelled {
   color: var(--color-danger);
 }
+
+/* KPI tarjeta reusable */
+.kpi-card {
+  transition: all 0.3s ease;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+.kpi-card:hover {
+  border-color: rgba(245, 200, 0, 0.5);
+  transform: translateY(-3px);
+}
+
+/* Utilidad para alinear números a la derecha en tablas */
+.align-right { text-align: right; }
+
+/* Evitar emojis ocultos en placeholders: (no-op CSS, inspección de templates requerida) */
+
+/* Estados estados unificados */
+

@@ -232,7 +232,7 @@ export function GestionUsuarios() {
         gap: '1.5rem',
         marginBottom: '2rem'
       }}>
-        <div style={{
+        <div className="kpi-card" style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
@@ -243,7 +243,7 @@ export function GestionUsuarios() {
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#f5c800' }}>{stats.total}</p>
         </div>
 
-        <div style={{
+        <div className="kpi-card" style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
@@ -254,7 +254,7 @@ export function GestionUsuarios() {
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#dc2626' }}>{stats.admins}</p>
         </div>
 
-        <div style={{
+        <div className="kpi-card" style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
@@ -265,7 +265,7 @@ export function GestionUsuarios() {
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#ea580c' }}>{stats.gerentes}</p>
         </div>
 
-        <div style={{
+        <div className="kpi-card" style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
@@ -276,7 +276,7 @@ export function GestionUsuarios() {
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#92400e' }}>{stats.vendedores}</p>
         </div>
 
-        <div style={{
+        <div className="kpi-card" style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: '16px',
@@ -332,7 +332,7 @@ export function GestionUsuarios() {
               fontSize: '0.95rem'
             }}
           >
-            {f === 'TODOS' ? '📊 Todos' : f === 'ADMIN' ? '👑 Admins' : f === 'GERENTE' ? '💼 Gerentes' : '🛒 Vendedores'}
+            {f === 'TODOS' ? 'Todos' : f === 'ADMIN' ? 'Admins' : f === 'GERENTE' ? 'Gerentes' : 'Vendedores'}
           </button>
         ))}
       </div>
@@ -346,7 +346,7 @@ export function GestionUsuarios() {
           marginBottom: '2rem',
           boxShadow: '0 10px 40px rgba(0,0,0,0.08)'
         }}>
-          <h3 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>➕ Nuevo Usuario</h3>
+          <h3 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>Nuevo Usuario</h3>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
             <div>
@@ -437,7 +437,7 @@ export function GestionUsuarios() {
               fontSize: '0.95rem'
             }}
           >
-            ✓ Crear Usuario
+            Crear Usuario
           </button>
         </div>
       )}
@@ -468,7 +468,7 @@ export function GestionUsuarios() {
                 {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
-                      Sin usuarios 👤
+                      Sin usuarios
                     </td>
                   </tr>
                 ) : (
@@ -512,7 +512,7 @@ export function GestionUsuarios() {
                             fontWeight: 700,
                             fontSize: '0.75rem'
                           }}>
-                            {u.estado === 'ACTIVO' ? '✓ ACTIVO' : '✕ INACTIVO'}
+                            {u.estado === 'ACTIVO' ? 'ACTIVO' : 'INACTIVO'}
                           </span>
                         </td>
                       </tr>
@@ -533,7 +533,7 @@ export function GestionUsuarios() {
             boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
             height: 'fit-content'
           }}>
-            <h3 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>👤 {selectedUser.nombre}</h3>
+            <h3 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>{selectedUser.nombre}</h3>
 
             <div style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #f1f5f9' }}>
               <p style={{ margin: '0.5rem 0', color: '#475569' }}><strong>Email:</strong> {selectedUser.email}</p>
@@ -598,7 +598,7 @@ export function GestionUsuarios() {
                   fontWeight: 600
                 }}
               >
-                {selectedUser.estado === 'ACTIVO' ? '✕ Desactivar' : '✓ Activar'}
+                {selectedUser.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'}
               </button>
               {confirmDeleteId === selectedUser.id ? (
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -615,7 +615,7 @@ export function GestionUsuarios() {
                       fontWeight: 600
                     }}
                   >
-                    ✓ Confirmar
+                    Confirmar
                   </button>
                   <button
                     onClick={() => setConfirmDeleteId(null)}
@@ -630,7 +630,7 @@ export function GestionUsuarios() {
                       fontWeight: 600
                     }}
                   >
-                    ✕ Cancelar
+                    Cancelar
                   </button>
                 </div>
               ) : (
@@ -646,7 +646,7 @@ export function GestionUsuarios() {
                     fontWeight: 600
                   }}
                 >
-                  🗑️ Eliminar
+                  Eliminar
                 </button>
               )}
             </div>
