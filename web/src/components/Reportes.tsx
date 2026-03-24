@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BarChart2, Download, FileSpreadsheet, Search, TrashIcon, FileText, CreditCard, DollarSign, TrendingUp, TrendingDown, Building2 } from 'lucide-react';
+import { BarChart2, Download, FileSpreadsheet, Search, Trash2, FileText, CreditCard, DollarSign, TrendingUp, TrendingDown, Building2 } from 'lucide-react';
 import { inventarioService } from '../services/api';
 
 export function Reportes() {

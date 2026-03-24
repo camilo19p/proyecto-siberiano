@@ -2,6 +2,13 @@ import { Inventario, CreateInventarioRequest, PrepareInventarioResponse } from '
 import prisma from '../lib/prisma';
 import { z } from 'zod';
 
+interface InventarioItemInput {
+  productId: number;
+  entraron: number;
+  salieron: number;
+  quedaron: number;
+}
+
 // Esquema de validación para items de inventario
 const inventarioItemSchema = z.object({
   productId: z.number().int().positive(),
@@ -34,35 +41,43 @@ export class InventarioService {
   /**
    * Valida que el inventario cumpla reglas de negocio
    */
-  async validarInventario(items: any[]): Promise<{ valido: boolean; errores: string[] }> {
+  async validarInventario(items: any[]): Promise<{ valido: boolean; errores: string[]; advertencias: string[] }> {
     const errores: string[] = [];
+    const advertencias: string[] = [];
 
-    for (const item of items) {
+    if (!items || items.length === 0) {
+      errores.push('Debe haber al menos un producto en el inventario');
+      return { valido: false, errores, advertencias };
+    }
+
+    for (let idx = 0; idx < items.length; idx++) {
+      const item = items[idx];
+      
       // Validar esquema Zod
       try {
         inventarioItemSchema.parse(item);
       } catch (error: any) {
-        errores.push(`Producto ${item.productId}: ${error.errors?.[0]?.message || error.message}`);
+        errores.push(`Item ${idx + 1}: ${error.errors?.[0]?.message || error.message}`);
         continue;
       }
 
-      // Obtener producto para validar stock mínimo
+      // Obtener producto para validar
       const producto = await prisma.product.findUnique({
         where: { id: item.productId }
       });
 
       if (!producto) {
-        errores.push(`Producto ${item.productId} no encontrado`);
+        errores.push(`Producto ID ${item.productId} no encontrado en base de datos`);
         continue;
       }
 
-      // Alertar si stock final es crítico (< 5)
+      // Advertencia si stock final es crítico (< 5)
       if (item.quedaron < 5) {
-        errores.push(`⚠️ Producto ${producto.name}: Stock Crítico (${item.quedaron} unidades)`);
+        advertencias.push(`Producto "${producto.name}": Stock bajo (${item.quedaron} unidades)`);
       }
     }
 
-    return { valido: errores.length === 0, errores };
+    return { valido: errores.length === 0, errores, advertencias };
   }
 
   // Obtener todos los inventarios
@@ -90,8 +105,8 @@ export class InventarioService {
       createdAt: inv.createdAt.toISOString(),
       items: inv.items.map((item: any) => ({
         id: item.id.toString(),
-        inventarioId: item.inventarioId.toString(),
-        productId: item.productId.toString(),
+        inventarioId: item.inventarioId,
+        productId: item.productId,
         productoNombre: item.product?.name || '',
         entraron: item.entraron ?? 0,
         quedaron: item.quedaron ?? 0,

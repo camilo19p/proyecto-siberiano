@@ -1,40 +1,60 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
+// Tipos para usuario autenticado
+export interface AuthUser {
+  id: number;
+  username: string;
+  role: string;
+}
+
 // Extender tipo de Request para incluir usuario
 declare global {
   namespace Express {
     interface Request {
-      user?: any;
+      user?: AuthUser;
     }
   }
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'siberiano-secret-key-2024';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET no configurado en variables de entorno');
+}
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const token = req.headers.authorization?.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'Token no proporcionado' });
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Token no proporcionado o formato inválido' });
   }
 
+  const token = authHeader.substring(7);
+
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, JWT_SECRET || 'siberiano-secret-key-2024') as AuthUser;
     req.user = decoded;
     next();
-  } catch (error) {
-    return res.status(401).json({ error: 'Token inválido o expirado' });
+  } catch (error: any) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expirado' });
+    }
+    return res.status(401).json({ error: 'Token inválido' });
   }
 };
 
 /**
  * Middleware para proteger rutas por rol
  */
-export const requireRole = (roles: string[]) => {
+export const requireRole = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Usuario no autenticado' });
+    }
+
+    if (!roles || roles.length === 0) {
+      return res.status(500).json({ error: 'Configuración de middlewares incorrecta' });
     }
 
     if (!roles.includes(req.user.role)) {

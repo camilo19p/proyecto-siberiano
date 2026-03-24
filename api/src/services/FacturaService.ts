@@ -6,17 +6,19 @@ export class FacturaService {
     cliente_id: string;
     monto_total: number;
     estado: string;
+    userId: number;
+    iva?: number;
     items: Array<{ producto_id: string; cantidad: number; precio: number }>;
   }) {
     // Validar campos obligatorios
-    if (!data.numero || !data.cliente_id || data.monto_total <= 0) {
+    if (!data.numero || !data.cliente_id || data.monto_total <= 0 || !data.userId) {
       throw new Error('Datos incompletos para crear factura');
     }
 
-    // Validar que no haya precios o cantidades negativas
+    // Validar que no haya precios o cantidades iguales o menores a cero
     for (const item of data.items) {
-      if (item.cantidad < 0 || item.precio < 0) {
-        throw new Error('Cantidad y precio no pueden ser negativos');
+      if (item.cantidad <= 0 || item.precio <= 0) {
+        throw new Error('Cantidad y precio deben ser positivos (> 0)');
       }
     }
 
@@ -28,11 +30,11 @@ export class FacturaService {
           data: {
             numero: data.numero,
             clienteId: parseInt(data.cliente_id),
-            userId: 1, // Usuario por defecto
+            userId: data.userId,
             subtotal: data.monto_total,
-            iva: 0,
+            iva: data.iva ?? 0,
             total: data.monto_total,
-            estado: data.estado,
+            estado: data.estado || 'COMPLETADA',
           },
         });
 
