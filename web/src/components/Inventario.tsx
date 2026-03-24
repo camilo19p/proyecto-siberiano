@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { BarChart2 } from 'lucide-react';
 import { inventarioService } from '../services/api';
 
 interface PrepItem { id: string; codigo: string; name: string; precioCompra: number; precioVenta: number; stockInicial: number; }
@@ -168,17 +169,21 @@ export function Inventario() {
 
   return (
     <div>
-      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: '#1e293b' }}>📊 Realizar Inventario Diario</h1>
+      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <BarChart2 size={28} />
+        Realizar Inventario Diario
+      </h1>
       
       {/* Checkbox de préstamo */}
       <div style={{
-        background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+        background: 'rgba(245,200,0,0.1)',
+        border: '2px solid #f5c800',
         borderRadius: '16px',
         padding: '1.5rem',
         marginBottom: '2rem',
-        boxShadow: '0 4px 20px rgba(245, 158, 11, 0.2)'
+        boxShadow: '0 4px 20px rgba(245, 200, 0, 0.15)'
       }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', fontWeight: 600, color: '#78350f' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', fontWeight: 600, color: 'var(--color-text)' }}>
           <input type="checkbox" checked={tienePrestamo} onChange={e => setTienePrestamo(e.target.checked)} 
             style={{ width: '1.5rem', height: '1.5rem', cursor: 'pointer' }} />
           <span style={{ fontSize: '1.125rem' }}>💳 ¿Solicitaste un préstamo?</span>
@@ -190,11 +195,12 @@ export function Inventario() {
                 width: '100%',
                 maxWidth: '300px',
                 padding: '0.75rem 1rem',
-                border: 'none',
+                border: '2px solid var(--color-border)',
                 borderRadius: '12px',
                 fontSize: '1rem',
-                background: 'rgba(255,255,255,0.5)',
-                boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.1)'
+                background: 'var(--color-surface-2)',
+                color: 'var(--color-text)',
+                boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.05)'
               }} />
           </div>
         )}
@@ -230,8 +236,8 @@ export function Inventario() {
                   <tr key={p.id} style={{ borderTop: '1px solid #f1f5f9', transition: 'background 0.2s' }}>
                     <td style={{ padding: '1rem 1.25rem', fontWeight: 500 }}>
                       <span style={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: 'white',
+                        background: '#1a1000',
+                        color: '#f5c800',
                         padding: '0.375rem 0.75rem',
                         borderRadius: '8px',
                         fontSize: '0.875rem',
@@ -251,17 +257,17 @@ export function Inventario() {
                           width: '80px',
                           padding: '0.5rem 0.75rem',
                           textAlign: 'center',
-                          border: 'none',
+                          border: '2px solid var(--color-border)',
                           borderRadius: '10px',
-                          background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
-                          color: '#1e40af',
+                          background: 'var(--color-surface-2)',
+                          color: 'var(--color-text)',
                           fontWeight: 600,
                           boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.05)'
                         }} />
                     </td>
-                    <td style={{ padding: '1rem 1.25rem', textAlign: 'center', fontWeight: 600, color: '#f59e0b' }}>{salieron}</td>
-                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: '#1e40af' }}>${vendido.toLocaleString()}</td>
-                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: '#16a34a' }}>${ganancia.toLocaleString()}</td>
+                    <td style={{ padding: '1rem 1.25rem', textAlign: 'center', fontWeight: 600, color: '#ef4444' }}>{salieron}</td>
+                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: '#f5c800' }}>${vendido.toLocaleString()}</td>
+                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: '#22c55e' }}>${ganancia.toLocaleString()}</td>
                   </tr>
                 );
               })}

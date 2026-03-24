@@ -53,15 +53,15 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
       }} onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: 'var(--color-surface)',
+          borderBottom: '1px solid var(--color-border)',
           padding: '2rem',
-          borderRadius: '24px 24px 0 0',
-          color: 'white'
+          borderRadius: '24px 24px 0 0'
         }}>
-          <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>
+          <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: '#f5c800' }}>
             {product ? '✏️ Editar Producto' : '✨ Nuevo Producto'}
           </h3>
-          <p style={{ margin: '0.5rem 0 0 0', opacity: 0.8 }}>
+          <p style={{ margin: '0.5rem 0 0 0', color: 'var(--color-text)', opacity: 0.7 }}>
             {product ? 'Actualiza la información del producto' : 'Completa los datos del nuevo producto'}
           </p>
         </div>
@@ -90,7 +90,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
             <div>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Tipo *</label>
               <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
-                style={{ width: '100%', padding: '0.875rem', border: '2px solid #e5e7eb', borderRadius: '12px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box', background: 'white' }}>
+                style={{ width: '100%', padding: '0.875rem', border: '2px solid var(--color-border)', borderRadius: '12px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}>
                 <option value="ron">🥃 Ron</option>
                 <option value="cerveza">🍺 Cerveza</option>
                 <option value="aguardiente">🍸 Aguardiente</option>
@@ -147,11 +147,11 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
           
           <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
             <button type="button" onClick={onClose}
-              style={{ flex: 1, padding: '1rem', border: '2px solid #e5e7eb', borderRadius: '12px', background: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', transition: 'all 0.3s' }}>
+              style={{ flex: 1, padding: '1rem', border: '2px solid var(--color-border)', borderRadius: '12px', background: 'transparent', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', color: 'var(--color-text)', transition: 'all 0.3s' }}>
               ❌ Cancelar
             </button>
             <button type="submit" disabled={loading}
-              style={{ flex: 1, padding: '1rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)' }}>
+              style={{ flex: 1, padding: '1rem', background: '#f5c800', color: '#0a0a0a', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', boxShadow: '0 4px 15px rgba(245, 200, 0, 0.4)' }}>
               {loading ? '⏳ Guardando...' : '💾 Guardar'}
             </button>
           </div>
