@@ -46,16 +46,28 @@ export class ProductService {
 
   // Crear nuevo producto
   async createProduct(productData: CreateProductRequest): Promise<Product> {
-    const newProduct = await prisma.product.create({
-      data: {
-        codigo: productData.codigo,
-        name: productData.name,
-        type: productData.type,
-        precioCompra: productData.precioCompra,
-        precioVenta: productData.precioVenta,
-        stock: productData.stock,
-        stockInicial: productData.stockInicial ?? productData.stock
-      }
+    // Validar que precios no sean negativos
+    if (productData.precioCompra < 0 || productData.precioVenta < 0) {
+      throw new Error('Los precios no pueden ser negativos');
+    }
+
+    if (productData.precioVenta < productData.precioCompra) {
+      throw new Error('Precio de venta debe ser >= precio de compra');
+    }
+
+    // Usar transacción para crear producto
+    const newProduct = await prisma.$transaction(async (tx) => {
+      return await tx.product.create({
+        data: {
+          codigo: productData.codigo,
+          name: productData.name,
+          type: productData.type,
+          precioCompra: productData.precioCompra,
+          precioVenta: productData.precioVenta,
+          stock: productData.stock,
+          stockInicial: productData.stockInicial ?? productData.stock
+        }
+      });
     });
 
     return {

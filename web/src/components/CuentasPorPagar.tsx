@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { CreditCard, Plus, AlertCircle } from 'lucide-react';
 
 interface Payable {
   id: string;
@@ -125,16 +126,16 @@ export function CuentasPorPagar() {
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case 'PENDIENTE': return { bg: '#fef3c7', text: '#dc2626', border: '#f59e0b' };
-      case 'PARCIAL': return { bg: '#fed7aa', text: '#ea580c', border: '#f97316' };
-      case 'PAGADO': return { bg: '#dcfce7', text: '#16a34a', border: '#22c55e' };
-      default: return { bg: '#f1f5f9', text: '#64748b', border: '#cbd5e1' };
+      case 'PENDIENTE': return { bg: 'rgba(245,200,0,0.1)', text: '#f5c800', border: '#f5c800' };
+      case 'PARCIAL': return { bg: 'rgba(245,200,0,0.05)', text: '#f5a800', border: '#f5c800' };
+      case 'PAGADO': return { bg: 'rgba(34,197,94,0.1)', text: '#22c55e', border: '#22c55e' };
+      default: return { bg: 'var(--color-surface)', text: 'var(--color-text)', border: 'var(--color-border)' };
     }
   };
 
   return (
     <div>
-      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: '#1e293b' }}>💳 Cuentas por Pagar</h1>
+      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CreditCard size={32} /> Cuentas por Pagar</h1>
 
       {/* Stats */}
       <div style={{
@@ -144,49 +145,53 @@ export function CuentasPorPagar() {
         marginBottom: '2rem'
       }}>
         <div style={{
-          background: 'linear-gradient(135deg, #bfdbfe 0%, #dbeafe 100%)',
+          background: 'var(--color-surface-2)',
+          border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
           textAlign: 'center'
         }}>
           <p style={{ margin: 0, color: '#1e40af', fontWeight: 600, fontSize: '0.875rem' }}>TOTAL DEUDA</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.75rem', fontWeight: 700, color: '#1e40af' }}>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-primary)' }}>
             ${stats.total.toLocaleString()}
           </p>
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, #fecaca 0%, #fed7aa 100%)',
+          background: 'var(--color-surface-2)',
+          border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
           textAlign: 'center'
         }}>
-          <p style={{ margin: 0, color: '#dc2626', fontWeight: 600, fontSize: '0.875rem' }}>POR PAGAR</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.75rem', fontWeight: 700, color: '#dc2626' }}>
+          <p style={{ margin: 0, color: '#ef4444', fontWeight: 600, fontSize: '0.875rem' }}>POR PAGAR</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.75rem', fontWeight: 700, color: '#ef4444' }}>
             ${stats.pendiente.toLocaleString()}
           </p>
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, #bbf7d0 0%, #dcfce7 100%)',
+          background: 'var(--color-surface-2)',
+          border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
           textAlign: 'center'
         }}>
-          <p style={{ margin: 0, color: '#16a34a', fontWeight: 600, fontSize: '0.875rem' }}>PAGADO</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.75rem', fontWeight: 700, color: '#16a34a' }}>
+          <p style={{ margin: 0, color: '#22c55e', fontWeight: 600, fontSize: '0.875rem' }}>PAGADO</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.75rem', fontWeight: 700, color: '#22c55e' }}>
             ${stats.pagado.toLocaleString()}
           </p>
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, #c7d2fe 0%, #ddd6fe 100%)',
+          background: 'var(--color-surface-2)',
+          border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
           textAlign: 'center'
         }}>
-          <p style={{ margin: 0, color: '#4c1d95', fontWeight: 600, fontSize: '0.875rem' }}>CUENTAS</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.75rem', fontWeight: 700, color: '#4c1d95' }}>
+          <p style={{ margin: 0, color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.875rem' }}>CUENTAS</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-primary)' }}>
             {stats.cuentas}
           </p>
         </div>
@@ -230,8 +235,8 @@ export function CuentasPorPagar() {
           onClick={() => setShowForm(!showForm)}
           style={{
             padding: '0.75rem 1.5rem',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
+            background: 'var(--color-primary)',
+            color: '#1a1a1a',
             border: 'none',
             borderRadius: '12px',
             cursor: 'pointer',
@@ -250,9 +255,9 @@ export function CuentasPorPagar() {
             onClick={() => setFilter(f as any)}
             style={{
               padding: '0.75rem 1.5rem',
-              background: filter === f ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f1f5f9',
-              color: filter === f ? 'white' : '#475569',
-              border: 'none',
+              background: filter === f ? 'var(--color-primary)' : 'var(--color-surface)',
+              color: filter === f ? '#1a1a1a' : 'var(--color-text)',
+              border: `1px solid ${filter === f ? 'var(--color-primary)' : 'var(--color-border)'}`,
               borderRadius: '12px',
               cursor: 'pointer',
               fontWeight: 600,
@@ -336,8 +341,8 @@ export function CuentasPorPagar() {
             onClick={createPayable}
             style={{
               padding: '0.75rem 1.5rem',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
+              background: 'var(--color-primary)',
+              color: '#1a1a1a',
               border: 'none',
               borderRadius: '10px',
               cursor: 'pointer',
@@ -365,7 +370,7 @@ export function CuentasPorPagar() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
+                <tr style={{ background: 'var(--color-surface)' }}>
                   <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>PROVEEDOR</th>
                   <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>DEUDA</th>
                   <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>PENDIENTE</th>
@@ -453,7 +458,7 @@ export function CuentasPorPagar() {
                 <div style={{
                   width: `${(selectedPayable.pagado / selectedPayable.monto) * 100}%`,
                   height: '100%',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  background: 'var(--color-primary)',
                   transition: 'width 0.3s'
                 }} />
               </div>

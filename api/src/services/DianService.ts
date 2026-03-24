@@ -47,7 +47,7 @@ export class DianService {
     nombre: 'SIBERIANO S.A.S'
   };
 
-  private consecutive = this.consecutiveStart;
+  private consecutive = this.config.consecutiveStart;
 
   // Generar número de factura
   generateInvoiceNumber(): string {

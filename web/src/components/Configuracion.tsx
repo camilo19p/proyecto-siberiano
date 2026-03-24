@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Settings, HardDrive, Download, Upload, RefreshCw, AlertCircle, Trash2, Info, Check } from 'lucide-react';
 import { backupService } from '../services/backupService';
 
 export function Configuracion() {
@@ -15,10 +16,10 @@ export function Configuracion() {
       setLoading(true);
       backupService.saveBackup();
       setBackupStatus(backupService.getBackupStatus());
-      alert('✅ Backup manual realizado exitosamente');
+      alert('Backup manual realizado exitosamente');
     } catch (error) {
       console.error('Error en backup:', error);
-      alert('❌ Error al realizar backup');
+      alert('Error al realizar backup');
     } finally {
       setLoading(false);
     }
@@ -50,8 +51,8 @@ export function Configuracion() {
   };
 
   const handleClearData = () => {
-    if (confirm('⚠️ ¿Estás seguro de eliminar TODOS los datos? Esta acción no se puede deshacer.')) {
-      if (confirm('🔴 ÚLTIMA CONFIRMACIÓN: ¿Eliminar todo definitivamente?')) {
+    if (confirm('¿Estás seguro de eliminar TODOS los datos? Esta acción no se puede deshacer.')) {
+      if (confirm('ÚLTIMA CONFIRMACIÓN: ¿Eliminar todo definitivamente?')) {
         localStorage.clear();
         alert('Datos eliminados. Recarga la página.');
         window.location.reload();
@@ -72,18 +73,19 @@ export function Configuracion() {
 
   return (
     <div>
-      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: '#1e293b' }}>⚙️ Configuración</h1>
+      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Settings size={32} /> Configuración</h1>
 
       {/* Backup Section */}
       <div style={{ background: 'white', borderRadius: '20px', padding: '2rem', boxShadow: '0 10px 40px rgba(0,0,0,0.08)', marginBottom: '2rem' }}>
-        <h2 style={{ margin: '0 0 1.5rem 0', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          💾 Respaldo de Datos
+        <h2 style={{ margin: '0 0 1.5rem 0', color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <HardDrive size={24} /> Respaldo de Datos
         </h2>
 
         {/* Status Card */}
         <div style={{ 
           padding: '1.5rem', 
-          background: backupStatus.hasBackup ? 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)' : 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+          background: 'var(--color-surface-2)',
+          border: `2px solid ${backupStatus.hasBackup ? '#22c55e' : 'var(--color-primary)'}`,
           borderRadius: '16px',
           marginBottom: '1.5rem',
           display: 'flex',
@@ -91,8 +93,8 @@ export function Configuracion() {
           alignItems: 'center'
         }}>
           <div>
-            <p style={{ margin: 0, fontWeight: 700, color: backupStatus.hasBackup ? '#166534' : '#92400e', fontSize: '1.1rem' }}>
-              {backupStatus.hasBackup ? '✅ Backup Disponible' : '⚠️ Sin Backup'}
+            <p style={{ margin: 0, fontWeight: 700, color: backupStatus.hasBackup ? '#22c55e' : 'var(--color-primary)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {backupStatus.hasBackup ? <Check size={20} /> : <AlertCircle size={20} />} {backupStatus.hasBackup ? 'Backup Disponible' : 'Sin Backup'}
             </p>
             {backupStatus.lastDate && (
               <p style={{ margin: '0.5rem 0 0 0', color: backupStatus.hasBackup ? '#15803d' : '#b45309', fontSize: '0.9rem' }}>
@@ -123,56 +125,72 @@ export function Configuracion() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
           <button onClick={handleManualBackup} disabled={loading} style={{
             padding: '1.25rem',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
+            background: 'var(--color-primary)',
+            color: '#1a1a1a',
             border: 'none',
             borderRadius: '12px',
             cursor: loading ? 'not-allowed' : 'pointer',
             fontWeight: 600,
             fontSize: '1rem',
-            transition: 'all 0.3s'
+            transition: 'all 0.3s',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            justifyContent: 'center'
           }}>
-            💾 {loading ? 'Guardando...' : 'Backup Ahora'}
+            <HardDrive size={18} /> {loading ? 'Guardando...' : 'Backup Ahora'}
           </button>
 
           <button onClick={handleDownloadBackup} style={{
             padding: '1.25rem',
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            color: 'white',
-            border: 'none',
+            background: 'var(--color-surface-2)',
+            color: 'var(--color-text)',
+            border: '1px solid var(--color-border)',
             borderRadius: '12px',
             cursor: 'pointer',
             fontWeight: 600,
-            fontSize: '1rem'
+            fontSize: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            justifyContent: 'center'
           }}>
-            📥 Descargar JSON
+            <Download size={18} /> Descargar JSON
           </button>
 
           <button onClick={handleRestore} style={{
             padding: '1.25rem',
-            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-            color: 'white',
-            border: 'none',
+            background: 'var(--color-surface-2)',
+            color: 'var(--color-text)',
+            border: '1px solid var(--color-border)',
             borderRadius: '12px',
             cursor: 'pointer',
             fontWeight: 600,
-            fontSize: '1rem'
+            fontSize: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            justifyContent: 'center'
           }}>
-            📤 Restaurar desde Archivo
+            <Upload size={18} /> Restaurar desde Archivo
           </button>
 
           {backupStatus.hasBackup && (
             <button onClick={handleRestoreLastBackup} style={{
               padding: '1.25rem',
-              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-              color: 'white',
-              border: 'none',
+              background: 'var(--color-surface-2)',
+              color: 'var(--color-text)',
+              border: '1px solid var(--color-border)',
               borderRadius: '12px',
               cursor: 'pointer',
               fontWeight: 600,
-              fontSize: '1rem'
+              fontSize: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              justifyContent: 'center'
             }}>
-              🔄 Restaurar Último
+              <RefreshCw size={18} /> Restaurar Último
             </button>
           )}
         </div>
@@ -180,15 +198,15 @@ export function Configuracion() {
 
       {/* Info Section */}
       <div style={{ background: 'white', borderRadius: '20px', padding: '2rem', boxShadow: '0 10px 40px rgba(0,0,0,0.08)', marginBottom: '2rem' }}>
-        <h2 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>ℹ️ Información del Sistema</h2>
+        <h2 style={{ margin: '0 0 1.5rem 0', color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Info size={24} /> Información del Sistema</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-          <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '12px' }}>
-            <p style={{ margin: 0, color: '#6b7280', fontSize: '0.875rem' }}>Versión</p>
-            <p style={{ margin: '0.5rem 0 0 0', fontWeight: 700, color: '#1e293b' }}>1.0.0</p>
+          <div style={{ padding: '1rem', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: '12px' }}>
+            <p style={{ margin: 0, color: 'var(--color-text)', fontSize: '0.875rem', opacity: 0.7 }}>Versión</p>
+            <p style={{ margin: '0.5rem 0 0 0', fontWeight: 700, color: 'var(--color-text)' }}>1.0.0</p>
           </div>
-          <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '12px' }}>
-            <p style={{ margin: 0, color: '#6b7280', fontSize: '0.875rem' }}>Almacenamiento</p>
-            <p style={{ margin: '0.5rem 0 0 0', fontWeight: 700, color: '#1e293b' }}>localStorage</p>
+          <div style={{ padding: '1rem', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: '12px' }}>
+            <p style={{ margin: 0, color: 'var(--color-text)', fontSize: '0.875rem', opacity: 0.7 }}>Almacenamiento</p>
+            <p style={{ margin: '0.5rem 0 0 0', fontWeight: 700, color: 'var(--color-text)' }}>localStorage</p>
           </div>
           <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '12px' }}>
             <p style={{ margin: 0, color: '#6b7280', fontSize: '0.875rem' }}>Productos</p>
@@ -213,8 +231,8 @@ export function Configuracion() {
         boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
         border: '2px solid #fee2e2'
       }}>
-        <h2 style={{ margin: '0 0 1.5rem 0', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          🔴 Zona de Peligro
+        <h2 style={{ margin: '0 0 1.5rem 0', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <AlertCircle size={24} /> Zona de Peligro
         </h2>
         <p style={{ margin: '0 0 1.5rem 0', color: '#6b7280' }}>
           Estas acciones son irreversibles. Asegúrate de tener un backup antes de continuar.

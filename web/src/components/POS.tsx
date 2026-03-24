@@ -351,7 +351,7 @@ export function POS() {
           border: `1px solid var(--color-border)`
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h3 style={{ margin: 0, color: 'var(--color-text)' }}>🛒 Carrito de Ventas</h3>
+            <h3 style={{ margin: 0, color: 'var(--color-text)' }}>Carrito de Ventas</h3>
             {cart.length > 0 && (
               <button
                 onClick={handleClearCart}
@@ -528,9 +528,9 @@ export function POS() {
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1rem' }}>
             {[
-              { id: 'cash', label: '💵 Efectivo', method: 'cash' },
-              { id: 'card', label: '💳 Tarjeta', method: 'card' },
-              { id: 'transfer', label: '🏦 Transferencia', method: 'transfer' }
+              { id: 'cash', label: 'Efectivo', method: 'cash' },
+              { id: 'card', label: 'Tarjeta', method: 'card' },
+              { id: 'transfer', label: 'Transferencia', method: 'transfer' }
             ].map(({ id, label, method }) => (
               <button
                 key={id}
@@ -569,7 +569,7 @@ export function POS() {
               transition: 'all 0.2s'
             }}
           >
-            ✅ Cobrar {formatNum(total)}
+            Cobrar {formatNum(total)}
           </button>
         </div>
 
@@ -582,7 +582,7 @@ export function POS() {
             boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
             border: `1px solid var(--color-border)`
           }}>
-            <h3 style={{ margin: '0 0 1rem 0', color: 'var(--color-text)' }}>📋 Ventas de Hoy ({sales.length})</h3>
+            <h3 style={{ margin: '0 0 1rem 0', color: 'var(--color-text)' }}>Ventas de Hoy ({sales.length})</h3>
             <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                 <thead>
@@ -604,7 +604,7 @@ export function POS() {
                         {formatNum(sale.total)}
                       </td>
                       <td style={{ padding: '0.75rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: 600 }}>
-                        {sale.paymentMethod === 'cash' ? '💵' : sale.paymentMethod === 'card' ? '💳' : '🏦'}
+                        {sale.paymentMethod === 'cash' ? 'Efectivo' : sale.paymentMethod === 'card' ? 'Tarjeta' : 'Transferencia'}
                       </td>
                     </tr>
                   ))}
@@ -635,7 +635,7 @@ export function POS() {
             boxShadow: '0 25px 80px rgba(0, 0, 0, 0.3)'
           }} onClick={e => e.stopPropagation()}>
             <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text)' }}>
-              ✅ Confirmar Venta
+              Confirmar Venta
             </h2>
             
             <div style={{ marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '2px solid var(--color-border)' }}>

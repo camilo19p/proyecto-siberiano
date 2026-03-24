@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Building2, Target, Inbox, ClipboardList, Trash2, Lock, DollarSign, TrendingUp } from 'lucide-react';
 
 interface CashEntry {
   id: string;
@@ -182,7 +183,7 @@ export function CierreCaja() {
   if (!currentClosing) {
     return (
       <div>
-        <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: '#1e293b' }}>🏪 Cierre de Caja</h1>
+        <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Building2 size={32} /> Cierre de Caja</h1>
 
         {showInitial ? (
           <div style={{
@@ -194,7 +195,7 @@ export function CierreCaja() {
             margin: '2rem auto',
             boxShadow: '0 10px 40px rgba(0,0,0,0.08)'
           }}>
-            <h2 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>🎯 Apertura de Caja</h2>
+            <h2 style={{ margin: '0 0 1.5rem 0', color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Target size={24} /> Apertura de Caja</h2>
             
             <label style={{ display: 'block', marginBottom: '1rem', color: '#475569', fontWeight: 600 }}>
               Monto Inicial en Caja
@@ -230,14 +231,14 @@ export function CierreCaja() {
                   fontWeight: 600
                 }}
               >
-                ✕ Cancelar
+                Cancelar
               </button>
               <button
                 onClick={startShift}
                 style={{
                   flex: 1,
                   padding: '0.75rem',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  background: 'var(--color-surface-2)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '10px',
@@ -245,22 +246,22 @@ export function CierreCaja() {
                   fontWeight: 600
                 }}
               >
-                ✓ Iniciar
+                Iniciar
               </button>
             </div>
           </div>
         ) : (
           <div style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            background: 'var(--color-surface-2)',
             borderRadius: '20px',
             padding: '3rem',
             textAlign: 'center',
             color: 'white',
             maxWidth: '500px',
             margin: '2rem auto',
-            boxShadow: '0 10px 40px rgba(102, 126, 234, 0.3)'
+            border: `2px solid var(--color-primary)`
           }}>
-            <p style={{ margin: '0 0 1rem 0', fontSize: '3rem' }}>📭</p>
+            <p style={{ margin: '0 0 1rem 0', fontSize: '3rem' }}><Inbox size={48} /></p>
             <h2 style={{ margin: '0 0 1rem 0', fontSize: '1.5rem' }}>No hay caja abierta</h2>
             <p style={{ margin: '0 0 1.5rem 0', opacity: 0.9, fontSize: '0.95rem' }}>
               Inicia una nueva sesión de caja para comenzar
@@ -278,17 +279,17 @@ export function CierreCaja() {
                 fontSize: '1rem'
               }}
             >
-              🎯 Abrir Caja
+              <Target size={16} style={{ display: 'inline', marginRight: '0.5rem' }} /> Abrir Caja
             </button>
           </div>
         )}
 
         {/* Histórico */}
         <div style={{ marginTop: '3rem' }}>
-          <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.25rem', fontWeight: 600, color: '#1e293b' }}>📋 Histórico de Cierres</h2>
+          <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.25rem', fontWeight: 600, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ClipboardList size={24} /> Histórico de Cierres</h2>
           <div style={{ display: 'grid', gap: '1rem' }}>
             {closings.length === 0 ? (
-              <p style={{ color: '#6b7280', textAlign: 'center', padding: '2rem' }}>Sin registros 📭</p>
+              <p style={{ color: 'var(--color-text)', textAlign: 'center', padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>Sin registros <Inbox size={20} /></p>
             ) : (
               closings.map(c => (
                 <div
@@ -340,7 +341,7 @@ export function CierreCaja() {
                           fontWeight: 700
                         }}
                       >
-                        🗑
+                        <Trash2 size={18} />
                       </button>
                     )}
                   </div>
@@ -359,7 +360,7 @@ export function CierreCaja() {
 
   return (
     <div>
-      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: '#1e293b' }}>🏪 Caja Abierta</h1>
+      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Building2 size={32} /> Caja Abierta</h1>
 
       {/* Stats */}
       <div style={{
@@ -369,7 +370,7 @@ export function CierreCaja() {
         marginBottom: '2rem'
       }}>
         <div style={{
-          background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
+          background: 'var(--color-surface-2)',
           borderRadius: '16px',
           padding: '1.5rem',
           textAlign: 'center'
@@ -381,7 +382,7 @@ export function CierreCaja() {
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, #bfdbfe 0%, #dbeafe 100%)',
+          background: 'var(--color-surface-2)',
           borderRadius: '16px',
           padding: '1.5rem',
           textAlign: 'center'
@@ -393,7 +394,7 @@ export function CierreCaja() {
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, #fecaca 0%, #fed7aa 100%)',
+          background: 'var(--color-surface-2)',
           borderRadius: '16px',
           padding: '1.5rem',
           textAlign: 'center'
@@ -405,7 +406,7 @@ export function CierreCaja() {
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, #c7d2fe 0%, #ddd6fe 100%)',
+          background: 'var(--color-surface-2)',
           borderRadius: '16px',
           padding: '1.5rem',
           textAlign: 'center'
@@ -489,8 +490,8 @@ export function CierreCaja() {
             onClick={addMovement}
             style={{
               padding: '0.75rem',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
+              background: 'var(--color-primary)',
+              color: '#1a1a1a',
               border: 'none',
               borderRadius: '10px',
               cursor: 'pointer',
@@ -513,7 +514,7 @@ export function CierreCaja() {
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
+              <tr style={{ background: 'var(--color-surface)' }}>
                 <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>HORA</th>
                 <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>TIPO</th>
                 <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>CONCEPTO</th>
@@ -524,7 +525,7 @@ export function CierreCaja() {
               {movimientosHoy.length === 0 ? (
                 <tr>
                   <td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
-                    Sin movimientos 📭
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Sin movimientos <Inbox size={18} /></div>
                   </td>
                 </tr>
               ) : (
@@ -571,7 +572,7 @@ export function CierreCaja() {
           marginBottom: '2rem',
           boxShadow: '0 10px 40px rgba(0,0,0,0.08)'
         }}>
-          <h3 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>🎯 Cierre de Caja</h3>
+          <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Target size={24} /> Cierre de Caja</h3>
 
           <div style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '2px solid #f1f5f9' }}>
             <p style={{ margin: '0.5rem 0', color: '#475569' }}>
@@ -645,15 +646,15 @@ export function CierreCaja() {
               style={{
                 flex: 1,
                 padding: '0.75rem',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
+                background: 'var(--color-primary)',
+                color: '#1a1a1a',
                 border: 'none',
                 borderRadius: '10px',
                 cursor: 'pointer',
                 fontWeight: 600
               }}
             >
-              ✓ Cerrar Caja
+              <Lock size={16} style={{ display: 'inline', marginRight: '0.5rem' }} /> Cerrar Caja
             </button>
           </div>
         </div>
@@ -663,8 +664,8 @@ export function CierreCaja() {
           style={{
             width: '100%',
             padding: '1rem',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
+            background: 'var(--color-primary)',
+            color: '#1a1a1a',
             border: 'none',
             borderRadius: '12px',
             cursor: 'pointer',
@@ -673,7 +674,7 @@ export function CierreCaja() {
             boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)'
           }}
         >
-          🔒 Cerrar Caja
+          <Lock size={16} style={{ display: 'inline', marginRight: '0.5rem' }} /> Cerrar Caja
         </button>
       )}
 
@@ -697,7 +698,7 @@ export function CierreCaja() {
             overflowY: 'auto',
             width: '90%'
           }}>
-            <h2 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>📋 Detalle: {selectedDetail.fecha}</h2>
+            <h2 style={{ margin: '0 0 1.5rem 0', color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ClipboardList size={24} /> Detalle: {selectedDetail.fecha}</h2>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
               <div style={{ padding: '1rem', background: '#dcfce7', borderRadius: '10px' }}>

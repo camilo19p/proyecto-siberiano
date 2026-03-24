@@ -135,7 +135,7 @@ export function Facturacion() {
 
   return (
     <div>
-      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: '#1e293b' }}>📋 Facturación Electrónica</h1>
+      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: '#1e293b' }}>Facturación Electrónica</h1>
 
       {/* Stats */}
       <div style={{

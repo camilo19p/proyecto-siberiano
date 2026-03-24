@@ -1,6 +1,6 @@
 
-
 import { useState, useEffect } from 'react';
+import { Calendar, FileText, BarChart3 } from 'lucide-react';
 import axios from 'axios';
 
 
@@ -249,7 +249,7 @@ export function Dashboard() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* Notas & Recordatorios */}
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 20, padding: 24 }}>
-          <h3 style={{ margin: '0 0 1rem 0', color: 'var(--color-text)', fontSize: 18, fontWeight: 700 }}>📝 Notas & Recordatorios</h3>
+          <h3 style={{ margin: '0 0 1rem 0', color: 'var(--color-text)', fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><FileText size={20} /> Notas & Recordatorios</h3>
             <div style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem 0' }}>
               Usa el calendario para agregar notas por día.
             </div>
@@ -257,7 +257,7 @@ export function Dashboard() {
 
         {/* Acceso Rápido */}
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 20, padding: 24 }}>
-          <p style={{ margin: 0, fontSize: 15, opacity: 0.8, color: 'var(--color-text)' }}>📊 Acceso Rápido</p>
+          <p style={{ margin: 0, fontSize: 15, opacity: 0.8, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><BarChart3 size={18} /> Acceso Rápido</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
             <div style={{ textAlign: 'center' }}>
               <p style={{ margin: '0 0 0.5rem 0', fontSize: 13, color: '#f5c800', fontWeight: 700 }}>VENTAS HOY</p>

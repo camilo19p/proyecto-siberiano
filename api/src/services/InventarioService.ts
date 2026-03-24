@@ -1,5 +1,17 @@
 import { Inventario, CreateInventarioRequest, PrepareInventarioResponse } from '../models/Inventario';
 import prisma from '../lib/prisma';
+import { z } from 'zod';
+
+// Esquema de validación para items de inventario
+const inventarioItemSchema = z.object({
+  productId: z.number().int().positive(),
+  entraron: z.number().int().min(0),
+  salieron: z.number().int().min(0),
+  quedaron: z.number().int().min(0),
+}).refine(
+  (data) => data.quedaron <= data.entraron,
+  { message: 'Stock final no puede ser mayor a stock entrada' }
+);
 
 export class InventarioService {
   // Preparar inventario - obtener productos con su stock actual como stockInicial
@@ -14,8 +26,43 @@ export class InventarioService {
       name: p.name,
       precioCompra: p.precioCompra,
       precioVenta: p.precioVenta,
-      stockInicial: p.stock
+      stockInicial: p.stock,
+      stockMinimo: p.stockMinimo,
     }));
+  }
+
+  /**
+   * Valida que el inventario cumpla reglas de negocio
+   */
+  async validarInventario(items: any[]): Promise<{ valido: boolean; errores: string[] }> {
+    const errores: string[] = [];
+
+    for (const item of items) {
+      // Validar esquema Zod
+      try {
+        inventarioItemSchema.parse(item);
+      } catch (error: any) {
+        errores.push(`Producto ${item.productId}: ${error.errors?.[0]?.message || error.message}`);
+        continue;
+      }
+
+      // Obtener producto para validar stock mínimo
+      const producto = await prisma.product.findUnique({
+        where: { id: item.productId }
+      });
+
+      if (!producto) {
+        errores.push(`Producto ${item.productId} no encontrado`);
+        continue;
+      }
+
+      // Alertar si stock final es crítico (< 5)
+      if (item.quedaron < 5) {
+        errores.push(`⚠️ Producto ${producto.name}: Stock Crítico (${item.quedaron} unidades)`);
+      }
+    }
+
+    return { valido: errores.length === 0, errores };
   }
 
   // Obtener todos los inventarios

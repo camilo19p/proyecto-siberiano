@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BarChart2, Download, FileSpreadsheet, Search, TrashIcon, FileText, CreditCard } from 'lucide-react';
+import { BarChart2, Download, FileSpreadsheet, Search, TrashIcon, FileText, CreditCard, DollarSign, TrendingUp, TrendingDown, Building2 } from 'lucide-react';
 import { inventarioService } from '../services/api';
 
 export function Reportes() {
@@ -171,49 +171,65 @@ export function Reportes() {
         marginBottom: '2rem'
       }}>
         <div style={{
-          background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
+          background: 'var(--color-surface-2)',
+          border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
-          boxShadow: '0 4px 15px rgba(59, 130, 246, 0.2)'
+          boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
         }}>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: '#1e40af', fontWeight: 600 }}>💵 TOTAL INGRESOS</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: '#1e40af' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+            <DollarSign size={18} style={{ color: 'var(--color-primary)' }} />
+            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-primary)', fontWeight: 600 }}>TOTAL INGRESOS</p>
+          </div>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: 'var(--color-primary)' }}>
             ${totalIngresos.toLocaleString()}
           </p>
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
+          background: 'var(--color-surface-2)',
+          border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
-          boxShadow: '0 4px 15px rgba(34, 197, 94, 0.2)'
+          boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
         }}>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: '#16a34a', fontWeight: 600 }}>📈 TOTAL GANANCIAS</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: '#16a34a' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+            <TrendingUp size={18} style={{ color: 'var(--color-success)' }} />
+            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-success)', fontWeight: 600 }}>TOTAL GANANCIAS</p>
+          </div>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: 'var(--color-success)' }}>
             ${totalGanancias.toLocaleString()}
           </p>
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+          background: 'var(--color-surface-2)',
+          border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
-          boxShadow: '0 4px 15px rgba(220, 38, 38, 0.2)'
+          boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
         }}>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: '#dc2626', fontWeight: 600 }}>📉 TOTAL EGRESOS</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: '#dc2626' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+            <TrendingDown size={18} style={{ color: 'var(--color-danger)' }} />
+            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-danger)', fontWeight: 600 }}>TOTAL EGRESOS</p>
+          </div>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: 'var(--color-danger)' }}>
             ${totalEgresos.toLocaleString()}
           </p>
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)',
+          background: 'var(--color-surface-2)',
+          border: '1px solid var(--color-border)',
           borderRadius: '16px',
           padding: '1.5rem',
-          boxShadow: '0 4px 15px rgba(168, 85, 247, 0.2)'
+          boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
         }}>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: '#7c3aed', fontWeight: 600 }}>🏦 CAPITAL NETO</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: '#7c3aed' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+            <Building2 size={18} style={{ color: 'var(--color-primary)' }} />
+            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-primary)', fontWeight: 600 }}>CAPITAL NETO</p>
+          </div>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: 'var(--color-primary)' }}>
             ${totalCapital.toLocaleString()}
           </p>
         </div>
@@ -221,74 +237,75 @@ export function Reportes() {
 
       {/* Tabla de Resumen */}
       <div style={{
-        background: 'white',
+        background: 'var(--color-surface)',
         borderRadius: '20px',
         overflow: 'hidden',
-        boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
-        marginBottom: '2rem'
+        boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+        marginBottom: '2rem',
+        border: '1px solid var(--color-border)'
       }}>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
-                <th style={{ padding: '1.25rem', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>FECHA</th>
-                <th style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>INGRESOS</th>
-                <th style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>GANANCIAS</th>
-                <th style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>EGRESOS</th>
-                <th style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>CAPITAL</th>
-                <th style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>DEUDA</th>
+              <tr style={{ background: 'var(--color-surface-2)' }}>
+                <th style={{ padding: '1.25rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>FECHA</th>
+                <th style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>INGRESOS</th>
+                <th style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>GANANCIAS</th>
+                <th style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>EGRESOS</th>
+                <th style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>CAPITAL</th>
+                <th style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>DEUDA</th>
               </tr>
             </thead>
             <tbody>
               {filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
-                    Sin datos para el período seleccionado 📭
+                  <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                    Sin datos para el período seleccionado
                   </td>
                 </tr>
               ) : (
                 filteredData.map((inv, idx) => (
                   <tr key={idx} style={{
-                    borderTop: '1px solid #f1f5f9',
-                    background: idx % 2 === 0 ? 'transparent' : 'rgba(100, 116, 139, 0.02)'
+                    borderTop: '1px solid var(--color-border)',
+                    background: idx % 2 === 0 ? 'transparent' : 'rgba(100, 116, 139, 0.05)'
                   }}>
-                    <td style={{ padding: '1rem 1.25rem', fontWeight: 500, color: '#1e293b' }}>
+                    <td style={{ padding: '1rem 1.25rem', fontWeight: 500, color: 'var(--color-text)' }}>
                       {new Date(inv.fecha).toLocaleDateString('es-ES')}
                     </td>
-                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: '#1e40af' }}>
+                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-primary)' }}>
                       ${inv.totalVendido.toLocaleString()}
                     </td>
-                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: '#16a34a' }}>
+                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-success)' }}>
                       ${inv.ganancias.toLocaleString()}
                     </td>
-                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: '#dc2626' }}>
+                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-danger)' }}>
                       ${inv.prestamo.toLocaleString()}
                     </td>
-                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: '#7c3aed' }}>
+                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-primary)' }}>
                       ${inv.capital.toLocaleString()}
                     </td>
-                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: '#f59e0b' }}>
+                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-warning)' }}>
                       ${inv.deudaRestante.toLocaleString()}
                     </td>
                   </tr>
                 ))
               )}
               {filteredData.length > 0 && (
-                <tr style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', fontWeight: 700 }}>
-                  <td style={{ padding: '1rem 1.25rem' }}>TOTAL</td>
-                  <td style={{ padding: '1rem 1.25rem', textAlign: 'right', color: '#1e40af' }}>
+                <tr style={{ background: 'var(--color-surface-2)', fontWeight: 700, borderTop: '2px solid var(--color-border)' }}>
+                  <td style={{ padding: '1rem 1.25rem', color: 'var(--color-primary)' }}>TOTAL</td>
+                  <td style={{ padding: '1rem 1.25rem', textAlign: 'right', color: 'var(--color-primary)' }}>
                     ${totalIngresos.toLocaleString()}
                   </td>
-                  <td style={{ padding: '1rem 1.25rem', textAlign: 'right', color: '#16a34a' }}>
+                  <td style={{ padding: '1rem 1.25rem', textAlign: 'right', color: 'var(--color-success)' }}>
                     ${totalGanancias.toLocaleString()}
                   </td>
-                  <td style={{ padding: '1rem 1.25rem', textAlign: 'right', color: '#dc2626' }}>
+                  <td style={{ padding: '1rem 1.25rem', textAlign: 'right', color: 'var(--color-danger)' }}>
                     ${totalEgresos.toLocaleString()}
                   </td>
-                  <td style={{ padding: '1rem 1.25rem', textAlign: 'right', color: '#7c3aed' }}>
+                  <td style={{ padding: '1rem 1.25rem', textAlign: 'right', color: 'var(--color-primary)' }}>
                     ${totalCapital.toLocaleString()}
                   </td>
-                  <td style={{ padding: '1rem 1.25rem', textAlign: 'right', color: '#f59e0b' }}>
+                  <td style={{ padding: '1rem 1.25rem', textAlign: 'right', color: 'var(--color-warning)' }}>
                     ${filteredData.reduce((s, inv) => s + inv.deudaRestante, 0).toLocaleString()}
                   </td>
                 </tr>

@@ -2,15 +2,19 @@
 :root {
   /* Paleta Siberiano negro/amarillo/verde */
   --color-bg: #0a0a0a;
-  --color-surface: #111111;
+  --color-surface: #0a0a0a;
   --color-surface-2: #1a1a1a;
   --color-border: #2a2a2a;
   --color-primary: #f5c800;
   --color-primary-dark: #d4a900;
   --color-primary-light: #ffe033;
   --color-success: #22c55e;
+  --color-warning: #f5c800;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
   --color-text: #f0f0f0;
   --color-text-muted: #888888;
+  --color-text-faint: #555555;
 
   /* TipografÃ­a */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
@@ -97,15 +101,36 @@ body {
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.6rem;
+  padding: 0.3rem 0.7rem;
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
+  border: 1px solid;
 }
-.badge-success { background: rgba(16,185,129,0.15); color: var(--color-success); }
-.badge-warning { background: rgba(245,158,11,0.15); color: var(--color-warning); }
-.badge-danger  { background: rgba(239,68,68,0.15);  color: var(--color-danger);  }
-.badge-info    { background: rgba(59,130,246,0.15);  color: var(--color-info);    }
+/* Pendiente/Amarillo */
+.badge-pending, .badge-warning { 
+  background: rgba(245, 200, 0, 0.1); 
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+/* Aprobado/Pagado/Verde */
+.badge-success, .badge-approved { 
+  background: rgba(34, 197, 94, 0.1); 
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+/* Anulado/Deuda/Rojo */
+.badge-danger, .badge-cancelled { 
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+/* Info/Azul */
+.badge-info { 
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--color-info);
+  border-color: var(--color-info);
+}
 
 input, select, textarea {
   background: var(--color-surface-2);
@@ -140,3 +165,113 @@ td {
   color: var(--color-text);
 }
 tr:hover td { background: var(--color-surface-2); }
+/* Modal y Overlay estilos unificados */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  border-top: 1px solid var(--color-border);
+  padding: 1rem 1.5rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+/* Tarjetas sin fondos de colores */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.card-header-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: rgba(245, 200, 0, 0.1);
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+/* Stock crítico */
+.stock-critical {
+  border: 1px solid var(--color-danger) !important;
+  border-left: 3px solid var(--color-danger) !important;
+}
+
+.stock-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.stock-tooltip:hover::before {
+  content: "Stock Crítico";
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-danger);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 100;
+}
+
+/* Estados estados unificados */
+.state-pending {
+  color: var(--color-warning);
+}
+
+.state-approved, .state-paid {
+  color: var(--color-success);
+}
+
+.state-cancelled {
+  color: var(--color-danger);
+}

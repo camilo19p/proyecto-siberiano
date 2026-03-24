@@ -13,18 +13,67 @@ export class FacturaService {
       throw new Error('Datos incompletos para crear factura');
     }
 
+    // Validar que no haya precios o cantidades negativas
+    for (const item of data.items) {
+      if (item.cantidad < 0 || item.precio < 0) {
+        throw new Error('Cantidad y precio no pueden ser negativos');
+      }
+    }
+
     try {
-      const sale = await prisma.sale.create({
-        data: {
-          numero: data.numero,
-          clienteId: parseInt(data.cliente_id),
-          userId: 1, // Usuario por defecto
-          subtotal: data.monto_total,
-          iva: 0,
-          total: data.monto_total,
-          estado: data.estado,
-        },
+      // Usar transacción para crear factura y descontar stock
+      const sale = await prisma.$transaction(async (tx) => {
+        // Crear venta
+        const newSale = await tx.sale.create({
+          data: {
+            numero: data.numero,
+            clienteId: parseInt(data.cliente_id),
+            userId: 1, // Usuario por defecto
+            subtotal: data.monto_total,
+            iva: 0,
+            total: data.monto_total,
+            estado: data.estado,
+          },
+        });
+
+        // Crear items y descontar stock
+        for (const item of data.items) {
+          const productId = parseInt(item.producto_id);
+          
+          // Obtener producto
+          const product = await tx.product.findUnique({
+            where: { id: productId }
+          });
+
+          if (!product) {
+            throw new Error(`Producto ${item.producto_id} no encontrado`);
+          }
+
+          if (product.stock < item.cantidad) {
+            throw new Error(`Stock insuficiente para ${product.name}`);
+          }
+
+          // Crear item de venta
+          await tx.saleItem.create({
+            data: {
+              saleId: newSale.id,
+              productId,
+              cantidad: item.cantidad,
+              precioUnit: item.precio,
+              subtotal: item.cantidad * item.precio
+            }
+          });
+
+          // Descontar stock
+          await tx.product.update({
+            where: { id: productId },
+            data: { stock: product.stock - item.cantidad }
+          });
+        }
+
+        return newSale;
       });
+
       return sale;
     } catch (error) {
       throw new Error('Error al crear factura: ' + (error as Error).message);

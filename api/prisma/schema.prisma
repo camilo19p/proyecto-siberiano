@@ -204,3 +204,19 @@ model PaymentHistory {
   payable   Payable  @relation(fields: [payableId], references: [id])
   createdAt DateTime @default(now())
 }
+
+model CajaAudit {
+  id                Int      @id @default(autoincrement())
+  fecha             DateTime @default(now())
+  usuarioId         Int
+  ventasEfectivo    Float
+  base              Float
+  gastos            Float
+  saldoEsperado     Float
+  saldoReal         Float
+  diferencia        Float
+  observaciones     String?
+  createdAt         DateTime @default(now())
+
+  @@index([fecha])
+}
