@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { BarChart2, Download, FileSpreadsheet, Search, TrashIcon, FileText, CreditCard } from 'lucide-react';
 import { inventarioService } from '../services/api';
 
 export function Reportes() {
@@ -69,7 +70,10 @@ export function Reportes() {
 
   return (
     <div>
-      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: '#1e293b' }}>📊 Reportes Detallados</h1>
+      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <BarChart2 size={28} />
+        Reportes Detallados
+      </h1>
 
       {/* Filtros */}
       <div style={{
@@ -79,7 +83,10 @@ export function Reportes() {
         marginBottom: '2rem',
         boxShadow: '0 10px 40px rgba(0,0,0,0.08)'
       }}>
-        <h3 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>🔍 Filtros</h3>
+        <h3 style={{ margin: '0 0 1rem 0', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Search size={20} />
+          Filtros
+        </h3>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -96,10 +103,12 @@ export function Reportes() {
               style={{
                 width: '100%',
                 padding: '0.75rem',
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--color-border)',
                 borderRadius: '10px',
                 fontSize: '1rem',
-                outline: 'none'
+                outline: 'none',
+                background: 'var(--color-surface-2)',
+                color: 'var(--color-text)'
               }}
             />
           </div>
@@ -114,10 +123,12 @@ export function Reportes() {
               style={{
                 width: '100%',
                 padding: '0.75rem',
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--color-border)',
                 borderRadius: '10px',
                 fontSize: '1rem',
-                outline: 'none'
+                outline: 'none',
+                background: 'var(--color-surface-2)',
+                color: 'var(--color-text)'
               }}
             />
           </div>
@@ -129,7 +140,10 @@ export function Reportes() {
                 onChange={e => setFilterMovements(e.target.checked)}
                 style={{ width: '1.25rem', height: '1.25rem' }}
               />
-              <span style={{ color: '#475569', fontWeight: 500 }}>📋 Movimientos</span>
+              <span style={{ color: '#475569', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <FileText size={18} />
+                Movimientos
+              </span>
             </label>
           </div>
           <div>
@@ -140,7 +154,10 @@ export function Reportes() {
                 onChange={e => setFilterPayments(e.target.checked)}
                 style={{ width: '1.25rem', height: '1.25rem' }}
               />
-              <span style={{ color: '#475569', fontWeight: 500 }}>💳 Métodos de Pago</span>
+              <span style={{ color: '#475569', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <CreditCard size={18} />
+                Métodos de Pago
+              </span>
             </label>
           </div>
         </div>
@@ -285,28 +302,34 @@ export function Reportes() {
       <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
         <button style={{
           padding: '0.875rem 1.5rem',
-          background: '#f1f5f9',
-          color: '#475569',
-          border: 'none',
+          background: 'transparent',
+          color: '#ef4444',
+          border: '1px solid #ef4444',
           borderRadius: '12px',
           cursor: 'pointer',
           fontWeight: 600,
-          transition: 'all 0.2s'
+          transition: 'all 0.2s',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
         }}>
-          📄 Exportar PDF
+          <Download size={18} /> Exportar PDF
         </button>
         <button style={{
           padding: '0.875rem 1.5rem',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white',
+          background: '#22c55e',
+          color: '#0a0a0a',
           border: 'none',
           borderRadius: '12px',
           cursor: 'pointer',
           fontWeight: 600,
-          boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-          transition: 'all 0.2s'
+          boxShadow: '0 4px 15px rgba(34, 197, 94, 0.4)',
+          transition: 'all 0.2s',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
         }}>
-          📊 Exportar Excel
+          <FileSpreadsheet size={18} /> Exportar Excel
         </button>
       </div>
 

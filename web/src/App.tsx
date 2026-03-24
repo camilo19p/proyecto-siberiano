@@ -98,15 +98,15 @@ export default function App() {
                 border: 'none',
                 borderRadius: '12px',
                 cursor: 'pointer',
-                background: page === n.id ? 'var(--color-primary)' : 'var(--color-surface-2)',
-                color: page === n.id ? '#000' : 'var(--color-text)',
+                background: page === n.id ? 'linear-gradient(90deg, rgba(245, 200, 0, 0.1) 0%, transparent 100%)' : 'var(--color-surface-2)',
+                color: page === n.id ? '#f5c800' : 'var(--color-text)',
                 textAlign: 'left',
                 transition: 'all 0.3s',
                 boxShadow: page === n.id ? '0 4px 15px rgba(245, 200, 0, 0.25)' : 'none',
                 fontSize: '0.95rem',
                 fontWeight: page === n.id ? 700 : 500,
-                borderLeft: page === n.id ? '6px solid var(--color-primary)' : '6px solid transparent',
-                outline: page === n.id ? '2px solid var(--color-primary-light)' : 'none',
+                borderLeft: page === n.id ? '4px solid #f5c800' : '4px solid transparent',
+                outline: 'none',
               }}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1rem' }}>

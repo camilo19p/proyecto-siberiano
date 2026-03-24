@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Diamond, BarChart2 } from 'lucide-react';
 import { productService } from '../services/api';
 
 interface GananciaItem { id: string; codigo: string; nombre: string; gananciaUnitaria: number; stock: number; potencialGanancia: number; }
@@ -59,7 +60,10 @@ export function Ganancias() {
 
   return (
     <div>
-      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: '#1e293b' }}>💎 Análisis de Ganancias</h1>
+      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <Diamond size={28} />
+        Análisis de Ganancias
+      </h1>
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
@@ -105,7 +109,7 @@ export function Ganancias() {
           transition: 'transform 0.3s'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '1.5rem' }}>📊</span>
+            <BarChart2 size={20} />
             <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.8 }}>Stock Total</p>
           </div>
           <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700 }}>{stockTotal}</p>
@@ -152,17 +156,19 @@ export function Ganancias() {
                 <tr key={g.id} style={{
                   borderTop: '1px solid #f1f5f9',
                   transition: 'background 0.2s',
-                  background: index % 2 === 0 ? 'transparent' : 'rgba(100, 116, 139, 0.02)'
+                  background: index % 2 === 0 ? 'transparent' : 'rgba(100, 116, 139, 0.02)',
+                  opacity: g.stock === 0 ? 0.6 : 1
                 }}>
                   <td style={{ padding: '1rem 1.25rem', textAlign: 'center', fontWeight: 600, color: '#94a3b8' }}>{index + 1}</td>
                   <td style={{ padding: '1rem 1.25rem' }}>
                     <code style={{
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      color: 'white',
+                      background: '#1a1a1a',
+                      border: '1px solid var(--color-border)',
+                      color: '#f5c800',
                       padding: '0.375rem 0.75rem',
                       borderRadius: '8px',
                       fontSize: '0.875rem',
-                      fontWeight: 500
+                      fontWeight: 600
                     }}>{g.codigo}</code>
                   </td>
                   <td style={{ padding: '1rem 1.25rem', fontWeight: 500, color: '#1e293b' }}>{g.nombre}</td>
@@ -176,20 +182,20 @@ export function Ganancias() {
                       background: g.stock > 10 ? 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)' :
                         g.stock > 5 ? 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' :
                           'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
-                      color: g.stock > 10 ? '#16a34a' : g.stock > 5 ? '#d97706' : '#dc2626'
+                      color: g.stock === 0 ? '#ef4444' : g.stock > 10 ? '#16a34a' : g.stock > 5 ? '#d97706' : '#dc2626'
                     }}>{g.stock}</span>
                   </td>
                   <td style={{
                     padding: '1rem 1.25rem',
                     textAlign: 'right',
                     fontWeight: 600,
-                    color: g.gananciaUnitaria > 0 ? '#16a34a' : '#dc2626'
+                    color: '#22c55e'
                   }}>${g.gananciaUnitaria.toLocaleString()}</td>
                   <td style={{
                     padding: '1rem 1.25rem',
                     textAlign: 'right',
                     fontWeight: 700,
-                    color: '#10b981',
+                    color: '#f5c800',
                     fontSize: '1.0625rem'
                   }}>${g.potencialGanancia.toLocaleString()}</td>
                 </tr>
