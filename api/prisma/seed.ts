@@ -39,7 +39,7 @@ async function main() {
     });
   }
 
-  console.log(`Seed completado: ${users.length} usuarios creados/actualizados.`);
+  console.info(`Seed completado: ${users.length} usuarios creados/actualizados.`);
 
   // Productos con precios actualizados
   const productos = [
@@ -119,7 +119,7 @@ async function main() {
     });
   }
 
-  console.log(`Seed completado: ${productos.length} productos (upsert).`);
+  console.info(`Seed completado: ${productos.length} productos (upsert).`);
 }
 
 main()

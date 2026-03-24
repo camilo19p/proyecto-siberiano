@@ -1,6 +1,6 @@
-
 import fs from 'fs';
 import path from 'path';
+import logger from '../middlewares/logger';
 // --- BACKUP AUTOMÁTICO DE SQLITE (físico) ---
 const SQLITE_DB_PATH = path.resolve(__dirname, '../../prisma/dev.db');
 const SQLITE_BACKUP_DIR = path.resolve(__dirname, '../../backups');
@@ -13,7 +13,7 @@ export function crearBackup() {
   const fecha = new Date().toISOString().replace(/[:.]/g, '-');
   const destino = path.join(SQLITE_BACKUP_DIR, `backup-${fecha}.db`);
   fs.copyFileSync(SQLITE_DB_PATH, destino);
-  console.log(`[Backup] Copia creada: ${destino}`);
+  logger.info?.(`[Backup] Copia creada: ${destino}`);
   // Eliminar backups viejos si hay más de SQLITE_MAX_BACKUPS
   const archivos = fs.readdirSync(SQLITE_BACKUP_DIR)
     .filter(f => f.endsWith('.db'))
@@ -23,7 +23,7 @@ export function crearBackup() {
     const viejo = archivos.shift();
     if (viejo) {
       fs.unlinkSync(path.join(SQLITE_BACKUP_DIR, viejo.nombre));
-      console.log(`[Backup] Eliminado backup antiguo: ${viejo.nombre}`);
+      logger.info?.(`[Backup] Eliminado backup antiguo: ${viejo.nombre}`);
     }
   }
 }
@@ -61,7 +61,7 @@ router.get('/full', async (req: Request, res: Response) => {
 
     res.json(backup);
   } catch (error) {
-    console.error('Error en backup:', error);
+    logger.error?.('Error en backup:', error);
     res.status(500).json({ error: 'Error al generar backup' });
   }
 });
@@ -101,7 +101,7 @@ router.post('/restore', async (req: Request, res: Response) => {
 
     res.json({ mensaje: 'Restauración completada exitosamente' });
   } catch (error) {
-    console.error('Error en restore:', error);
+    logger.error?.('Error en restore:', error);
     res.status(500).json({ error: 'Error al restaurar backup' });
   }
 });
@@ -134,7 +134,7 @@ router.post('/save-file', async (req: Request, res: Response) => {
 
     res.json({ mensaje: 'Backup guardado', filename });
   } catch (error) {
-    console.error('Error guardando backup:', error);
+    logger.error?.('Error guardando backup:', error);
     res.status(500).json({ error: 'Error al guardar backup' });
   }
 });
@@ -162,7 +162,7 @@ router.get('/list', async (req: Request, res: Response) => {
 
     res.json(files);
   } catch (error) {
-    console.error('Error listando backups:', error);
+    logger.error?.('Error listando backups:', error);
     res.status(500).json({ error: 'Error al listar backups' });
   }
 });
