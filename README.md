@@ -57,4 +57,3 @@ Las credenciales de acceso se configuran en el archivo .env
 
 ## Autor
 Camilo - https://github.com/camilo19p
-<parameter name="filePath">c:\Users\camil\Downloads\proyecto-siberiano-main\README.md
