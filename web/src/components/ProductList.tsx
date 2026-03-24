@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { productService, Product } from '../services/api';
 import { ProductForm } from './ProductForm';
 
@@ -340,34 +340,46 @@ export function ProductList() {
                       <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
                         <button onClick={() => { setEditProduct(p); setShowForm(true); }}
                           style={{
-                            padding: '0.5rem 0.75rem',
+                            width: '32px',
+                            height: '32px',
+                            padding: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                             background: 'transparent',
                             border: '1px solid var(--color-border)',
                             borderRadius: '6px',
                             color: '#f5c800',
                             cursor: 'pointer',
-                            fontSize: '0.875rem',
-                            fontWeight: 600,
                             transition: 'all 0.2s'
                           }}
                           onMouseEnter={e => { e.currentTarget.style.background = '#f5c800'; e.currentTarget.style.color = '#0a0a0a'; }}
                           onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#f5c800'; }}
-                        >✏️ Editar</button>
+                          title="Editar"
+                        >
+                          <Pencil size={16} />
+                        </button>
                         <button onClick={() => handleDelete(p.id)}
                           style={{
-                            padding: '0.5rem 0.75rem',
+                            width: '32px',
+                            height: '32px',
+                            padding: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                             background: 'transparent',
                             border: '1px solid #ef4444',
                             borderRadius: '6px',
                             color: '#ef4444',
                             cursor: 'pointer',
-                            fontSize: '0.875rem',
-                            fontWeight: 600,
                             transition: 'all 0.2s'
                           }}
                           onMouseEnter={e => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = 'white'; }}
                           onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#ef4444'; }}
-                        >🗑️ Eliminar</button>
+                          title="Eliminar"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </td>
                   </tr>
