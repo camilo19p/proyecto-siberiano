@@ -10,6 +10,9 @@ interface Note {
   date: string; // formato YYYY-MM-DD
 }
 
+// Formateador de números corto para moneda
+const formatNum = (n: number) => '$' + n.toLocaleString('es-CO');
+
 export function Dashboard() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<number>(new Date().getDate());
@@ -289,29 +292,29 @@ export function Dashboard() {
               }}
             >
               {/* VENDIDO */}
-              <div style={{ padding: '8px 4px', borderRadius: '10px', textAlign: 'center', minWidth: 0, overflow: 'hidden', background: '#dbeafe', color: '#1e3a5f' }}>
-                <div style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>VENDIDO</div>
-                <div style={{ fontSize: '13px', fontWeight: 700 }}>${inventarioSelected?.totalVendido?.toLocaleString('es-CO') ?? '0'}</div>
+              <div style={{ padding: '6px 4px', borderRadius: '10px', textAlign: 'center', minWidth: 0, overflow: 'hidden', background: '#dbeafe', color: '#1e3a5f' }}>
+                <div style={{ fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '2px' }}>VENDIDO</div>
+                <div style={{ fontSize: '11px', fontWeight: 700 }}>{formatNum(inventarioSelected?.totalVendido ?? 0)}</div>
               </div>
               {/* GANANCIAS */}
-              <div style={{ padding: '8px 4px', borderRadius: '10px', textAlign: 'center', minWidth: 0, overflow: 'hidden', background: '#dcfce7', color: '#052e16' }}>
-                <div style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>GANANCIAS</div>
-                <div style={{ fontSize: '13px', fontWeight: 700 }}>${inventarioSelected?.ganancias?.toLocaleString('es-CO') ?? '0'}</div>
+              <div style={{ padding: '6px 4px', borderRadius: '10px', textAlign: 'center', minWidth: 0, overflow: 'hidden', background: '#dcfce7', color: '#052e16' }}>
+                <div style={{ fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '2px' }}>GANANCIAS</div>
+                <div style={{ fontSize: '11px', fontWeight: 700 }}>{formatNum(inventarioSelected?.ganancias ?? 0)}</div>
               </div>
               {/* PRÉSTAMO */}
-              <div style={{ padding: '8px 4px', borderRadius: '10px', textAlign: 'center', minWidth: 0, overflow: 'hidden', background: '#fef9c3', color: '#1a1000' }}>
-                <div style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>PRÉSTAMO</div>
-                <div style={{ fontSize: '13px', fontWeight: 700 }}>${inventarioSelected?.prestamo?.toLocaleString('es-CO') ?? '0'}</div>
+              <div style={{ padding: '6px 4px', borderRadius: '10px', textAlign: 'center', minWidth: 0, overflow: 'hidden', background: '#fef9c3', color: '#1a1000' }}>
+                <div style={{ fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '2px' }}>PRÉSTAMO</div>
+                <div style={{ fontSize: '11px', fontWeight: 700 }}>{formatNum(inventarioSelected?.prestamo ?? 0)}</div>
               </div>
               {/* DEUDA REST. */}
-              <div style={{ padding: '8px 4px', borderRadius: '10px', textAlign: 'center', minWidth: 0, overflow: 'hidden', background: '#fee2e2', color: '#450a0a' }}>
-                <div style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>DEUDA REST.</div>
-                <div style={{ fontSize: '13px', fontWeight: 700 }}>${inventarioSelected?.deudaRestante?.toLocaleString('es-CO') ?? '0'}</div>
+              <div style={{ padding: '6px 4px', borderRadius: '10px', textAlign: 'center', minWidth: 0, overflow: 'hidden', background: '#fee2e2', color: '#450a0a' }}>
+                <div style={{ fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '2px' }}>DEUDA REST.</div>
+                <div style={{ fontSize: '11px', fontWeight: 700 }}>{formatNum(inventarioSelected?.deudaRestante ?? 0)}</div>
               </div>
               {/* CAPITAL */}
-              <div style={{ padding: '8px 4px', borderRadius: '10px', textAlign: 'center', minWidth: 0, overflow: 'hidden', background: '#ede9fe', color: '#1e0a3d' }}>
-                <div style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>CAPITAL</div>
-                <div style={{ fontSize: '13px', fontWeight: 700 }}>${inventarioSelected?.capital?.toLocaleString('es-CO') ?? '0'}</div>
+              <div style={{ padding: '6px 4px', borderRadius: '10px', textAlign: 'center', minWidth: 0, overflow: 'hidden', background: '#ede9fe', color: '#1e0a3d' }}>
+                <div style={{ fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '2px' }}>CAPITAL</div>
+                <div style={{ fontSize: '11px', fontWeight: 700 }}>{formatNum(inventarioSelected?.capital ?? 0)}</div>
               </div>
             </div>
           )}
