@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import logger from './logger';
 
 // Tipos para usuario autenticado
 export interface AuthUser {
@@ -31,6 +32,13 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
   }
 
   const token = authHeader.substring(7);
+
+  // Dev shortcut: si en desarrollo se usa el token de fallback 'ok', permitir acceso y asignar rol ADMIN
+  if (token === 'ok' && process.env.NODE_ENV !== 'production') {
+    logger.info?.('Dev auth bypass: token "ok" usado, asignando usuario ADMIN local');
+    req.user = { id: 0, username: 'local-admin', role: 'ADMIN' };
+    return next();
+  }
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET || 'siberiano-secret-key-2024') as AuthUser;
@@ -71,6 +79,6 @@ export const requireRole = (...roles: string[]) => {
  * Middleware para logging de acceso
  */
 export const loggerMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - Usuario: ${req.user?.username || 'Anónimo'}`);
+  logger.info?.(`[${new Date().toISOString()}] ${req.method} ${req.path} - Usuario: ${req.user?.username || 'Anónimo'}`);
   next();
 };
