@@ -6,27 +6,50 @@ const API_BASE_URL = '/api';
 // If the backend is not running, requests will fail fast instead of hanging indefinitely.
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 5000
+  timeout: 10000  // Aumentado a 10 segundos
 });
 
-// Añadir token de auth desde localStorage a cada petición (si existe)
-if (typeof window !== 'undefined') {
-  api.interceptors.request.use((config) => {
-    try {
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        if (!config.headers) (config as any).headers = {};
-        // No sobrescribir si ya está presente
-        if (!(config.headers as any).Authorization && !(config.headers as any).authorization) {
-          (config.headers as any).Authorization = `Bearer ${token}`;
-        }
+// Interceptor de request - Añadir token de auth desde localStorage
+api.interceptors.request.use((config) => {
+  try {
+    // Intentar obtener token de diferentes keys
+    let token = localStorage.getItem('authToken') || 
+                localStorage.getItem('token') ||
+                localStorage.getItem('auth_token');
+    
+    if (token && token.trim()) {
+      if (!config.headers) (config as any).headers = {};
+      // No sobrescribir si ya está presente
+      if (!(config.headers as any).Authorization && !(config.headers as any).authorization) {
+        (config.headers as any).Authorization = `Bearer ${token}`;
       }
-    } catch (e) {
-      // ignore (por ejemplo si localStorage no está disponible)
     }
-    return config;
-  }, (error) => Promise.reject(error));
-}
+  } catch (e) {
+    // ignorar (por ejemplo si localStorage no está disponible)
+    console.warn('Error obteniendo token:', e);
+  }
+  return config;
+}, (error) => Promise.reject(error));
+
+// Interceptor de response - Manejar errores de autenticación
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Si recibimos 401 o 403, limpiar tokens
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      try {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('token');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('userRole');
+      } catch (e) {
+        console.warn('Error limpiando tokens:', e);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 function toErrorMessage(err: unknown): string {
   if (axios.isAxiosError(err)) {
@@ -39,7 +62,7 @@ function toErrorMessage(err: unknown): string {
     );
   }
   if (err instanceof Error) return err.message;
-  return 'Ocurrió un error inesperado';
+  return 'Ocurrio un error inesperado';
 }
 
 export interface Product {

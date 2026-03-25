@@ -18,7 +18,7 @@ declare global {
   }
 }
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || 'siberiano-secret-key-2024';
 
 if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
   throw new Error('JWT_SECRET no configurado en variables de entorno');
@@ -28,7 +28,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
   const authHeader = req.headers.authorization;
   
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Token no proporcionado o formato inválido' });
+    return res.status(401).json({ error: 'Token no proporcionado o formato invalido' });
   }
 
   const token = authHeader.substring(7);
@@ -41,14 +41,17 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET || 'siberiano-secret-key-2024') as AuthUser;
+    const decoded = jwt.verify(token, JWT_SECRET) as AuthUser;
     req.user = decoded;
     next();
   } catch (error: any) {
     if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ error: 'Token expirado' });
+      return res.status(401).json({ error: 'Token expirado. Por favor inicia sesion nuevamente.' });
     }
-    return res.status(401).json({ error: 'Token inválido' });
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ error: 'Token invalido' });
+    }
+    return res.status(401).json({ error: 'Error de autenticacion' });
   }
 };
 
@@ -62,7 +65,7 @@ export const requireRole = (...roles: string[]) => {
     }
 
     if (!roles || roles.length === 0) {
-      return res.status(500).json({ error: 'Configuración de middlewares incorrecta' });
+      return res.status(500).json({ error: 'Configuracion de middlewares incorrecta' });
     }
 
     if (!roles.includes(req.user.role)) {
@@ -79,6 +82,6 @@ export const requireRole = (...roles: string[]) => {
  * Middleware para logging de acceso
  */
 export const loggerMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  logger.info?.(`[${new Date().toISOString()}] ${req.method} ${req.path} - Usuario: ${req.user?.username || 'Anónimo'}`);
+  logger.info?.(`[${new Date().toISOString()}] ${req.method} ${req.path} - Usuario: ${req.user?.username || 'Anonimo'}`);
   next();
 };
