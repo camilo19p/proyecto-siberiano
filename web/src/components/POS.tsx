@@ -102,7 +102,14 @@ export function POS() {
     try {
       const data = await productService.getProducts();
       setProducts(data);
-    } catch (error) {
+    } catch (error: any) {
+      // Si el token expiró, redirigir al login
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/';
+        return;
+      }
       console.error('Error cargando productos:', error);
       setProducts([]);
     } finally {
@@ -114,7 +121,14 @@ export function POS() {
     try {
       const data = await clienteService.getClientes();
       setClientes(data || []);
-    } catch (error) {
+    } catch (error: any) {
+      // Si el token expiró, redirigir al login
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/';
+        return;
+      }
       console.error('Error cargando clientes:', error);
       setClientes([]);
     }

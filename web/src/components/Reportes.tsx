@@ -27,7 +27,15 @@ export function Reportes() {
       setData(inventarios);
       const closings = localStorage.getItem('closingHistory');
       setClosingHistory(closings ? JSON.parse(closings) : []);
-    } catch (error) {
+    } catch (error: any) {
+      // Si el token expiró, redirigir al login
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('authToken');
+        window.location.href = '/';
+        return;
+      }
       console.error('Error cargando reportes:', error);
       setData([]);
       setClosingHistory([]);

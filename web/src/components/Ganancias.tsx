@@ -15,7 +15,14 @@ export function Ganancias() {
     setError(null);
     try {
       setData(await productService.getGanancias());
-    } catch (err) {
+    } catch (err: any) {
+      // Si el token expiró, redirigir al login
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/';
+        return;
+      }
       setError(err instanceof Error ? err.message : 'Error cargando ganancias');
       setData([]);
     } finally {
