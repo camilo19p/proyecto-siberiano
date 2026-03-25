@@ -164,7 +164,7 @@ export function Reportes() {
               />
               <span style={{ color: '#475569', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <CreditCard size={18} />
-                Métodos de Pago
+                Metodos de Pago
               </span>
             </label>
           </div>
@@ -366,7 +366,7 @@ export function Reportes() {
           padding: '1.5rem',
           boxShadow: '0 10px 40px rgba(0,0,0,0.08)'
         }}>
-          <h3 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>🧾 Histórico de Cierres (Admin)</h3>
+          <h3 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>Historico de Cierres (Admin)</h3>
           {closingHistory.length === 0 ? (
             <p style={{ margin: 0, color: '#6b7280' }}>No hay cierres para eliminar.</p>
           ) : (
@@ -395,7 +395,7 @@ export function Reportes() {
                     cursor: 'pointer',
                     fontWeight: 700
                   }}>
-                    🗑 Eliminar
+                    Eliminar
                   </button>
                 </div>
               ))}

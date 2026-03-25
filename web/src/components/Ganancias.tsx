@@ -2,28 +2,49 @@ import { useState, useEffect } from 'react';
 import { Diamond, BarChart2 } from 'lucide-react';
 import { productService } from '../services/api';
 
-interface GananciaItem { id: string; codigo: string; nombre: string; gananciaUnitaria: number; stock: number; potencialGanancia: number; }
+interface GananciaItem { 
+  id: string; 
+  codigo: string; 
+  nombre: string; 
+  gananciaUnitaria: number; 
+  stock: number; 
+  potencialGanancia: number; 
+}
 
 export function Ganancias() {
   const [data, setData] = useState<GananciaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { 
+    load(); 
+  }, []);
+
   const load = async () => {
     setLoading(true);
     setError(null);
     try {
-      setData(await productService.getGanancias());
+      const ganancias = await productService.getGanancias();
+      setData(ganancias);
     } catch (err: any) {
-      // Si el token expiró, redirigir al login
-      if (err.response?.status === 401) {
-        localStorage.removeItem('token');
+      console.error('Error cargando ganancias:', err);
+      
+      // Verificar si es error de autenticación
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        localStorage.removeItem('authToken');
         localStorage.removeItem('user');
+        localStorage.removeItem('userRole');
         window.location.href = '/';
         return;
       }
-      setError(err instanceof Error ? err.message : 'Error cargando ganancias');
+
+      // Mensaje de error más legible
+      const errorMsg = err.response?.data?.error || 
+                      err.response?.data?.message || 
+                      err.message || 
+                      'Error cargando ganancias';
+      
+      setError(errorMsg);
       setData([]);
     } finally {
       setLoading(false);
@@ -33,7 +54,7 @@ export function Ganancias() {
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '400px' }}>
       <div style={{ textAlign: 'center' }}>
-        <p style={{ color: '#6b7280' }}>Cargando análisis de ganancias...</p>
+        <p style={{ color: '#6b7280' }}>Cargando analisis de ganancias...</p>
       </div>
     </div>
   );
@@ -67,7 +88,7 @@ export function Ganancias() {
     <div>
       <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <Diamond size={28} />
-        Análisis de Ganancias
+        Analisis de Ganancias
       </h1>
 
       {/* KPI Cards */}
@@ -114,7 +135,7 @@ export function Ganancias() {
             <thead>
               <tr style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
                 <th style={{ padding: '1.25rem', textAlign: 'center', fontWeight: 600, color: '#475569', fontSize: '0.875rem', width: '60px' }}>#</th>
-                <th style={{ padding: '1.25rem', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>CÓDIGO</th>
+                <th style={{ padding: '1.25rem', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>CODIGO</th>
                 <th style={{ padding: '1.25rem', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>PRODUCTO</th>
                 <th style={{ padding: '1.25rem', textAlign: 'center', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>STOCK</th>
                 <th className="align-right" style={{ padding: '1.25rem', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>GANANCIA/U</th>
