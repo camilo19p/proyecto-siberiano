@@ -278,14 +278,14 @@ export function Clientes() {
   return (
     <div>
       <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <User size={32} /> Gestión de Clientes
+        <User size={32} /> Gestion de Clientes
       </h1>
 
       {error && (
         <div style={{ background: '#fee2e2', border: '1px solid #ef4444', color: '#dc2626', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <AlertCircle size={20} />
           <span>{error}</span>
-          <button onClick={() => setError(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '1.5rem' }}>×</button>
+          <button onClick={() => setError(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '1.5rem' }}>x</button>
         </div>
       )}
 
@@ -318,7 +318,7 @@ export function Clientes() {
           <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
           <input
             type="text"
-            placeholder="Buscar por nombre, documento o teléfono..."
+            placeholder="Buscar por nombre, documento o telefono..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{ width: '100%', padding: '0.75rem 0.75rem 0.75rem 2.5rem', border: '1px solid var(--color-border)', borderRadius: '10px', background: 'var(--color-surface)', color: 'var(--color-text)' }}
@@ -396,9 +396,9 @@ export function Clientes() {
                 onChange={e => setNewCliente({...newCliente, tipoDocumento: e.target.value as any})}
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               >
-                <option value="CC">Cédula (CC)</option>
+                <option value="CC">Cedula (CC)</option>
                 <option value="NIT">NIT</option>
-                <option value="CE">Cédula Extranjería</option>
+                <option value="CE">Cedula Extranjeria</option>
                 <option value="PASAPORTE">Pasaporte</option>
               </select>
             </div>
@@ -408,27 +408,27 @@ export function Clientes() {
                 type="text"
                 value={newCliente.documento}
                 onChange={e => setNewCliente({...newCliente, documento: e.target.value})}
-                placeholder="Número de documento"
+                placeholder="Numero de documento"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Teléfono *</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Telefono *</label>
               <input
                 type="tel"
                 value={newCliente.telefono}
                 onChange={e => setNewCliente({...newCliente, telefono: e.target.value})}
-                placeholder="Teléfono principal"
+                placeholder="Telefono principal"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Teléfono 2</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Telefono 2</label>
               <input
                 type="tel"
                 value={newCliente.telefonoSecundario}
                 onChange={e => setNewCliente({...newCliente, telefonoSecundario: e.target.value})}
-                placeholder="Teléfono secundario"
+                placeholder="Telefono secundario"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
@@ -438,17 +438,17 @@ export function Clientes() {
                 type="email"
                 value={newCliente.email}
                 onChange={e => setNewCliente({...newCliente, email: e.target.value})}
-                placeholder="Correo electrónico"
+                placeholder="Correo electronico"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Dirección</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Direccion</label>
               <input
                 type="text"
                 value={newCliente.direccion}
                 onChange={e => setNewCliente({...newCliente, direccion: e.target.value})}
-                placeholder="Dirección completa"
+                placeholder="Direccion completa"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
@@ -473,7 +473,7 @@ export function Clientes() {
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Cupo de Crédito ($)</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Cupo de Credito ($)</label>
               <input
                 type="number"
                 value={newCliente.cupo}
@@ -526,7 +526,7 @@ export function Clientes() {
         {loading ? (
           <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>Cargando clientes...</div>
         ) : paginatedClientes.length === 0 ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>Sin clientes registrados 👤</div>
+          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>Sin clientes registrados</div>
         ) : (
           <>
             <div style={{ overflowX: 'auto' }}>
@@ -535,7 +535,7 @@ export function Clientes() {
                   <tr style={{ background: 'var(--color-surface-2)', borderBottom: '1px solid var(--color-border)' }}>
                     <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>NOMBRE</th>
                     <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>DOCUMENTO</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>TELÉFONO</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>TELEFONO</th>
                     <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>CIUDAD</th>
                     <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>CUPO</th>
                     <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>DEUDA</th>
@@ -581,7 +581,7 @@ export function Clientes() {
                           background: c.estado === 'ACTIVO' ? '#dcfce7' : '#fee2e2',
                           color: c.estado === 'ACTIVO' ? '#16a34a' : '#dc2626'
                         }}>
-                          {c.estado === 'ACTIVO' ? '✓ ACTIVO' : '✕ INACTIVO'}
+                          {c.estado === 'ACTIVO' ? 'ACTIVO' : 'INACTIVO'}
                         </span>
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'center', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
@@ -683,7 +683,7 @@ export function Clientes() {
                   Anterior
                 </button>
                 <span style={{ fontWeight: 600, color: 'var(--color-text)', minWidth: '80px', textAlign: 'center' }}>
-                  Página {currentPage} de {totalPages}
+                  Pagina {currentPage} de {totalPages}
                 </span>
                 <button
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
@@ -727,11 +727,11 @@ export function Clientes() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
               <AlertCircle size={24} color="#dc2626" />
               <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text)' }}>
-                Confirmar eliminación
+                Confirmar eliminacion
               </h3>
             </div>
             <p style={{ color: 'var(--color-text)', marginBottom: '1.5rem' }}>
-              ¿Estás seguro de que deseas eliminar este cliente? Esta acción no se puede deshacer.
+              Estas seguro de que deseas eliminar este cliente? Esta accion no se puede deshacer.
             </p>
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button
@@ -747,7 +747,7 @@ export function Clientes() {
                   fontWeight: 700
                 }}
               >
-                Sí, eliminar
+                Si, eliminar
               </button>
               <button
                 onClick={() => setConfirmDelete(null)}
@@ -847,7 +847,7 @@ export function Clientes() {
                         flex: 1,
                         padding: '0.875rem',
                         background: 'var(--color-surface-2)',
-                        color: 'var(--color-text)',
+                        color: 'var(--color_text)',
                         border: '1px solid var(--color-border)',
                         borderRadius: '8px',
                         cursor: 'pointer',
