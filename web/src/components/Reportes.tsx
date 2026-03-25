@@ -7,7 +7,7 @@ export function Reportes() {
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState(() => {
     const today = new Date();
-    today.setDate(today.getDate() - 30);
+    today.setDate(today.getDate() - 60);
     return today.toISOString().split('T')[0];
   });
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);

@@ -54,7 +54,7 @@ export function Ganancias() {
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '400px' }}>
       <div style={{ textAlign: 'center' }}>
-        <p style={{ color: '#6b7280' }}>Cargando analisis de ganancias...</p>
+        <p style={{ color: '#6b7280' }}>Cargando análisis de ganancias...</p>
       </div>
     </div>
   );
@@ -88,7 +88,7 @@ export function Ganancias() {
     <div>
       <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <Diamond size={28} />
-        Analisis de Ganancias
+        Análisis de Ganancias
       </h1>
 
       {/* KPI Cards */}

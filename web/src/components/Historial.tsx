@@ -15,7 +15,16 @@ export function Historial() {
       const invs = await inventarioService.getAllInventarios();
       setData(invs);
       if (invs.length > 0) setSelected(invs[0]);
-    } catch (err) {
+    } catch (err: any) {
+      // Si el token es inválido (401/403), redirigir al login
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('userRole');
+        window.location.href = '/';
+        return;
+      }
       setError(err instanceof Error ? err.message : 'Error cargando historial');
       setData([]);
       setSelected(null);
