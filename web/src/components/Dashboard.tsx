@@ -109,17 +109,46 @@ export function Dashboard() {
     axios.get('/api/inventario').then(res => {
       setInventarios(Array.isArray(res.data) ? res.data : res.data.value || []);
     }).catch(() => {
-      console.warn('Endpoint /api/inventario no disponible');
+      // Si el API no funciona, intentar cargar desde localStorage
+      const saved = localStorage.getItem('inventarios_list');
+      if (saved) {
+        try {
+          setInventarios(JSON.parse(saved));
+        } catch (e) {
+          console.warn('Error loading inventarios from localStorage:', e);
+        }
+      }
     });
   }, []);
 
   // Filtrar inventario por día seleccionado
   useEffect(() => {
     const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay);
-    const found = inventarios.find(inv => {
+    
+    // Primero buscar exactamente en ese día
+    let found = inventarios.find(inv => {
       const invDate = new Date(inv.fecha);
       return invDate.toDateString() === selectedDate.toDateString();
     });
+
+    // Si no encuentra en ese día, buscar el más reciente anterior a esa fecha
+    if (!found) {
+      const filteredByDate = inventarios
+        .filter(inv => {
+          const invDate = new Date(inv.fecha);
+          return invDate <= selectedDate;
+        })
+        .sort((a, b) => {
+          const dateA = new Date(a.fecha).getTime();
+          const dateB = new Date(b.fecha).getTime();
+          return dateB - dateA; // Descendente para obtener el más reciente
+        });
+      
+      if (filteredByDate.length > 0) {
+        found = filteredByDate[0];
+      }
+    }
+
     setInventarioSelected(found || null);
   }, [inventarios, currentDate, selectedDay]);
 
@@ -408,7 +437,7 @@ export function Dashboard() {
         {inventarioSelected && (
           <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '20px', padding: '1.5rem' }}>
             <h3 style={{ margin: '0 0 1rem 0', color: 'var(--color-text)', fontSize: '1rem', fontWeight: 700 }}>
-              📊 Inventario
+              📊 Inventario {new Date(inventarioSelected.fecha).toLocaleDateString('es-CO')}
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.875rem' }}>
               <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
