@@ -247,8 +247,7 @@ export function Proveedores() {
               cursor: 'pointer',
               fontWeight: 600,
               fontSize: '0.875rem'
-            }}
-          >
+            }}>
             {f === 'EN_MORA' ? 'En Mora' : f}
           </button>
         ))}
@@ -290,7 +289,7 @@ export function Proveedores() {
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>NIT *</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>NIT / CC *</label>
               <input
                 type="text"
                 value={newProveedor.nit}
@@ -350,7 +349,7 @@ export function Proveedores() {
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Dias en Mora</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Dias de Mora</label>
               <input
                 type="number"
                 value={newProveedor.diasEnMora}

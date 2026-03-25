@@ -325,19 +325,77 @@ export function Reportes() {
 
       {/* Botones de Exportación */}
       <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-        <button style={{
-          padding: '0.875rem 1.5rem',
-          background: 'transparent',
-          color: '#ef4444',
-          border: '1px solid #ef4444',
-          borderRadius: '12px',
-          cursor: 'pointer',
-          fontWeight: 600,
-          transition: 'all 0.2s',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem'
-        }}>
+        <button 
+          onClick={() => {
+            try {
+              const jsPDFModule = (window as any).jsPDF;
+              if (!jsPDFModule) {
+                alert('Para exportar PDF, instala: npm install jspdf jspdf-autotable');
+                return;
+              }
+              
+              const doc = new jsPDFModule.jsPDF();
+              const pageWidth = doc.internal.pageSize.getWidth();
+              const pageHeight = doc.internal.pageSize.getHeight();
+              
+              // Encabezado
+              doc.setFillColor(245, 200, 0);
+              doc.rect(0, 0, pageWidth, 30, 'F');
+              doc.setTextColor(0, 0, 0);
+              doc.setFontSize(20);
+              doc.text('SIBERIANO - Sistema de Control', pageWidth / 2, 15, { align: 'center' });
+              doc.setFontSize(10);
+              doc.text(`Reporte generado: ${new Date().toLocaleDateString('es-CO')} ${new Date().toLocaleTimeString('es-CO')}`, pageWidth / 2, 25, { align: 'center' });
+              
+              // Tabla
+              const tableData = filteredData.map(inv => [
+                new Date(inv.fecha).toLocaleDateString('es-ES'),
+                `$${inv.totalVendido.toLocaleString()}`,
+                `$${inv.ganancias.toLocaleString()}`,
+                `$${inv.prestamo.toLocaleString()}`,
+                `$${inv.capital.toLocaleString()}`,
+                `$${inv.deudaRestante.toLocaleString()}`
+              ]);
+              
+              const autoTableModule = (window as any).autoTable;
+              if (autoTableModule) {
+                autoTableModule(doc, {
+                  head: [['FECHA', 'INGRESOS', 'GANANCIAS', 'EGRESOS', 'CAPITAL', 'DEUDA']],
+                  body: tableData,
+                  startY: 40,
+                  styles: { fontSize: 9, cellPadding: 3 },
+                  headStyles: { fillColor: [245, 200, 0], textColor: [0, 0, 0], fontStyle: 'bold' },
+                  bodyStyles: { textColor: [50, 50, 50] },
+                  alternateRowStyles: { fillColor: [240, 240, 240] }
+                });
+              }
+              
+              // Total general
+              const lastY = (doc as any).lastAutoTable?.finalY || 150;
+              doc.setFontSize(11);
+              doc.setFont(undefined, 'bold');
+              doc.text(`TOTAL: $${totalIngresos.toLocaleString()} | GANANCIAS: $${totalGanancias.toLocaleString()}`, pageWidth / 2, lastY + 10, { align: 'center' });
+              
+              doc.save(`reporte_${endDate}.pdf`);
+            } catch (error) {
+              console.error('Error exportando PDF:', error);
+              alert('Error al exportar PDF. Asegúrate de tener instaladas las dependencias.');
+            }
+          }}
+          style={{
+            padding: '0.875rem 1.5rem',
+            background: 'transparent',
+            color: '#ef4444',
+            border: '1px solid #ef4444',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            fontWeight: 600,
+            transition: 'all 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}
+        >
           <Download size={18} /> Exportar PDF
         </button>
         <button style={{

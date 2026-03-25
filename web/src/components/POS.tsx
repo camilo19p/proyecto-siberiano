@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { productService, Product, clienteService, Cliente } from '../services/api';
 import { ShoppingCart, Users, Package, CreditCard, FileText, Trash2, Plus, Minus } from 'lucide-react';
+import axios from 'axios';
 
 interface CartItem {
   product: Product;
@@ -13,7 +14,7 @@ interface Sale {
   timestamp: string;
   items: CartItem[];
   total: number;
-  paymentMethod: 'cash' | 'card' | 'transfer' | 'credit';
+  paymentMethod: 'EFECTIVO' | 'NEQUI' | 'TRANSFERENCIA' | 'FIADO';
   amountReceived?: number;
   change?: number;
   cliente?: Cliente;
@@ -26,6 +27,13 @@ interface Caja {
   vendedor: string;
   saldo: number;
   activa: boolean;
+}
+
+interface Depositos {
+  efectivo: number;
+  nequi: number;
+  transferencia: number;
+  fiado: number;
 }
 
 const formatNum = (n: number) => '$' + n.toLocaleString('es-CO');
@@ -50,7 +58,7 @@ export function POS() {
   const [search, setSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('TODOS');
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'transfer' | 'credit'>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<'EFECTIVO' | 'NEQUI' | 'TRANSFERENCIA' | 'FIADO'>('EFECTIVO');
   const [amountReceived, setAmountReceived] = useState<number>(0);
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +69,7 @@ export function POS() {
   const [showClienteModal, setShowClienteModal] = useState(false);
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
   const [showCuentaCobro, setShowCuentaCobro] = useState(false);
+  const [depositos, setDepositos] = useState<Depositos>({ efectivo: 0, nequi: 0, transferencia: 0, fiado: 0 });
 
   const searchRef = useRef<HTMLInputElement | null>(null);
   const amountRef = useRef<HTMLInputElement | null>(null);
@@ -70,6 +79,7 @@ export function POS() {
     loadClientes();
     loadCajas();
     loadTodaysSales();
+    cargarDepositos();
     setTimeout(() => searchRef.current?.focus(), 50);
   }, []);
 
@@ -92,7 +102,9 @@ export function POS() {
   useEffect(() => {
     if (showConfirmation) {
       setTimeout(() => {
-        amountRef.current?.focus();
+        if (paymentMethod === 'EFECTIVO') {
+          amountRef.current?.focus();
+        }
       }, 80);
     }
   }, [showConfirmation]);
@@ -103,7 +115,6 @@ export function POS() {
       const data = await productService.getProducts();
       setProducts(data);
     } catch (error: any) {
-      // Si el token expiró, redirigir al login
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -122,7 +133,6 @@ export function POS() {
       const data = await clienteService.getClientes();
       setClientes(data || []);
     } catch (error: any) {
-      // Si el token expiró, redirigir al login
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -169,6 +179,30 @@ export function POS() {
         setSales(JSON.parse(stored));
       } catch {
         setSales([]);
+      }
+    }
+  };
+
+  const cargarDepositos = async () => {
+    try {
+      const response = await axios.get('/api/pos/depositos-dia');
+      setDepositos(response.data);
+    } catch (err) {
+      // Si el endpoint no existe, usar valores por defecto
+      console.warn('Endpoint /api/pos/depositos-dia no disponible');
+      // Calcular desde las ventas locales
+      const today = new Date().toLocaleDateString('es-CO');
+      const stored = localStorage.getItem(`sales-${today}`);
+      if (stored) {
+        const salesData = JSON.parse(stored);
+        const deps: Depositos = { efectivo: 0, nequi: 0, transferencia: 0, fiado: 0 };
+        salesData.forEach((sale: Sale) => {
+          if (sale.paymentMethod === 'EFECTIVO') deps.efectivo += sale.total;
+          else if (sale.paymentMethod === 'NEQUI') deps.nequi += sale.total;
+          else if (sale.paymentMethod === 'TRANSFERENCIA') deps.transferencia += sale.total;
+          else if (sale.paymentMethod === 'FIADO') deps.fiado += sale.total;
+        });
+        setDepositos(deps);
       }
     }
   };
@@ -237,8 +271,8 @@ export function POS() {
       items: [...cart],
       total,
       paymentMethod,
-      amountReceived: paymentMethod === 'cash' ? amountReceived : undefined,
-      change: paymentMethod === 'cash' ? change : undefined,
+      amountReceived: paymentMethod === 'EFECTIVO' ? amountReceived : undefined,
+      change: paymentMethod === 'EFECTIVO' ? change : undefined,
       cliente: selectedCliente,
       cajaId: cajaActiva
     };
@@ -251,6 +285,14 @@ export function POS() {
     );
     setCajas(updatedCajas);
     localStorage.setItem('cajas', JSON.stringify(updatedCajas));
+    
+    // Actualizar depósitos localmente
+    const newDeps = { ...depositos };
+    if (paymentMethod === 'EFECTIVO') newDeps.efectivo += total;
+    else if (paymentMethod === 'NEQUI') newDeps.nequi += total;
+    else if (paymentMethod === 'TRANSFERENCIA') newDeps.transferencia += total;
+    else if (paymentMethod === 'FIADO') newDeps.fiado += total;
+    setDepositos(newDeps);
     
     showToast(`Venta registrada: ${formatNum(total)}`);
     setCart([]);
@@ -266,8 +308,12 @@ export function POS() {
   };
 
   const handleConfirmSale = () => {
-    if (paymentMethod === 'credit' && !selectedCliente) {
-      showToast('Selecciona un cliente para venta a credito', 'error');
+    if (paymentMethod === 'FIADO' && !selectedCliente) {
+      showToast('Selecciona un cliente para venta a crédito', 'error');
+      return;
+    }
+    if (paymentMethod === 'EFECTIVO' && isAmountInsufficient) {
+      showToast('Monto insuficiente', 'error');
       return;
     }
     handleCheckout();
@@ -283,6 +329,15 @@ export function POS() {
     setCajaActiva(cajaId);
     localStorage.setItem('cajas', JSON.stringify(updated));
     showToast(`Turno de ${updated.find(c => c.id === cajaId)?.nombre} activado`);
+  };
+
+  const getPaymentMethodColor = (method: 'EFECTIVO' | 'NEQUI' | 'TRANSFERENCIA' | 'FIADO') => {
+    switch (method) {
+      case 'EFECTIVO': return { bg: '#F5C800', text: '#1a1a1a' };
+      case 'NEQUI': return { bg: '#7C3AED', text: 'white' };
+      case 'TRANSFERENCIA': return { bg: '#2563EB', text: 'white' };
+      case 'FIADO': return { bg: '#DC2626', text: 'white' };
+    }
   };
 
   if (loading) {
@@ -381,117 +436,157 @@ export function POS() {
         </div>
       </div>
 
-      {/* Carrito */}
-      <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', overflow: 'hidden' }}>
-        {/* Header */}
-        <div style={{ padding: '1rem', background: 'var(--color-surface-2)', borderBottom: '1px solid var(--color-border)' }}>
-          <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>Carrito</h2>
-          <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
-            Caja: {cajas.find(c => c.id === cajaActiva)?.nombre}
-          </div>
-        </div>
-
-        {/* Items */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {cart.length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', paddingTop: '2rem' }}>
-              <ShoppingCart size={32} style={{ opacity: 0.5, margin: '0 auto 0.5rem' }} />
-              <p style={{ margin: 0, fontSize: '0.875rem' }}>Carrito vacío</p>
+      {/* Carrito y Panel Lateral */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflow: 'hidden' }}>
+        {/* Carrito */}
+        <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', overflow: 'hidden', flex: 1 }}>
+          {/* Header */}
+          <div style={{ padding: '1rem', background: 'var(--color-surface-2)', borderBottom: '1px solid var(--color-border)' }}>
+            <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>Carrito</h2>
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
+              Caja: {cajas.find(c => c.id === cajaActiva)?.nombre}
             </div>
-          ) : (
-            cart.map(item => (
-              <div key={item.product.id} style={{ background: 'var(--color-surface)', padding: '0.75rem', borderRadius: '6px', borderBottom: '1px solid var(--color-border)' }}>
-                <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.25rem' }}>{item.product.name}</div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <button onClick={() => handleDecreaseQuantity(item.product.id)} style={{ padding: '0.25rem 0.5rem', background: '#f5c800', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>?</button>
-                    <span style={{ minWidth: '2rem', textAlign: 'center', fontWeight: 600 }}>{item.quantity}</span>
-                    <button onClick={() => handleIncreaseQuantity(item.product.id)} style={{ padding: '0.25rem 0.5rem', background: '#f5c800', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>+</button>
-                  </div>
-                  <button onClick={() => handleRemoveFromCart(item.product.id)} style={{ padding: '0.25rem 0.5rem', background: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textAlign: 'right' }}>
-                  {formatNum(item.subtotal)}
-                </div>
+          </div>
+
+          {/* Items */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {cart.length === 0 ? (
+              <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', paddingTop: '2rem' }}>
+                <ShoppingCart size={32} style={{ opacity: 0.5, margin: '0 auto 0.5rem' }} />
+                <p style={{ margin: 0, fontSize: '0.875rem' }}>Carrito vacío</p>
               </div>
-            ))
-          )}
+            ) : (
+              cart.map(item => (
+                <div key={item.product.id} style={{ background: 'var(--color-surface)', padding: '0.75rem', borderRadius: '6px', borderBottom: '1px solid var(--color-border)' }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.25rem' }}>{item.product.name}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <button onClick={() => handleDecreaseQuantity(item.product.id)} style={{ padding: '0.25rem 0.5rem', background: '#f5c800', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>?</button>
+                      <span style={{ minWidth: '2rem', textAlign: 'center', fontWeight: 600 }}>{item.quantity}</span>
+                      <button onClick={() => handleIncreaseQuantity(item.product.id)} style={{ padding: '0.25rem 0.5rem', background: '#f5c800', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>+</button>
+                    </div>
+                    <button onClick={() => handleRemoveFromCart(item.product.id)} style={{ padding: '0.25rem 0.5rem', background: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textAlign: 'right' }}>
+                    {formatNum(item.subtotal)}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Totales */}
+          <div style={{ padding: '1rem', background: 'var(--color-surface-2)', borderTop: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+              <span>Subtotal:</span>
+              <span style={{ fontWeight: 600 }}>{formatNum(total)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: '#22c55e' }}>
+              <span>Ganancia:</span>
+              <span style={{ fontWeight: 600 }}>{formatNum(totalProfit)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 700, paddingTop: '0.5rem', borderTop: '1px solid var(--color-border)' }}>
+              <span>Total:</span>
+              <span style={{ color: '#f5c800' }}>{formatNum(total)}</span>
+            </div>
+          </div>
+
+          {/* Método de pago - Botones */}
+          <div style={{ padding: '1rem', borderTop: '1px solid var(--color-border)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+            {(['EFECTIVO', 'NEQUI', 'TRANSFERENCIA', 'FIADO'] as const).map((method) => {
+              const isVisible = method !== 'FIADO' || selectedCliente;
+              const isActive = paymentMethod === method;
+              const colors = getPaymentMethodColor(method);
+              return (
+                <button
+                  key={method}
+                  onClick={() => setPaymentMethod(method)}
+                  style={{
+                    padding: '0.5rem',
+                    background: isActive ? colors.bg : 'var(--color-surface)',
+                    color: isActive ? colors.text : 'var(--color-text)',
+                    border: `2px solid ${isActive ? colors.bg : 'var(--color-border)'}`,
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: '0.75rem',
+                    opacity: isVisible ? 1 : 0.3,
+                    pointerEvents: isVisible ? 'auto' : 'none'
+                  }}
+                  disabled={!isVisible}
+                >
+                  {method}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Botones */}
+          <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <button
+              onClick={() => setShowConfirmation(true)}
+              disabled={cart.length === 0}
+              style={{
+                padding: '0.75rem',
+                background: cart.length === 0 ? '#ccc' : '#10b981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: cart.length === 0 ? 'not-allowed' : 'pointer',
+                fontWeight: 600,
+                fontSize: '0.875rem'
+              }}
+            >
+              Pagar (F2)
+            </button>
+            <button
+              onClick={handleClearCart}
+              disabled={cart.length === 0}
+              style={{
+                padding: '0.75rem',
+                background: cart.length === 0 ? '#ccc' : '#dc2626',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: cart.length === 0 ? 'not-allowed' : 'pointer',
+                fontWeight: 600,
+                fontSize: '0.875rem'
+              }}
+            >
+              Limpiar (ESC)
+            </button>
+          </div>
         </div>
 
-        {/* Totales */}
-        <div style={{ padding: '1rem', background: 'var(--color-surface-2)', borderTop: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
-            <span>Subtotal:</span>
-            <span style={{ fontWeight: 600 }}>{formatNum(total)}</span>
+        {/* Panel de Depósitos */}
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', padding: '1rem' }}>
+          <h3 style={{ margin: '0 0 1rem 0', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-text)' }}>?? Depósitos del Día</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem' }}>
+            <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--color-text-muted)', fontWeight: 600 }}>EFECTIVO</span>
+              <span style={{ color: '#F5C800', fontWeight: 700 }}>{formatNum(depositos.efectivo)}</span>
+            </div>
+            <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--color-text-muted)', fontWeight: 600 }}>NEQUI</span>
+              <span style={{ color: '#7C3AED', fontWeight: 700 }}>{formatNum(depositos.nequi)}</span>
+            </div>
+            <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--color-text-muted)', fontWeight: 600 }}>TRANSFER.</span>
+              <span style={{ color: '#2563EB', fontWeight: 700 }}>{formatNum(depositos.transferencia)}</span>
+            </div>
+            <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--color-text-muted)', fontWeight: 600 }}>FIADO</span>
+              <span style={{ color: '#DC2626', fontWeight: 700 }}>{formatNum(depositos.fiado)}</span>
+            </div>
+            <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '0.75rem', marginTop: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--color-text)', fontSize: '0.9rem', fontWeight: 700 }}>TOTAL</span>
+              <span style={{ color: '#F5C800', fontWeight: 700, fontSize: '1rem' }}>
+                {formatNum(depositos.efectivo + depositos.nequi + depositos.transferencia + depositos.fiado)}
+              </span>
+            </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: '#22c55e' }}>
-            <span>Ganancia:</span>
-            <span style={{ fontWeight: 600 }}>{formatNum(totalProfit)}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 700, paddingTop: '0.5rem', borderTop: '1px solid var(--color-border)' }}>
-            <span>Total:</span>
-            <span style={{ color: '#f5c800' }}>{formatNum(total)}</span>
-          </div>
-        </div>
-
-        {/* Método de pago */}
-        <div style={{ padding: '1rem', borderTop: '1px solid var(--color-border)' }}>
-          <select
-            value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value as any)}
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-              borderRadius: '6px',
-              color: 'var(--color-text)',
-              marginBottom: '0.5rem'
-            }}
-          >
-            <option value="cash">Efectivo</option>
-            <option value="card">Tarjeta</option>
-            <option value="transfer">Transferencia</option>
-            <option value="credit">Crédito</option>
-          </select>
-        </div>
-
-        {/* Botones */}
-        <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <button
-            onClick={() => setShowConfirmation(true)}
-            disabled={cart.length === 0}
-            style={{
-              padding: '0.75rem',
-              background: cart.length === 0 ? '#ccc' : '#10b981',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: cart.length === 0 ? 'not-allowed' : 'pointer',
-              fontWeight: 600,
-              fontSize: '0.875rem'
-            }}
-          >
-            Pagar (F2)
-          </button>
-          <button
-            onClick={handleClearCart}
-            disabled={cart.length === 0}
-            style={{
-              padding: '0.75rem',
-              background: cart.length === 0 ? '#ccc' : '#dc2626',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: cart.length === 0 ? 'not-allowed' : 'pointer',
-              fontWeight: 600,
-              fontSize: '0.875rem'
-            }}
-          >
-            Limpiar (ESC)
-          </button>
         </div>
       </div>
 
@@ -523,7 +618,11 @@ export function POS() {
                 <span>Total:</span>
                 <span style={{ fontWeight: 700, color: '#f5c800' }}>{formatNum(total)}</span>
               </div>
-              {paymentMethod === 'cash' && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                <span>Método:</span>
+                <span style={{ fontWeight: 700, color: getPaymentMethodColor(paymentMethod).bg }}>{paymentMethod}</span>
+              </div>
+              {paymentMethod === 'EFECTIVO' && (
                 <>
                   <div style={{ marginBottom: '1rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Cantidad recibida:</label>
@@ -538,7 +637,7 @@ export function POS() {
                         border: `1px solid ${isAmountInsufficient ? '#dc2626' : 'var(--color-border)'}`,
                         borderRadius: '6px',
                         background: 'var(--color-surface)',
-                        color: 'var(--color-text)'
+                        color: 'var(--color-text'
                       }}
                     />
                   </div>
@@ -575,15 +674,15 @@ export function POS() {
               </button>
               <button
                 onClick={handleConfirmSale}
-                disabled={paymentMethod === 'cash' && isAmountInsufficient}
+                disabled={paymentMethod === 'EFECTIVO' && isAmountInsufficient}
                 style={{
                   flex: 1,
                   padding: '0.75rem',
-                  background: (paymentMethod === 'cash' && isAmountInsufficient) ? '#ccc' : '#10b981',
+                  background: (paymentMethod === 'EFECTIVO' && isAmountInsufficient) ? '#ccc' : '#10b981',
                   color: 'white',
                   border: 'none',
                   borderRadius: '6px',
-                  cursor: (paymentMethod === 'cash' && isAmountInsufficient) ? 'not-allowed' : 'pointer',
+                  cursor: (paymentMethod === 'EFECTIVO' && isAmountInsufficient) ? 'not-allowed' : 'pointer',
                   fontWeight: 600
                 }}
               >

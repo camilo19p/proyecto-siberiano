@@ -7,6 +7,7 @@ import { Ganancias } from './components/Ganancias';
 import { Historial } from './components/Historial';
 import { Dashboard } from './components/Dashboard';
 import { POS } from './components/POS';
+import { Movimientos } from './components/Movimientos';
 import { Reportes } from './components/Reportes';
 import { ReportesAvanzados } from './components/ReportesAvanzados';
 import { Facturacion } from './components/Facturacion';
@@ -16,10 +17,10 @@ import { Clientes } from './components/Clientes';
 import { Proveedores } from './components/Proveedores';
 import { CierreCaja } from './components/CierreCaja';
 import SiberianoLogo from './assets/Siberiano.png';
-import { Package, ClipboardList, TrendingUp, History, FileText, CreditCard, Users, Landmark, ShoppingCart, BarChart2, LayoutDashboard, LogOut, Building2 } from 'lucide-react';
+import { Package, ClipboardList, TrendingUp, History, FileText, CreditCard, Users, Landmark, ShoppingCart, BarChart2, LayoutDashboard, LogOut, Building2, Activity } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 
-type Page = 'inicio' | 'pos' | 'productos' | 'inventario' | 'inventario_avanzado' | 'ganancias' | 'facturas' | 'reportes' | 'reportes_avanzados' | 'cuentas_pagar' | 'usuarios' | 'cierre_caja' | 'historial' | 'clientes' | 'proveedores';
+type Page = 'inicio' | 'pos' | 'movimientos' | 'productos' | 'inventario' | 'inventario_avanzado' | 'ganancias' | 'facturas' | 'reportes' | 'reportes_avanzados' | 'cuentas_pagar' | 'usuarios' | 'cierre_caja' | 'historial' | 'clientes' | 'proveedores';
 
 export default function App() {
   const [logged, setLogged] = useState(() => !!localStorage.getItem('authToken'));
@@ -46,6 +47,7 @@ export default function App() {
   const nav = [
     { id: 'inicio' as Page, label: 'Dashboard', icon: <LayoutDashboard size={18} />, desc: 'Inicio y calendario' },
     { id: 'pos' as Page, label: 'Punto de Venta', icon: <ShoppingCart size={18} />, desc: 'POS - Ventas rápidas' },
+    { id: 'movimientos' as Page, label: 'Movimientos', icon: <Activity size={18} />, desc: 'Registro de ingresos' },
     { id: 'productos' as Page, label: 'Productos', icon: <Package size={18} />, desc: 'Gestiona el inventario' },
     { id: 'inventario' as Page, label: 'Inventario Diario', icon: <ClipboardList size={18} />, desc: 'Control diario' },
     { id: 'inventario_avanzado' as Page, label: 'Inventario Avanzado', icon: <Package size={18} />, desc: '15000+ productos' },
@@ -177,6 +179,7 @@ export default function App() {
         }}>
           {page === 'inicio' && <Dashboard />}
           {page === 'pos' && <POS />}
+          {page === 'movimientos' && <Movimientos />}
           {page === 'productos' && <ProductList />}
           {page === 'inventario' && <Inventario />}
           {page === 'inventario_avanzado' && <InventarioAvanzado />}
