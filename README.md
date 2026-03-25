@@ -29,11 +29,32 @@ npm install
 ```
 
 ## Ejecución
-- Backend: `cd api && npm run dev`
-- Frontend: `cd web && npm run dev`
 
-Frontend: http://localhost:5173
-API: http://localhost:3001
+### Opción 1: Script automático (Windows)
+Ejecuta el archivo `iniciar.bat` en la raíz del proyecto. Este script:
+1. Verifica e instala dependencias si faltan
+2. Genera el cliente Prisma
+3. Inicia el backend en puerto 3001
+4. Inicia el frontend en puerto 4173
+
+### Opción 2: Manual
+```bash
+# Terminal 1 - Backend
+cd api
+npm run dev
+
+# Terminal 2 - Frontend
+cd web
+npm run dev
+```
+
+### Direcciones de acceso
+- **Frontend**: http://localhost:4173
+- **API**: http://localhost:3001
+
+### Credenciales por defecto
+- Usuario: `admin`
+- Contraseña: `admin123`
 
 ## Módulos
 - Gestión de productos y stock
