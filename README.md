@@ -1,12 +1,12 @@
-# 🥃 Sistema de Inventario Siberiano
-Sistema de gestión de inventario para licoreras y tiendas de bebidas alcohólicas.
+# Sistema de Inventario Siberiano
+Sistema de gestion de inventario para licoreras y tiendas de bebidas alcoholicas.
 
-## Tecnologías
+## Tecnologias
 - **Backend**: Node.js, Express, Prisma ORM, SQLite, TypeScript
 - **Frontend**: React 19, Vite, TypeScript, Axios
 - **Infraestructura**: Docker Compose
 
-## Instalación
+## Instalacion
 ### Requisitos
 - Node.js 18+
 - npm
@@ -28,16 +28,16 @@ cp .env.example .env
 npm install
 ```
 
-## Ejecución
+## Ejecucion
 
-### Opción 1: Script automático (Windows)
-Ejecuta el archivo `iniciar.bat` en la raíz del proyecto. Este script:
+### Opcion 1: Script automatico (Windows)
+Ejecuta el archivo `iniciar.bat` en la raiz del proyecto. Este script:
 1. Verifica e instala dependencias si faltan
 2. Genera el cliente Prisma
 3. Inicia el backend en puerto 3001
 4. Inicia el frontend en puerto 4173
 
-### Opción 2: Manual
+### Opcion 2: Manual
 ```bash
 # Terminal 1 - Backend
 cd api
@@ -54,30 +54,30 @@ npm run dev
 
 ### Credenciales por defecto
 - Usuario: `admin`
-- Contraseña: `admin123`
+- Contrasena: `admin123`
 
-## Módulos
-- Gestión de productos y stock
+## Modulos
+- Gestion de productos y stock
 - Control de inventario diario
-- Análisis de ganancias y reportes
-- Facturación electrónica
+- Analisis de ganancias y reportes
+- Facturacion electronica
 - Cuentas por pagar
 - Control de usuarios con roles (RBAC)
 - Cierre de caja y POS
 
-## Características Implementadas
-- POS con atajos de teclado (F2 confirmar venta, F4 foco en búsqueda)
-- Autofocus en campos clave (búsqueda en POS, monto en modal de cobro)
+## Caracteristicas Implementadas
+- POS con atajos de teclado (F2 confirmar venta, F4 foco en busqueda)
+- Autofocus en campos clave (busqueda en POS, monto en modal de cobro)
 - Arqueo de caja / Cierre de caja
-- Gestión de roles y permisos (ADMIN / VENDEDOR / GERENTE)
-- Reportes y análisis de ganancias
-- Backup/restore de datos (JSON y backup físico de SQLite)
-- Interfaz optimizada: tarjetas KPI con hover, tablas con alineación numérica, modales accesibles
+- Gestion de roles y permisos (ADMIN / VENDEDOR / GERENTE)
+- Reportes y analisis de ganancias
+- Backup/restore de datos (JSON y backup fisico de SQLite)
+- Interfaz optimizada: tarjetas KPI con hover, tablas con alineacion numerica, modales accesibles
 
-## Contribución
+## Contribucion
 1. Fork el proyecto
 2. Crea tu rama: `git checkout -b feature/mi-feature`
-3. Commit: `git commit -m 'feat: descripción'`
+3. Commit: `git commit -m 'feat: descripcion'`
 4. Push: `git push origin feature/mi-feature`
 5. Abre un Pull Request
 
