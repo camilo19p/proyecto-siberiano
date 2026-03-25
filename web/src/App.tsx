@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Login } from './components/Login';
 import { ProductList } from './components/ProductList';
 import { Inventario } from './components/Inventario';
@@ -17,15 +17,65 @@ import { Clientes } from './components/Clientes';
 import { Proveedores } from './components/Proveedores';
 import { CierreCaja } from './components/CierreCaja';
 import SiberianoLogo from './assets/Siberiano.png';
-import { Package, ClipboardList, TrendingUp, History, FileText, CreditCard, Users, Landmark, ShoppingCart, BarChart2, LayoutDashboard, LogOut, Building2, Activity } from 'lucide-react';
+import { Package, ClipboardList, TrendingUp, History, FileText, CreditCard, Users, Landmark, ShoppingCart, BarChart2, LayoutDashboard, LogOut, Building2, Activity, AlertCircle } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 
 type Page = 'inicio' | 'pos' | 'movimientos' | 'productos' | 'inventario' | 'inventario_avanzado' | 'ganancias' | 'facturas' | 'reportes' | 'reportes_avanzados' | 'cuentas_pagar' | 'usuarios' | 'cierre_caja' | 'historial' | 'clientes' | 'proveedores';
 
+interface Alertas {
+  stockCritico: number;
+  fiadosPendientes: number;
+  cuentasVencidas: number;
+}
+
 export default function App() {
   const [logged, setLogged] = useState(() => !!localStorage.getItem('authToken'));
   const [page, setPage] = useState<Page>('inicio');
+  const [alertas, setAlertas] = useState<Alertas>({ stockCritico: 0, fiadosPendientes: 0, cuentasVencidas: 0 });
   const userRole = localStorage.getItem('userRole') || 'VENDEDOR';
+
+  // Cargar alertas cada 60 segundos
+  useEffect(() => {
+    const loadAlertas = () => {
+      try {
+        // Stock crítico
+        const productosData = localStorage.getItem('productos_list');
+        let stockCritico = 0;
+        if (productosData) {
+          const productos = JSON.parse(productosData);
+          stockCritico = productos.filter((p: any) => p.stock <= (p.minimo || 5)).length;
+        }
+
+        // Fiados pendientes
+        const clientesData = localStorage.getItem('clientes_list');
+        let fiadosPendientes = 0;
+        if (clientesData) {
+          const clientes = JSON.parse(clientesData);
+          fiadosPendientes = clientes.filter((c: any) => c.saldo > 0).length;
+        }
+
+        // Cuentas vencidas
+        const cuentasData = localStorage.getItem('cuentas_pagar_list');
+        let cuentasVencidas = 0;
+        if (cuentasData) {
+          const cuentas = JSON.parse(cuentasData);
+          const today = new Date();
+          cuentasVencidas = cuentas.filter((c: any) => {
+            const dueDate = new Date(c.fechaVencimiento);
+            return dueDate < today && c.estado !== 'PAGADA';
+          }).length;
+        }
+
+        setAlertas({ stockCritico, fiadosPendientes, cuentasVencidas });
+      } catch (e) {
+        console.warn('Error loading alertas:', e);
+      }
+    };
+
+    loadAlertas();
+    const interval = setInterval(loadAlertas, 60000); // Cada 60 seg
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
@@ -33,10 +83,9 @@ export default function App() {
     setLogged(false);
   };
 
-  // Validar acceso por rol
   const handlePageChange = (newPage: Page) => {
     if ((newPage === 'ganancias' || newPage === 'reportes') && userRole !== 'ADMIN') {
-      setPage('inicio'); // Redirigir a Dashboard si no es ADMIN
+      setPage('inicio');
       return;
     }
     setPage(newPage);
@@ -48,11 +97,11 @@ export default function App() {
     { id: 'inicio' as Page, label: 'Dashboard', icon: <LayoutDashboard size={18} />, desc: 'Inicio y calendario' },
     { id: 'pos' as Page, label: 'Punto de Venta', icon: <ShoppingCart size={18} />, desc: 'POS - Ventas rápidas' },
     { id: 'movimientos' as Page, label: 'Movimientos', icon: <Activity size={18} />, desc: 'Registro de ingresos' },
-    { id: 'productos' as Page, label: 'Productos', icon: <Package size={18} />, desc: 'Gestiona el inventario' },
+    { id: 'productos' as Page, label: 'Productos', icon: <Package size={18} />, desc: 'Gestiona el inventario', badge: alertas.stockCritico > 0 ? alertas.stockCritico : undefined },
     { id: 'inventario' as Page, label: 'Inventario Diario', icon: <ClipboardList size={18} />, desc: 'Control diario' },
     { id: 'inventario_avanzado' as Page, label: 'Inventario Avanzado', icon: <Package size={18} />, desc: '15000+ productos' },
-    { id: 'clientes' as Page, label: 'Clientes', icon: <Users size={18} />, desc: 'Gestión de clientes' },
-    { id: 'proveedores' as Page, label: 'Gestión de Proveedores', icon: <Building2 size={18} />, desc: 'Gestión de proveedores' },
+    { id: 'clientes' as Page, label: 'Clientes', icon: <Users size={18} />, desc: 'Gestión de clientes', badge: alertas.fiadosPendientes > 0 ? alertas.fiadosPendientes : undefined },
+    { id: 'proveedores' as Page, label: 'Gestión de Proveedores', icon: <Building2 size={18} />, desc: 'Gestión de proveedores', badge: alertas.cuentasVencidas > 0 ? alertas.cuentasVencidas : undefined },
     ...(userRole === 'ADMIN' ? [{ id: 'ganancias' as Page, label: 'Análisis de Ganancias', icon: <TrendingUp size={18} />, desc: 'Análisis de ingresos' }] : []),
     { id: 'facturas' as Page, label: 'Facturas', icon: <FileText size={18} />, desc: 'Electrónica' },
     ...(userRole === 'ADMIN' ? [{ id: 'reportes' as Page, label: 'Reportes', icon: <BarChart2 size={18} />, desc: 'Análisis y datos' }] : []),
@@ -101,7 +150,7 @@ export default function App() {
         </div>
 
         {/* Navigation */}
-        <nav style={{ flex: 1, padding: '1.5rem 0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <nav style={{ flex: 1, padding: '1.5rem 0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', overflowY: 'auto' }}>
           {nav.map(n => (
             <button
               key={n.id}
@@ -125,10 +174,30 @@ export default function App() {
                 fontWeight: page === n.id ? 700 : 500,
                 borderLeft: page === n.id ? '4px solid #f5c800' : '4px solid transparent',
                 outline: 'none',
+                position: 'relative'
               }}
             >
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1rem' }}>
-                {React.cloneElement(n.icon as any, { color: page === n.id ? '#f5c800' : undefined })} {n.label}
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1rem', width: '100%', justifyContent: 'space-between' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  {React.cloneElement(n.icon as any, { color: page === n.id ? '#f5c800' : undefined })} {n.label}
+                </span>
+                {n.badge !== undefined && (
+                  <span style={{
+                    background: '#dc2626',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    flexShrink: 0
+                  }}>
+                    {n.badge}
+                  </span>
+                )}
               </span>
               <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', paddingLeft: '1.75rem' }}>{n.desc}</span>
             </button>
@@ -158,7 +227,8 @@ export default function App() {
               transition: 'all 0.3s',
               fontWeight: 700,
               fontSize: '0.95rem',
-              boxShadow: '0 2px 8px rgba(245, 200, 0, 0.15)'
+              boxShadow: '0 2px 8px rgba(245, 200, 0, 0.15)',
+              justifyContent: 'center'
             }}
           >
             {React.cloneElement(<LogOut size={18} /> as any, { color: '#fff' })} Cerrar Sesión

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { User, Search, AlertCircle, Check, Plus, Edit2, Trash2 } from 'lucide-react';
+import { User, Search, AlertCircle, Check, Plus, Edit2, Trash2, Clock, DollarSign, X } from 'lucide-react';
+import axios from 'axios';
 
 interface Cliente {
   id: string;
@@ -8,6 +9,7 @@ interface Cliente {
   documento: string;
   tipoDocumento: 'CC' | 'NIT' | 'CE' | 'PASAPORTE';
   telefono?: string;
+  telefonoSecundario?: string;
   email?: string;
   ciudad?: string;
   direccion?: string;
@@ -15,9 +17,33 @@ interface Cliente {
   cupo: number;
   saldo: number;
   estado: 'ACTIVO' | 'INACTIVO';
+  creadoEn?: string;
+}
+
+interface Compra {
+  id: string;
+  clienteId: string;
+  fecha: string;
+  productos: { nombre: string; cantidad: number; precio: number; subtotal: number }[];
+  total: number;
+  metodo: 'EFECTIVO' | 'NEQUI' | 'TRANSFERENCIA' | 'FIADO';
+  descuento: number;
+  estado: 'COMPLETADA' | 'PENDIENTE';
 }
 
 const ITEMS_PER_PAGE = 10;
+
+const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  const bgColor = type === 'success' ? '#16a34a' : '#dc2626';
+  toast.style.cssText = `
+    position: fixed; bottom: 20px; right: 20px; background: ${bgColor}; color: white;
+    padding: 12px 20px; border-radius: 8px; font-weight: 600; z-index: 9999;
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+};
 
 export function Clientes() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -29,6 +55,10 @@ export function Clientes() {
   const [filterEstado, setFilterEstado] = useState<'TODOS' | 'ACTIVO' | 'INACTIVO' | 'DEUDA'>('TODOS');
   const [currentPage, setCurrentPage] = useState(1);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [historialClienteId, setHistorialClienteId] = useState<string | null>(null);
+  const [compras, setCompras] = useState<Compra[]>([]);
+  const [showPagoModal, setShowPagoModal] = useState<string | null>(null);
+  const [montoPago, setMontoPago] = useState(0);
 
   const [newCliente, setNewCliente] = useState({
     nombres: '',
@@ -36,16 +66,17 @@ export function Clientes() {
     documento: '',
     tipoDocumento: 'CC' as 'CC' | 'NIT' | 'CE' | 'PASAPORTE',
     telefono: '',
+    telefonoSecundario: '',
     email: '',
     ciudad: '',
     direccion: '',
     barrio: '',
-    cupo: 0,
-    saldo: 0
+    cupo: 0
   });
 
   useEffect(() => {
     loadClientes();
+    loadCompras();
   }, []);
 
   const loadClientes = async () => {
@@ -64,8 +95,23 @@ export function Clientes() {
     }
   };
 
+  const loadCompras = async () => {
+    try {
+      const saved = localStorage.getItem('compras_list');
+      if (saved) {
+        setCompras(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error('Error loading compras:', e);
+    }
+  };
+
   const saveToStorage = (data: Cliente[]) => {
     localStorage.setItem('clientes_list', JSON.stringify(data));
+  };
+
+  const saveCompras = (data: Compra[]) => {
+    localStorage.setItem('compras_list', JSON.stringify(data));
   };
 
   const handleSaveCliente = async () => {
@@ -84,15 +130,19 @@ export function Clientes() {
         );
         setClientes(updated);
         saveToStorage(updated);
+        showToast('Cliente actualizado correctamente');
       } else {
         const cliente: Cliente = {
           id: `cliente_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           ...newCliente,
-          estado: 'ACTIVO'
+          estado: 'ACTIVO',
+          saldo: 0,
+          creadoEn: new Date().toISOString()
         };
         const updated = [...clientes, cliente];
         setClientes(updated);
         saveToStorage(updated);
+        showToast('Cliente creado correctamente');
       }
       resetForm();
     } catch (e) {
@@ -109,8 +159,40 @@ export function Clientes() {
       saveToStorage(updated);
       setConfirmDelete(null);
       setSelectedCliente(null);
+      showToast('Cliente eliminado correctamente');
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Error al eliminar cliente';
+      setError(errorMsg);
+    }
+  };
+
+  const handleRegistrarPago = (clienteId: string) => {
+    try {
+      if (montoPago <= 0) {
+        setError('Ingresa un monto válido');
+        return;
+      }
+
+      const cliente = clientes.find(c => c.id === clienteId);
+      if (!cliente) return;
+
+      if (montoPago > cliente.saldo) {
+        setError('El monto no puede ser mayor a la deuda');
+        return;
+      }
+
+      const updated = clientes.map(c => 
+        c.id === clienteId 
+          ? { ...c, saldo: Math.max(0, c.saldo - montoPago) }
+          : c
+      );
+      setClientes(updated);
+      saveToStorage(updated);
+      setShowPagoModal(null);
+      setMontoPago(0);
+      showToast(`Pago registrado: $${montoPago.toLocaleString()}`);
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : 'Error al registrar pago';
       setError(errorMsg);
     }
   };
@@ -124,12 +206,12 @@ export function Clientes() {
       documento: '',
       tipoDocumento: 'CC',
       telefono: '',
+      telefonoSecundario: '',
       email: '',
       ciudad: '',
       direccion: '',
       barrio: '',
-      cupo: 0,
-      saldo: 0
+      cupo: 0
     });
   };
 
@@ -141,12 +223,12 @@ export function Clientes() {
       documento: cliente.documento,
       tipoDocumento: cliente.tipoDocumento,
       telefono: cliente.telefono || '',
+      telefonoSecundario: cliente.telefonoSecundario || '',
       email: cliente.email || '',
       ciudad: cliente.ciudad || '',
       direccion: cliente.direccion || '',
       barrio: cliente.barrio || '',
-      cupo: cliente.cupo,
-      saldo: cliente.saldo
+      cupo: cliente.cupo
     });
     setShowForm(true);
   };
@@ -175,8 +257,23 @@ export function Clientes() {
     total: clientes.length,
     activos: clientes.filter(c => c.estado === 'ACTIVO').length,
     deuda: clientes.reduce((sum, c) => sum + c.saldo, 0),
-    conCupo: clientes.filter(c => c.cupo > 0).length
+    conCupo: clientes.filter(c => c.cupo > 0).length,
+    conDeuda: clientes.filter(c => c.saldo > 0).length
   };
+
+  // Obtener compras del cliente seleccionado para historial
+  const comprasCliente = useMemo(() => {
+    if (!historialClienteId) return [];
+    return compras.filter(c => c.clienteId === historialClienteId);
+  }, [compras, historialClienteId]);
+
+  const totalCompradoCliente = useMemo(() => {
+    return comprasCliente.reduce((sum, c) => sum + c.total, 0);
+  }, [comprasCliente]);
+
+  const fiadosPendientes = useMemo(() => {
+    return comprasCliente.filter(c => c.metodo === 'FIADO' && c.estado === 'PENDIENTE');
+  }, [comprasCliente]);
 
   return (
     <div>
@@ -205,13 +302,13 @@ export function Clientes() {
         </div>
 
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '1.5rem', textAlign: 'center' }}>
-          <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>TOTAL DEUDA</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#dc2626' }}>${stats.deuda.toLocaleString()}</p>
+          <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>CON DEUDA</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#dc2626' }}>{stats.conDeuda}</p>
         </div>
 
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '1.5rem', textAlign: 'center' }}>
-          <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>CON CUPO</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#2563eb' }}>{stats.conCupo}</p>
+          <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>TOTAL DEUDA</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#dc2626' }}>${stats.deuda.toLocaleString()}</p>
         </div>
       </div>
 
@@ -316,12 +413,22 @@ export function Clientes() {
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Teléfono</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Teléfono *</label>
               <input
                 type="tel"
                 value={newCliente.telefono}
                 onChange={e => setNewCliente({...newCliente, telefono: e.target.value})}
                 placeholder="Teléfono principal"
+                style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Teléfono 2</label>
+              <input
+                type="tel"
+                value={newCliente.telefonoSecundario}
+                onChange={e => setNewCliente({...newCliente, telefonoSecundario: e.target.value})}
+                placeholder="Teléfono secundario"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
@@ -336,16 +443,6 @@ export function Clientes() {
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Ciudad</label>
-              <input
-                type="text"
-                value={newCliente.ciudad}
-                onChange={e => setNewCliente({...newCliente, ciudad: e.target.value})}
-                placeholder="Ciudad"
-                style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
-              />
-            </div>
-            <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Dirección</label>
               <input
                 type="text"
@@ -356,7 +453,27 @@ export function Clientes() {
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Cupo de Crédito</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Barrio</label>
+              <input
+                type="text"
+                value={newCliente.barrio}
+                onChange={e => setNewCliente({...newCliente, barrio: e.target.value})}
+                placeholder="Barrio"
+                style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Ciudad</label>
+              <input
+                type="text"
+                value={newCliente.ciudad}
+                onChange={e => setNewCliente({...newCliente, ciudad: e.target.value})}
+                placeholder="Ciudad"
+                style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Cupo de Crédito ($)</label>
               <input
                 type="number"
                 value={newCliente.cupo}
@@ -451,7 +568,8 @@ export function Clientes() {
                         ${c.cupo.toLocaleString()}
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: c.saldo > 0 ? '#dc2626' : '#16a34a' }}>
-                        ${c.saldo.toLocaleString()}
+                        {c.saldo > 0 && <span style={{ background: '#fee2e2', color: '#dc2626', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700 }}>DEBE ${c.saldo.toLocaleString()}</span>}
+                        {c.saldo === 0 && <span style={{ color: '#16a34a' }}>$0</span>}
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'center' }}>
                         <span style={{
@@ -467,6 +585,44 @@ export function Clientes() {
                         </span>
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'center', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                        <button
+                          onClick={() => setHistorialClienteId(c.id)}
+                          title="Ver historial"
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            background: '#dbeafe',
+                            color: '#2563eb',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}
+                        >
+                          <Clock size={14} />
+                        </button>
+                        {c.saldo > 0 && (
+                          <button
+                            onClick={() => setShowPagoModal(c.id)}
+                            title="Registrar pago"
+                            style={{
+                              padding: '0.5rem 0.75rem',
+                              background: '#dcfce7',
+                              color: '#16a34a',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem'
+                            }}
+                          >
+                            <DollarSign size={14} />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleEdit(c)}
                           style={{
@@ -609,6 +765,206 @@ export function Clientes() {
                 No, cancelar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de pago */}
+      {showPagoModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '20px',
+            padding: '2rem',
+            maxWidth: '400px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+              <DollarSign size={24} color="#16a34a" />
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text)' }}>
+                Registrar Pago
+              </h3>
+            </div>
+            {(() => {
+              const cliente = clientes.find(c => c.id === showPagoModal);
+              return (
+                <>
+                  <p style={{ color: 'var(--color-text)', marginBottom: '1rem', fontSize: '0.95rem' }}>
+                    <strong>Cliente:</strong> {cliente?.nombres} <br />
+                    <strong>Deuda actual:</strong> <span style={{ color: '#dc2626', fontWeight: 700 }}>${cliente?.saldo.toLocaleString()}</span>
+                  </p>
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>
+                      Monto a pagar:
+                    </label>
+                    <input
+                      type="number"
+                      value={montoPago}
+                      onChange={e => setMontoPago(parseFloat(e.target.value) || 0)}
+                      max={cliente?.saldo || 0}
+                      placeholder="0"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        background: 'var(--color-surface-2)',
+                        color: 'var(--color-text)'
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button
+                      onClick={() => handleRegistrarPago(showPagoModal)}
+                      style={{
+                        flex: 1,
+                        padding: '0.875rem',
+                        background: '#16a34a',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontWeight: 700
+                      }}
+                    >
+                      Pagar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowPagoModal(null);
+                        setMontoPago(0);
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '0.875rem',
+                        background: 'var(--color-surface-2)',
+                        color: 'var(--color-text)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontWeight: 700
+                      }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* Panel lateral de historial */}
+      {historialClienteId && (
+        <div style={{
+          position: 'fixed',
+          right: 0,
+          top: 0,
+          bottom: 0,
+          width: '350px',
+          background: 'var(--color-surface)',
+          border: `1px solid var(--color-border)`,
+          borderRadius: '0',
+          boxShadow: '-4px 0 15px rgba(0,0,0,0.3)',
+          zIndex: 999,
+          display: 'flex',
+          flexDirection: 'column',
+          overflowY: 'auto'
+        }}>
+          {/* Header */}
+          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Clock size={20} /> Historial
+            </h3>
+            <button
+              onClick={() => setHistorialClienteId(null)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem' }}
+            >
+              <X size={24} color="var(--color-text)" />
+            </button>
+          </div>
+
+          {/* Cliente info */}
+          <div style={{ padding: '1rem', background: 'var(--color-surface-2)', borderBottom: '1px solid var(--color-border)' }}>
+            {(() => {
+              const cliente = clientes.find(c => c.id === historialClienteId);
+              return (
+                <>
+                  <p style={{ margin: '0 0 0.5rem 0', fontWeight: 700, color: 'var(--color-text)' }}>
+                    {cliente?.nombres}
+                  </p>
+                  <p style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                    Total comprado: <span style={{ color: '#f5c800', fontWeight: 700 }}>${totalCompradoCliente.toLocaleString()}</span>
+                  </p>
+                  <p style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                    Deuda actual: <span style={{ color: cliente?.saldo ? '#dc2626' : '#16a34a', fontWeight: 700 }}>${cliente?.saldo.toLocaleString()}</span>
+                  </p>
+                </>
+              );
+            })()}
+          </div>
+
+          {/* Fiados pendientes */}
+          {fiadosPendientes.length > 0 && (
+            <div style={{ padding: '1rem', background: '#fee2e2', borderBottom: '1px solid var(--color-border)' }}>
+              <p style={{ margin: '0 0 0.75rem 0', fontWeight: 600, color: '#dc2626', fontSize: '0.9rem' }}>
+                📌 FIADOS PENDIENTES ({fiadosPendientes.length})
+              </p>
+              {fiadosPendientes.map(fiado => (
+                <div key={fiado.id} style={{ fontSize: '0.85rem', color: 'var(--color-text)', marginBottom: '0.5rem', padding: '0.5rem', background: 'var(--color-surface)', borderRadius: '4px' }}>
+                  <p style={{ margin: 0, fontWeight: 600 }}>
+                    ${fiado.total.toLocaleString()}
+                  </p>
+                  <p style={{ margin: '0.25rem 0 0 0', color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>
+                    {new Date(fiado.fecha).toLocaleDateString('es-CO')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Lista de compras */}
+          <div style={{ flex: 1, overflow: 'auto', padding: '1rem' }}>
+            {comprasCliente.length === 0 ? (
+              <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.9rem', marginTop: '2rem' }}>
+                Sin compras registradas
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {comprasCliente.map(compra => (
+                  <div key={compra.id} style={{ background: 'var(--color-surface-2)', padding: '0.75rem', borderRadius: '8px', borderLeft: `3px solid ${compra.metodo === 'FIADO' ? '#dc2626' : '#16a34a'}` }}>
+                    <p style={{ margin: '0 0 0.25rem 0', fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-text)' }}>
+                      ${compra.total.toLocaleString()}
+                    </p>
+                    <p style={{ margin: '0.25rem 0', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                      {new Date(compra.fecha).toLocaleDateString('es-CO')}
+                    </p>
+                    <span style={{
+                      display: 'inline-block',
+                      marginTop: '0.25rem',
+                      padding: '0.2rem 0.5rem',
+                      borderRadius: '3px',
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                      background: compra.metodo === 'FIADO' ? '#fee2e2' : '#dcfce7',
+                      color: compra.metodo === 'FIADO' ? '#dc2626' : '#16a34a'
+                    }}>
+                      {compra.metodo}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
