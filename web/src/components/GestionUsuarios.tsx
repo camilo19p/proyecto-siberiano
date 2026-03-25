@@ -192,7 +192,7 @@ export function GestionUsuarios() {
 
   return (
     <div>
-      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: '#1e293b' }}>Gestión de Usuarios</h1>
+      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Gestión de Usuarios</h1>
 
       {error && (
         <div style={{

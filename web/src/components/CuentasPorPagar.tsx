@@ -204,19 +204,19 @@ export function CuentasPorPagar() {
         gap: '1rem',
         marginBottom: '2rem'
       }}>
-        <div style={{ background: '#fef3c7', borderRadius: '12px', padding: '1rem', textAlign: 'center' }}>
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', padding: '1rem', textAlign: 'center' }}>
           <p style={{ margin: 0, color: '#dc2626', fontSize: '0.875rem', fontWeight: 600 }}>Pendientes</p>
           <p style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#dc2626' }}>
             {stats.pendientes}
           </p>
         </div>
-        <div style={{ background: '#fed7aa', borderRadius: '12px', padding: '1rem', textAlign: 'center' }}>
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', padding: '1rem', textAlign: 'center' }}>
           <p style={{ margin: 0, color: '#ea580c', fontSize: '0.875rem', fontWeight: 600 }}>Parciales</p>
           <p style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#ea580c' }}>
             {stats.parciales}
           </p>
         </div>
-        <div style={{ background: '#dcfce7', borderRadius: '12px', padding: '1rem', textAlign: 'center' }}>
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', padding: '1rem', textAlign: 'center' }}>
           <p style={{ margin: 0, color: '#16a34a', fontSize: '0.875rem', fontWeight: 600 }}>Pagadas</p>
           <p style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#16a34a' }}>
             {stats.pagadas}

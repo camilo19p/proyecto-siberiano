@@ -2,20 +2,24 @@ import React, { useState } from 'react';
 import { Login } from './components/Login';
 import { ProductList } from './components/ProductList';
 import { Inventario } from './components/Inventario';
+import { InventarioAvanzado } from './components/InventarioAvanzado';
 import { Ganancias } from './components/Ganancias';
 import { Historial } from './components/Historial';
 import { Dashboard } from './components/Dashboard';
 import { POS } from './components/POS';
 import { Reportes } from './components/Reportes';
+import { ReportesAvanzados } from './components/ReportesAvanzados';
 import { Facturacion } from './components/Facturacion';
 import { CuentasPorPagar } from './components/CuentasPorPagar';
 import { GestionUsuarios } from './components/GestionUsuarios';
+import { Clientes } from './components/Clientes';
+import { Proveedores } from './components/Proveedores';
 import { CierreCaja } from './components/CierreCaja';
 import SiberianoLogo from './assets/Siberiano.png';
-import { Package, ClipboardList, TrendingUp, History, FileText, CreditCard, Users, Landmark, ShoppingCart, BarChart2, LayoutDashboard, LogOut } from 'lucide-react';
+import { Package, ClipboardList, TrendingUp, History, FileText, CreditCard, Users, Landmark, ShoppingCart, BarChart2, LayoutDashboard, LogOut, Building2 } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 
-type Page = 'inicio' | 'pos' | 'productos' | 'inventario' | 'ganancias' | 'facturas' | 'reportes' | 'cuentas_pagar' | 'usuarios' | 'cierre_caja' | 'historial';
+type Page = 'inicio' | 'pos' | 'productos' | 'inventario' | 'inventario_avanzado' | 'ganancias' | 'facturas' | 'reportes' | 'reportes_avanzados' | 'cuentas_pagar' | 'usuarios' | 'cierre_caja' | 'historial' | 'clientes' | 'proveedores';
 
 export default function App() {
   const [logged, setLogged] = useState(() => !!localStorage.getItem('authToken'));
@@ -43,10 +47,14 @@ export default function App() {
     { id: 'inicio' as Page, label: 'Dashboard', icon: <LayoutDashboard size={18} />, desc: 'Inicio y calendario' },
     { id: 'pos' as Page, label: 'Punto de Venta', icon: <ShoppingCart size={18} />, desc: 'POS - Ventas rápidas' },
     { id: 'productos' as Page, label: 'Productos', icon: <Package size={18} />, desc: 'Gestiona el inventario' },
-    { id: 'inventario' as Page, label: 'Inventario', icon: <ClipboardList size={18} />, desc: 'Control diario' },
+    { id: 'inventario' as Page, label: 'Inventario Diario', icon: <ClipboardList size={18} />, desc: 'Control diario' },
+    { id: 'inventario_avanzado' as Page, label: 'Inventario Avanzado', icon: <Package size={18} />, desc: '15000+ productos' },
+    { id: 'clientes' as Page, label: 'Clientes', icon: <Users size={18} />, desc: 'Gestión de clientes' },
+    { id: 'proveedores' as Page, label: 'Proveedores', icon: <Building2 size={18} />, desc: 'Gestión de proveedores' },
     ...(userRole === 'ADMIN' ? [{ id: 'ganancias' as Page, label: 'Ganancias', icon: <TrendingUp size={18} />, desc: 'Análisis de ingresos' }] : []),
     { id: 'facturas' as Page, label: 'Facturas', icon: <FileText size={18} />, desc: 'Electrónica' },
     ...(userRole === 'ADMIN' ? [{ id: 'reportes' as Page, label: 'Reportes', icon: <BarChart2 size={18} />, desc: 'Análisis y datos' }] : []),
+    ...(userRole === 'ADMIN' ? [{ id: 'reportes_avanzados' as Page, label: 'Reportes Avanzados', icon: <TrendingUp size={18} />, desc: 'Por empleado y producto' }] : []),
     { id: 'cuentas_pagar' as Page, label: 'Cuentas por Pagar', icon: <CreditCard size={18} />, desc: 'Deudas' },
     { id: 'cierre_caja' as Page, label: 'Cierre de Caja', icon: <Landmark size={18} />, desc: 'Cuadre diario' },
     ...(userRole === 'ADMIN' ? [{ id: 'usuarios' as Page, label: 'Usuarios', icon: <Users size={18} />, desc: 'Gestión de permisos' }] : []),
@@ -171,9 +179,13 @@ export default function App() {
           {page === 'pos' && <POS />}
           {page === 'productos' && <ProductList />}
           {page === 'inventario' && <Inventario />}
+          {page === 'inventario_avanzado' && <InventarioAvanzado />}
+          {page === 'clientes' && <Clientes />}
+          {page === 'proveedores' && <Proveedores />}
           {page === 'ganancias' && <Ganancias />}
           {page === 'facturas' && <Facturacion />}
           {page === 'reportes' && <Reportes />}
+          {page === 'reportes_avanzados' && <ReportesAvanzados />}
           {page === 'cuentas_pagar' && <CuentasPorPagar />}
           {page === 'cierre_caja' && <CierreCaja />}
           {page === 'usuarios' && <GestionUsuarios />}

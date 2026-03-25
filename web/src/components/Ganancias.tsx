@@ -65,33 +65,33 @@ export function Ganancias() {
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-        <div className="kpi-card" style={{ background: '#dcfce7', color: '#052e16', fontWeight: 700, boxShadow: '0 10px 40px rgba(16, 185, 129, 0.3)' }}>
+        <div className="kpi-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-            <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.8 }}>Ganancia Potencial</p>
+            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>Ganancia Potencial</p>
           </div>
-          <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700 }}>${total.toLocaleString()}</p>
+          <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700, color: '#f5c800' }}>${total.toLocaleString()}</p>
         </div>
 
-        <div className="kpi-card" style={{ background: '#0ea5e9', color: '#0c1a3d', fontWeight: 700, boxShadow: '0 10px 40px rgba(59, 130, 246, 0.3)' }}>
+        <div className="kpi-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-            <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.8 }}>Productos</p>
+            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>Productos</p>
           </div>
-          <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700 }}>{data.length}</p>
+          <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700, color: 'white' }}>{data.length}</p>
         </div>
 
-        <div className="kpi-card" style={{ background: '#f5c800', color: '#1a1000', fontWeight: 700, boxShadow: '0 10px 40px rgba(245, 200, 0, 0.3)' }}>
+        <div className="kpi-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
             <BarChart2 size={20} />
-            <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.8 }}>Stock Total</p>
+            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>Stock Total</p>
           </div>
-          <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700 }}>{stockTotal}</p>
+          <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700, color: 'white' }}>{stockTotal}</p>
         </div>
 
-        <div className="kpi-card" style={{ background: '#fee2e2', color: '#450a0a', fontWeight: 700, boxShadow: '0 10px 40px rgba(139, 92, 246, 0.3)' }}>
+        <div className="kpi-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-            <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.8 }}>Promedio</p>
+            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>Promedio</p>
           </div>
-          <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700 }}>${promedio.toLocaleString()}</p>
+          <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700, color: '#f5c800' }}>${promedio.toLocaleString()}</p>
         </div>
       </div>
 

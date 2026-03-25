@@ -1,5 +1,4 @@
 # 🥃 Sistema de Inventario Siberiano
-# 🥃 Sistema de Inventario Siberiano
 Sistema de gestión de inventario para licoreras y tiendas de bebidas alcohólicas.
 
 ## Tecnologías
@@ -14,6 +13,7 @@ Sistema de gestión de inventario para licoreras y tiendas de bebidas alcohólic
 - Git
 
 ### Pasos
+```bash
 git clone https://github.com/camilo19p/proyecto-siberiano.git
 cd proyecto-siberiano
 
@@ -26,18 +26,14 @@ npx prisma db seed
 cd ../web
 cp .env.example .env
 npm install
+```
 
 ## Ejecución
-docker-compose -f docker-compose.dev.yml up
-
-O manual:
-- Terminal 1: cd api && npm run dev
-- Terminal 2: cd web && npm run dev
+- Backend: `cd api && npm run dev`
+- Frontend: `cd web && npm run dev`
 
 Frontend: http://localhost:5173
 API: http://localhost:3001
-
-Las credenciales de acceso se configuran en el archivo .env
 
 ## Módulos
 - Gestión de productos y stock
@@ -48,11 +44,20 @@ Las credenciales de acceso se configuran en el archivo .env
 - Control de usuarios con roles (RBAC)
 - Cierre de caja y POS
 
+## Características Implementadas
+- POS con atajos de teclado (F2 confirmar venta, F4 foco en búsqueda)
+- Autofocus en campos clave (búsqueda en POS, monto en modal de cobro)
+- Arqueo de caja / Cierre de caja
+- Gestión de roles y permisos (ADMIN / VENDEDOR / GERENTE)
+- Reportes y análisis de ganancias
+- Backup/restore de datos (JSON y backup físico de SQLite)
+- Interfaz optimizada: tarjetas KPI con hover, tablas con alineación numérica, modales accesibles
+
 ## Contribución
 1. Fork el proyecto
-2. Crea tu rama: git checkout -b feature/mi-feature
-3. Commit: git commit -m 'feat: descripción'
-4. Push: git push origin feature/mi-feature
+2. Crea tu rama: `git checkout -b feature/mi-feature`
+3. Commit: `git commit -m 'feat: descripción'`
+4. Push: `git push origin feature/mi-feature`
 5. Abre un Pull Request
 
 ## Autor

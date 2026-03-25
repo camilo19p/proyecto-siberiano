@@ -206,6 +206,13 @@ export const clienteService = {
     } catch (err) {
       throw new Error(toErrorMessage(err));
     }
+  },
+  async deleteCliente(id: string): Promise<void> {
+    try {
+      await api.delete(`/clientes/${id}`);
+    } catch (err) {
+      throw new Error(toErrorMessage(err));
+    }
   }
 };
 
@@ -360,6 +367,21 @@ export interface CierreCaja {
   diferencia?: number;
 }
 
+export interface Proveedor {
+  id: string;
+  nombre: string;
+  nit: string;
+  telefono: string;
+  email?: string;
+  ciudad?: string;
+  direccion: string;
+  deudaActual: number;
+  diasEnMora: number;
+  estado: 'ACTIVO' | 'INACTIVO';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export const cajaService = {
   async getCierres(vendedor_id?: string): Promise<CierreCaja[]> {
     try {
@@ -391,6 +413,74 @@ export const cajaService = {
     try {
       const res = await api.patch(`/cajas/${id}/close`, { monto_final });
       return res.data;
+    } catch (err) {
+      throw new Error(toErrorMessage(err));
+    }
+  }
+};
+
+export const proveedorService = {
+  async getProveedores(): Promise<Proveedor[]> {
+    try {
+      const res = await api.get('/proveedores');
+      return res.data;
+    } catch (err) {
+      throw new Error(toErrorMessage(err));
+    }
+  },
+  async createProveedor(proveedor: Omit<Proveedor, 'id' | 'estado' | 'createdAt' | 'updatedAt'> & { estado?: Proveedor['estado'] }): Promise<Proveedor> {
+    try {
+      const res = await api.post('/proveedores', {
+        nombre: proveedor.nombre,
+        nit: proveedor.nit,
+        telefono: proveedor.telefono,
+        email: proveedor.email || '',
+        ciudad: proveedor.ciudad || '',
+        direccion: proveedor.direccion,
+        deudaActual: proveedor.deudaActual || 0,
+        diasEnMora: proveedor.diasEnMora || 0
+      });
+      return res.data;
+    } catch (err) {
+      throw new Error(toErrorMessage(err));
+    }
+  },
+  async updateProveedor(id: string, data: Partial<Omit<Proveedor, 'id'>>): Promise<Proveedor> {
+    try {
+      const res = await api.put(`/proveedores/${id}`, {
+        nombre: data.nombre,
+        nit: data.nit,
+        telefono: data.telefono,
+        email: data.email,
+        ciudad: data.ciudad,
+        direccion: data.direccion,
+        deudaActual: data.deudaActual,
+        diasEnMora: data.diasEnMora
+      });
+      return res.data;
+    } catch (err) {
+      throw new Error(toErrorMessage(err));
+    }
+  },
+  async updateEstado(id: string, estado: string): Promise<Proveedor> {
+    try {
+      const res = await api.patch(`/proveedores/${id}/estado`, { estado });
+      return res.data;
+    } catch (err) {
+      throw new Error(toErrorMessage(err));
+    }
+  },
+  async registrarPago(id: string, monto: number): Promise<Proveedor> {
+    try {
+      const res = await api.post(`/proveedores/${id}/pago`, { monto });
+      return res.data;
+    } catch (err) {
+      throw new Error(toErrorMessage(err));
+    }
+  },
+  async deleteProveedor(id: string): Promise<void> {
+    try {
+      await api.delete(`/proveedores/${id}`);
     } catch (err) {
       throw new Error(toErrorMessage(err));
     }

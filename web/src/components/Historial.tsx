@@ -69,7 +69,7 @@ export function Historial() {
 
   return (
     <div>
-      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: '#1e293b' }}>📜 Historial de Inventarios</h1>
+      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)' }}>📜 Historial de Inventarios</h1>
       
       <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '2rem', minHeight: '600px' }}>
         {/* Sidebar - Lista de inventarios */}

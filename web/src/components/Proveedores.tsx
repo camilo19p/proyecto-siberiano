@@ -1,217 +1,224 @@
 import { useState, useEffect, useMemo } from 'react';
-import { User, Search, AlertCircle, Check, Plus, Edit2, Trash2 } from 'lucide-react';
-
-interface Cliente {
-  id: string;
-  nombres: string;
-  apellidos?: string;
-  documento: string;
-  tipoDocumento: 'CC' | 'NIT' | 'CE' | 'PASAPORTE';
-  telefono?: string;
-  email?: string;
-  ciudad?: string;
-  direccion?: string;
-  barrio?: string;
-  cupo: number;
-  saldo: number;
-  estado: 'ACTIVO' | 'INACTIVO';
-}
+import { Building2, Search, AlertCircle, Check, Plus, Edit2, Trash2, DollarSign } from 'lucide-react';
+import { proveedorService, Proveedor } from '../services/api';
 
 const ITEMS_PER_PAGE = 10;
 
-export function Clientes() {
-  const [clientes, setClientes] = useState<Cliente[]>([]);
+export function Proveedores() {
+  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
+  const [selectedProveedor, setSelectedProveedor] = useState<Proveedor | null>(null);
   const [search, setSearch] = useState('');
-  const [filterEstado, setFilterEstado] = useState<'TODOS' | 'ACTIVO' | 'INACTIVO' | 'DEUDA'>('TODOS');
+  const [filterEstado, setFilterEstado] = useState<'TODOS' | 'ACTIVO' | 'INACTIVO' | 'EN_MORA'>('TODOS');
   const [currentPage, setCurrentPage] = useState(1);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [showPagoModal, setShowPagoModal] = useState<string | null>(null);
+  const [montoPago, setMontoPago] = useState(0);
 
-  const [newCliente, setNewCliente] = useState({
-    nombres: '',
-    apellidos: '',
-    documento: '',
-    tipoDocumento: 'CC' as 'CC' | 'NIT' | 'CE' | 'PASAPORTE',
+  const [newProveedor, setNewProveedor] = useState({
+    nombre: '',
+    nit: '',
     telefono: '',
     email: '',
     ciudad: '',
     direccion: '',
-    barrio: '',
-    cupo: 0,
-    saldo: 0
+    deudaActual: 0,
+    diasEnMora: 0
   });
 
   useEffect(() => {
-    loadClientes();
+    loadProveedores();
   }, []);
 
-  const loadClientes = async () => {
+  const loadProveedores = async () => {
     setLoading(true);
     setError(null);
     try {
-      const saved = localStorage.getItem('clientes_list');
+      const saved = localStorage.getItem('proveedores_list');
       if (saved) {
-        setClientes(JSON.parse(saved));
+        setProveedores(JSON.parse(saved));
       }
     } catch (e) {
-      const errorMsg = e instanceof Error ? e.message : 'Error al cargar clientes';
+      const errorMsg = e instanceof Error ? e.message : 'Error al cargar proveedores';
       setError(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
-  const saveToStorage = (data: Cliente[]) => {
-    localStorage.setItem('clientes_list', JSON.stringify(data));
+  const saveToStorage = (data: Proveedor[]) => {
+    localStorage.setItem('proveedores_list', JSON.stringify(data));
   };
 
-  const handleSaveCliente = async () => {
-    if (!newCliente.nombres || !newCliente.documento) {
-      setError('Completa los campos obligatorios: Nombres y Documento');
+  const handleSaveProveedor = async () => {
+    if (!newProveedor.nombre || !newProveedor.nit || !newProveedor.direccion) {
+      setError('Completa los campos obligatorios: Nombre, NIT y Direccion');
       return;
     }
 
     try {
       setError(null);
-      if (selectedCliente) {
-        const updated = clientes.map(c => 
-          c.id === selectedCliente.id 
-            ? { ...selectedCliente, ...newCliente, estado: selectedCliente.estado }
-            : c
+      if (selectedProveedor) {
+        const updated = proveedores.map(p =>
+          p.id === selectedProveedor.id
+            ? { ...selectedProveedor, ...newProveedor, estado: selectedProveedor.estado }
+            : p
         );
-        setClientes(updated);
+        setProveedores(updated);
         saveToStorage(updated);
       } else {
-        const cliente: Cliente = {
-          id: `cliente_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          ...newCliente,
+        const proveedor: Proveedor = {
+          id: `proveedor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          ...newProveedor,
           estado: 'ACTIVO'
         };
-        const updated = [...clientes, cliente];
-        setClientes(updated);
+        const updated = [...proveedores, proveedor];
+        setProveedores(updated);
         saveToStorage(updated);
       }
       resetForm();
     } catch (e) {
-      const errorMsg = e instanceof Error ? e.message : 'Error al guardar cliente';
+      const errorMsg = e instanceof Error ? e.message : 'Error al guardar proveedor';
       setError(errorMsg);
     }
   };
 
-  const handleDeleteCliente = (id: string) => {
+  const handleDeleteProveedor = (id: string) => {
     try {
       setError(null);
-      const updated = clientes.filter(c => c.id !== id);
-      setClientes(updated);
+      const updated = proveedores.filter(p => p.id !== id);
+      setProveedores(updated);
       saveToStorage(updated);
       setConfirmDelete(null);
-      setSelectedCliente(null);
+      setSelectedProveedor(null);
     } catch (e) {
-      const errorMsg = e instanceof Error ? e.message : 'Error al eliminar cliente';
+      const errorMsg = e instanceof Error ? e.message : 'Error al eliminar proveedor';
+      setError(errorMsg);
+    }
+  };
+
+  const handleRegistrarPago = (id: string) => {
+    try {
+      if (montoPago <= 0) {
+        setError('Ingresa un monto valido');
+        return;
+      }
+
+      const updated = proveedores.map(p => {
+        if (p.id === id) {
+          const nuevaDeuda = Math.max(0, p.deudaActual - montoPago);
+          const diasEnMora = nuevaDeuda === 0 ? 0 : p.diasEnMora;
+          return { ...p, deudaActual: nuevaDeuda, diasEnMora };
+        }
+        return p;
+      });
+      setProveedores(updated);
+      saveToStorage(updated);
+      setShowPagoModal(null);
+      setMontoPago(0);
+      setError(null);
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : 'Error al registrar pago';
       setError(errorMsg);
     }
   };
 
   const resetForm = () => {
     setShowForm(false);
-    setSelectedCliente(null);
-    setNewCliente({
-      nombres: '',
-      apellidos: '',
-      documento: '',
-      tipoDocumento: 'CC',
+    setSelectedProveedor(null);
+    setNewProveedor({
+      nombre: '',
+      nit: '',
       telefono: '',
       email: '',
       ciudad: '',
       direccion: '',
-      barrio: '',
-      cupo: 0,
-      saldo: 0
+      deudaActual: 0,
+      diasEnMora: 0
     });
   };
 
-  const handleEdit = (cliente: Cliente) => {
-    setSelectedCliente(cliente);
-    setNewCliente({
-      nombres: cliente.nombres,
-      apellidos: cliente.apellidos || '',
-      documento: cliente.documento,
-      tipoDocumento: cliente.tipoDocumento,
-      telefono: cliente.telefono || '',
-      email: cliente.email || '',
-      ciudad: cliente.ciudad || '',
-      direccion: cliente.direccion || '',
-      barrio: cliente.barrio || '',
-      cupo: cliente.cupo,
-      saldo: cliente.saldo
+  const handleEdit = (proveedor: Proveedor) => {
+    setSelectedProveedor(proveedor);
+    setNewProveedor({
+      nombre: proveedor.nombre,
+      nit: proveedor.nit,
+      telefono: proveedor.telefono,
+      email: proveedor.email || '',
+      ciudad: proveedor.ciudad || '',
+      direccion: proveedor.direccion,
+      deudaActual: proveedor.deudaActual,
+      diasEnMora: proveedor.diasEnMora
     });
     setShowForm(true);
   };
 
-  const filteredClientes = useMemo(() => {
-    return clientes.filter(c => {
+  const filteredProveedores = useMemo(() => {
+    return proveedores.filter(p => {
       const matchSearch = search === '' ||
-        c.nombres.toLowerCase().includes(search.toLowerCase()) ||
-        c.documento.includes(search) ||
-        (c.telefono && c.telefono.includes(search));
+        p.nombre.toLowerCase().includes(search.toLowerCase()) ||
+        p.nit.includes(search) ||
+        (p.telefono && p.telefono.includes(search));
       const matchEstado =
         filterEstado === 'TODOS' ||
-        (filterEstado === 'DEUDA' ? c.saldo > 0 : c.estado === filterEstado);
+        (filterEstado === 'EN_MORA' ? p.diasEnMora > 0 : p.estado === filterEstado);
       return matchSearch && matchEstado;
     });
-  }, [clientes, search, filterEstado]);
+  }, [proveedores, search, filterEstado]);
 
-  const totalPages = Math.ceil(filteredClientes.length / ITEMS_PER_PAGE);
-  const paginatedClientes = filteredClientes.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredProveedores.length / ITEMS_PER_PAGE);
+  const paginatedProveedores = filteredProveedores.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   useEffect(() => {
     setCurrentPage(1);
   }, [search, filterEstado]);
 
   const stats = {
-    total: clientes.length,
-    activos: clientes.filter(c => c.estado === 'ACTIVO').length,
-    deuda: clientes.reduce((sum, c) => sum + c.saldo, 0),
-    conCupo: clientes.filter(c => c.cupo > 0).length
+    total: proveedores.length,
+    activos: proveedores.filter(p => p.estado === 'ACTIVO').length,
+    deudaTotal: proveedores.reduce((sum, p) => sum + p.deudaActual, 0),
+    enMora: proveedores.filter(p => p.diasEnMora > 0).length
   };
 
   return (
     <div>
       <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <User size={32} /> Gestión de Clientes
+        <Building2 size={32} /> Gestion de Proveedores
       </h1>
 
       {error && (
         <div style={{ background: '#fee2e2', border: '1px solid #ef4444', color: '#dc2626', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <AlertCircle size={20} />
           <span>{error}</span>
-          <button onClick={() => setError(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '1.5rem' }}>×</button>
+          <button onClick={() => setError(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '1.5rem' }}>x</button>
         </div>
       )}
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '1.5rem', textAlign: 'center' }}>
-          <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>TOTAL CLIENTES</p>
+          <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>TOTAL PROVEEDORES</p>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#f5c800' }}>{stats.total}</p>
         </div>
 
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '1.5rem', textAlign: 'center' }}>
-          <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>CLIENTES ACTIVOS</p>
+          <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>PROVEEDORES ACTIVOS</p>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#16a34a' }}>{stats.activos}</p>
         </div>
 
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '1.5rem', textAlign: 'center' }}>
-          <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>TOTAL DEUDA</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#dc2626' }}>${stats.deuda.toLocaleString()}</p>
+          <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>DEUDA TOTAL</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#dc2626' }}>${stats.deudaTotal.toLocaleString()}</p>
         </div>
 
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '1.5rem', textAlign: 'center' }}>
-          <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>CON CUPO</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#2563eb' }}>{stats.conCupo}</p>
+          <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>EN MORA</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#f97316' }}>{stats.enMora}</p>
         </div>
       </div>
 
@@ -221,13 +228,13 @@ export function Clientes() {
           <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
           <input
             type="text"
-            placeholder="Buscar por nombre, documento o teléfono..."
+            placeholder="Buscar por nombre, NIT o telefono..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{ width: '100%', padding: '0.75rem 0.75rem 0.75rem 2.5rem', border: '1px solid var(--color-border)', borderRadius: '10px', background: 'var(--color-surface)', color: 'var(--color-text)' }}
           />
         </div>
-        {(['TODOS', 'ACTIVO', 'INACTIVO', 'DEUDA'] as const).map(f => (
+        {(['TODOS', 'ACTIVO', 'INACTIVO', 'EN_MORA'] as const).map(f => (
           <button
             key={f}
             onClick={() => setFilterEstado(f)}
@@ -242,7 +249,7 @@ export function Clientes() {
               fontSize: '0.875rem'
             }}
           >
-            {f === 'DEUDA' ? 'Con Deuda' : f}
+            {f === 'EN_MORA' ? 'En Mora' : f}
           </button>
         ))}
         <button
@@ -260,7 +267,7 @@ export function Clientes() {
             gap: '0.5rem'
           }}
         >
-          <Plus size={18} /> Nuevo Cliente
+          <Plus size={18} /> Nuevo Proveedor
         </button>
       </div>
 
@@ -268,60 +275,37 @@ export function Clientes() {
       {showForm && (
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '20px', padding: '2rem', marginBottom: '2rem' }}>
           <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text)' }}>
-            {selectedCliente ? <Edit2 size={24} /> : <Plus size={24} />}
-            {selectedCliente ? 'Editar' : 'Nuevo'} Cliente
+            {selectedProveedor ? <Edit2 size={24} /> : <Plus size={24} />}
+            {selectedProveedor ? 'Editar' : 'Nuevo'} Proveedor
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Nombre *</label>
               <input
                 type="text"
-                value={newCliente.nombres}
-                onChange={e => setNewCliente({...newCliente, nombres: e.target.value})}
-                placeholder="Nombre completo"
+                value={newProveedor.nombre}
+                onChange={e => setNewProveedor({...newProveedor, nombre: e.target.value})}
+                placeholder="Nombre del proveedor"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Apellido</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>NIT *</label>
               <input
                 type="text"
-                value={newCliente.apellidos}
-                onChange={e => setNewCliente({...newCliente, apellidos: e.target.value})}
-                placeholder="Apellidos"
+                value={newProveedor.nit}
+                onChange={e => setNewProveedor({...newProveedor, nit: e.target.value})}
+                placeholder="NIT del proveedor"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Tipo de Documento *</label>
-              <select
-                value={newCliente.tipoDocumento}
-                onChange={e => setNewCliente({...newCliente, tipoDocumento: e.target.value as any})}
-                style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
-              >
-                <option value="CC">Cédula (CC)</option>
-                <option value="NIT">NIT</option>
-                <option value="CE">Cédula Extranjería</option>
-                <option value="PASAPORTE">Pasaporte</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Documento *</label>
-              <input
-                type="text"
-                value={newCliente.documento}
-                onChange={e => setNewCliente({...newCliente, documento: e.target.value})}
-                placeholder="Número de documento"
-                style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Teléfono</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Telefono *</label>
               <input
                 type="tel"
-                value={newCliente.telefono}
-                onChange={e => setNewCliente({...newCliente, telefono: e.target.value})}
-                placeholder="Teléfono principal"
+                value={newProveedor.telefono}
+                onChange={e => setNewProveedor({...newProveedor, telefono: e.target.value})}
+                placeholder="Telefono"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
@@ -329,9 +313,9 @@ export function Clientes() {
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Email</label>
               <input
                 type="email"
-                value={newCliente.email}
-                onChange={e => setNewCliente({...newCliente, email: e.target.value})}
-                placeholder="Correo electrónico"
+                value={newProveedor.email}
+                onChange={e => setNewProveedor({...newProveedor, email: e.target.value})}
+                placeholder="Correo electronico"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
@@ -339,28 +323,38 @@ export function Clientes() {
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Ciudad</label>
               <input
                 type="text"
-                value={newCliente.ciudad}
-                onChange={e => setNewCliente({...newCliente, ciudad: e.target.value})}
+                value={newProveedor.ciudad}
+                onChange={e => setNewProveedor({...newProveedor, ciudad: e.target.value})}
                 placeholder="Ciudad"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Dirección</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Direccion *</label>
               <input
                 type="text"
-                value={newCliente.direccion}
-                onChange={e => setNewCliente({...newCliente, direccion: e.target.value})}
-                placeholder="Dirección completa"
+                value={newProveedor.direccion}
+                onChange={e => setNewProveedor({...newProveedor, direccion: e.target.value})}
+                placeholder="Direccion completa"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Cupo de Crédito</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Deuda Actual</label>
               <input
                 type="number"
-                value={newCliente.cupo}
-                onChange={e => setNewCliente({...newCliente, cupo: parseFloat(e.target.value) || 0})}
+                value={newProveedor.deudaActual}
+                onChange={e => setNewProveedor({...newProveedor, deudaActual: parseFloat(e.target.value) || 0})}
+                placeholder="0"
+                style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Dias en Mora</label>
+              <input
+                type="number"
+                value={newProveedor.diasEnMora}
+                onChange={e => setNewProveedor({...newProveedor, diasEnMora: parseInt(e.target.value) || 0})}
                 placeholder="0"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
@@ -368,7 +362,7 @@ export function Clientes() {
           </div>
           <div style={{ display: 'flex', gap: '1rem' }}>
             <button
-              onClick={handleSaveCliente}
+              onClick={handleSaveProveedor}
               style={{
                 padding: '0.875rem 2rem',
                 background: '#f5c800',
@@ -383,7 +377,7 @@ export function Clientes() {
                 fontSize: '1rem'
               }}
             >
-              <Check size={18} /> {selectedCliente ? 'Actualizar' : 'Crear'} Cliente
+              <Check size={18} /> {selectedProveedor ? 'Actualizar' : 'Crear'} Proveedor
             </button>
             <button
               onClick={resetForm}
@@ -407,9 +401,9 @@ export function Clientes() {
       {/* Table */}
       <div style={{ background: 'var(--color-surface)', borderRadius: '20px', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
         {loading ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>Cargando clientes...</div>
-        ) : paginatedClientes.length === 0 ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>Sin clientes registrados 👤</div>
+          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>Cargando proveedores...</div>
+        ) : paginatedProveedores.length === 0 ? (
+          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>Sin proveedores registrados - No hay datos</div>
         ) : (
           <>
             <div style={{ overflowX: 'auto' }}>
@@ -417,41 +411,41 @@ export function Clientes() {
                 <thead>
                   <tr style={{ background: 'var(--color-surface-2)', borderBottom: '1px solid var(--color-border)' }}>
                     <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>NOMBRE</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>DOCUMENTO</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>TELÉFONO</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>CIUDAD</th>
-                    <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>CUPO</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>NIT</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>TELEFONO</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>DIRECCION</th>
                     <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>DEUDA</th>
+                    <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>DIAS EN MORA</th>
                     <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>ESTADO</th>
                     <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>ACCIONES</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedClientes.map((c, idx) => (
+                  {paginatedProveedores.map((p, idx) => (
                     <tr
-                      key={c.id}
+                      key={p.id}
                       style={{
                         borderTop: '1px solid var(--color-border)',
                         background: idx % 2 === 0 ? 'transparent' : 'var(--color-surface-2)'
                       }}
                     >
                       <td style={{ padding: '1rem', fontWeight: 600, color: 'var(--color-text)' }}>
-                        {c.nombres} {c.apellidos || ''}
+                        {p.nombre}
                       </td>
                       <td style={{ padding: '1rem', fontSize: '0.875rem', color: 'var(--color-text)' }}>
-                        {c.tipoDocumento} {c.documento}
+                        {p.nit}
                       </td>
                       <td style={{ padding: '1rem', fontSize: '0.875rem', color: 'var(--color-text)' }}>
-                        {c.telefono || '-'}
+                        {p.telefono}
                       </td>
                       <td style={{ padding: '1rem', fontSize: '0.875rem', color: 'var(--color-text)' }}>
-                        {c.ciudad || '-'}
+                        {p.direccion}
                       </td>
-                      <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: '#2563eb' }}>
-                        ${c.cupo.toLocaleString()}
+                      <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: p.deudaActual > 0 ? '#dc2626' : '#16a34a' }}>
+                        ${p.deudaActual.toLocaleString()}
                       </td>
-                      <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: c.saldo > 0 ? '#dc2626' : '#16a34a' }}>
-                        ${c.saldo.toLocaleString()}
+                      <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: p.diasEnMora > 0 ? '#dc2626' : '#16a34a' }}>
+                        {p.diasEnMora}
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'center' }}>
                         <span style={{
@@ -460,15 +454,35 @@ export function Clientes() {
                           borderRadius: '6px',
                           fontSize: '0.75rem',
                           fontWeight: 700,
-                          background: c.estado === 'ACTIVO' ? '#dcfce7' : '#fee2e2',
-                          color: c.estado === 'ACTIVO' ? '#16a34a' : '#dc2626'
+                          background: p.estado === 'ACTIVO' ? '#dcfce7' : '#fee2e2',
+                          color: p.estado === 'ACTIVO' ? '#16a34a' : '#dc2626'
                         }}>
-                          {c.estado === 'ACTIVO' ? '✓ ACTIVO' : '✕ INACTIVO'}
+                          {p.estado === 'ACTIVO' ? '[+] ACTIVO' : '[-] INACTIVO'}
                         </span>
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'center', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                        {p.deudaActual > 0 && (
+                          <button
+                            onClick={() => setShowPagoModal(p.id)}
+                            title="Registrar pago"
+                            style={{
+                              padding: '0.5rem 0.75rem',
+                              background: '#dbeafe',
+                              color: '#2563eb',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem'
+                            }}
+                          >
+                            <DollarSign size={14} />
+                          </button>
+                        )}
                         <button
-                          onClick={() => handleEdit(c)}
+                          onClick={() => handleEdit(p)}
                           style={{
                             padding: '0.5rem 0.75rem',
                             background: 'var(--color-surface-2)',
@@ -485,7 +499,7 @@ export function Clientes() {
                           <Edit2 size={14} />
                         </button>
                         <button
-                          onClick={() => setConfirmDelete(c.id)}
+                          onClick={() => setConfirmDelete(p.id)}
                           style={{
                             padding: '0.5rem 0.75rem',
                             background: '#fee2e2',
@@ -527,7 +541,7 @@ export function Clientes() {
                   Anterior
                 </button>
                 <span style={{ fontWeight: 600, color: 'var(--color-text)', minWidth: '80px', textAlign: 'center' }}>
-                  Página {currentPage} de {totalPages}
+                  Pagina {currentPage} de {totalPages}
                 </span>
                 <button
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
@@ -550,7 +564,7 @@ export function Clientes() {
         )}
       </div>
 
-      {/* Modal de confirmación de eliminación */}
+      {/* Modal de confirmacion de eliminacion */}
       {confirmDelete && (
         <div style={{
           position: 'fixed',
@@ -571,15 +585,15 @@ export function Clientes() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
               <AlertCircle size={24} color="#dc2626" />
               <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text)' }}>
-                Confirmar eliminación
+                Confirmar eliminacion
               </h3>
             </div>
             <p style={{ color: 'var(--color-text)', marginBottom: '1.5rem' }}>
-              ¿Estás seguro de que deseas eliminar este cliente? Esta acción no se puede deshacer.
+              Estoy seguro de que deseo eliminar este proveedor? Esta accion no se puede deshacer.
             </p>
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button
-                onClick={() => handleDeleteCliente(confirmDelete)}
+                onClick={() => handleDeleteProveedor(confirmDelete)}
                 style={{
                   flex: 1,
                   padding: '0.875rem',
@@ -591,7 +605,7 @@ export function Clientes() {
                   fontWeight: 700
                 }}
               >
-                Sí, eliminar
+                Si, eliminar
               </button>
               <button
                 onClick={() => setConfirmDelete(null)}
@@ -606,7 +620,82 @@ export function Clientes() {
                   fontWeight: 700
                 }}
               >
-                No, cancelar
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de registro de pago */}
+      {showPagoModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '20px',
+            padding: '2rem',
+            maxWidth: '400px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+              <DollarSign size={24} color="#16a34a" />
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text)' }}>
+                Registrar pago
+              </h3>
+            </div>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>
+                Monto a pagar
+              </label>
+              <input
+                type="number"
+                value={montoPago}
+                onChange={e => setMontoPago(parseFloat(e.target.value) || 0)}
+                placeholder="0"
+                style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                onClick={() => handleRegistrarPago(showPagoModal)}
+                style={{
+                  flex: 1,
+                  padding: '0.875rem',
+                  background: '#16a34a',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 700
+                }}
+              >
+                Pagar
+              </button>
+              <button
+                onClick={() => {
+                  setShowPagoModal(null);
+                  setMontoPago(0);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '0.875rem',
+                  background: 'var(--color-surface-2)',
+                  color: 'var(--color-text)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 700
+                }}
+              >
+                Cancelar
               </button>
             </div>
           </div>

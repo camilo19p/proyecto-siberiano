@@ -12,17 +12,42 @@ export default defineConfig(({ command, mode }) => {
     publicDir: 'public',
     server: {
       host: '0.0.0.0',
-      port: 5173,
-      strictPort: false,
+      port: 4173,
+      strictPort: true,
       // Deshabilitar HMR en Docker para evitar problemas
-      hmr: isDocker ? false : true,
+      hmr: isDocker ? false : {
+        host: 'localhost',
+        port: 4173,
+        protocol: 'http'
+      },
       proxy: {
         '/api': {
           target: apiUrl,
           changeOrigin: true,
           ws: true,
+          secure: false,
+          rewrite: (path) => path,
+          configure: (proxy) => {
+            proxy.on('error', (err, req, res: any) => {
+              console.error('Proxy error:', err);
+              res.writeHead(502, {
+                'Content-Type': 'application/json',
+              });
+              res.end(JSON.stringify({
+                error: 'Error conectando con el servidor API',
+                message: err.message
+              }));
+            });
+            proxy.on('proxyRes', (proxyRes) => {
+              proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+            });
+          }
         }
       }
+    },
+    build: {
+      outDir: 'dist',
+      sourcemap: false
     }
   }
 })
