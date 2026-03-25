@@ -36,3 +36,45 @@ api/backups/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Visual Studio
+.vs/
+
+# Archivos de documentación no permitidos (usar solo README.md)
+RESUMEN_*.md
+GUIA_*.md
+CHECKLIST_*.md
+SOLUCION_*.md
+VERIFICACION_*.md
+FIXES_*.md
+QUICK_START.md
+ENTREGA_*.md
+ARQUITECTURA_*.md
+README_INICIAR.md
+INFORME_*.md
+STATUS_*.md
+INDICE_*.md
+GIT_*.md
+CAMBIOS_*.md
+CONFIRMACION_*.md
+ULTIMO_*.md
+MODULO_*_README.md
+MODULO_*_RESUMEN.md
+out.txt
+*.txt
+
+# Scripts adicionales no permitidos (solo iniciar.bat)
+iniciar_*.bat
+run.bat
+START.bat
+VERIFICAR_*.bat
+SOLUCION_*.bat
+LIBERAR_*.bat
+DIAGNOSE_*.bat
+FIX_*.bat
+CHECK_*.bat
+fix-*.bat
+
+# Scripts shell no permitidos
+DIAGNOSE.sh
+*.sh
