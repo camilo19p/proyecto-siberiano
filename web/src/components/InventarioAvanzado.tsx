@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Package, Download, Upload, Search, Filter, Trash2, Eye, EyeOff, Plus } from 'lucide-react';
+import { inventarioService, productService, type Product, type Inventario } from '../services/api';
 
 interface Producto {
   id: string;
@@ -51,7 +52,7 @@ const showToast = (message: string, type: 'success' | 'error' = 'success') => {
 
 export function InventarioAvanzado() {
   const [productos, setProductos] = useState<Producto[]>([]);
-  const [movimientos, setMovimientos] = useState<MovimientoInventario[]>([]);
+  const [inventarios, setInventarios] = useState<Inventario[]>([]);
   const [loading, setLoading] = useState(false);
   const [filtros, setFiltros] = useState<Filtros>({
     categoria: '',
@@ -64,23 +65,8 @@ export function InventarioAvanzado() {
   // UI State
   const [vista, setVista] = useState<'tabla' | 'reportes' | 'movimientos'>('tabla');
   const [showFiltros, setShowFiltros] = useState(false);
-  const [showNuevoProducto, setShowNuevoProducto] = useState(false);
-  const [editandoId, setEditandoId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(50);
-  
-  // Nuevo producto
-  const [nuevoProducto, setNuevoProducto] = useState<Partial<Producto>>({
-    codigo: '',
-    nombre: '',
-    categoria: '',
-    seccion: '',
-    estante: '',
-    stockActual: 0,
-    stockMinimo: 5,
-    precioCompra: 0,
-    precioVenta: 0
-  });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -89,25 +75,40 @@ export function InventarioAvanzado() {
     cargarDatos();
   }, []);
 
-  // Cargar desde localStorage
-  const cargarDatos = () => {
+  // Cargar datos desde API
+  const cargarDatos = async () => {
     setLoading(true);
     try {
-      const saved = localStorage.getItem('inventario_productos');
-      const savedMov = localStorage.getItem('inventario_movimientos');
-      if (saved) setProductos(JSON.parse(saved));
-      if (savedMov) setMovimientos(JSON.parse(savedMov));
+      const [productosData, inventariosData] = await Promise.all([
+        productService.getProducts(),
+        inventarioService.getAllInventarios()
+      ]);
+      
+      // Mapear productos a formato local
+      const productosFormateados: Producto[] = productosData.map((p: Product) => ({
+        id: p.id,
+        codigo: p.codigo,
+        nombre: p.name,
+        categoria: p.type || 'Sin Categoria',
+        seccion: 'Sin Seccion',
+        estante: 'Sin Estante',
+        stockActual: p.stock,
+        stockMinimo: p.stockInicial || 5,
+        precioCompra: p.precioCompra,
+        precioVenta: p.precioVenta,
+        ubicacion: 'Sin ubicacion',
+        ultimaActualizacion: p.updatedAt || new Date().toISOString()
+      }));
+      
+      setProductos(productosFormateados);
+      setInventarios(inventariosData);
+      showToast('Datos cargados correctamente', 'success');
     } catch (error) {
       showToast('Error cargando datos', 'error');
+      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Guardar en localStorage
-  const guardarDatos = (prods: Producto[], movs: MovimientoInventario[] = movimientos) => {
-    localStorage.setItem('inventario_productos', JSON.stringify(prods));
-    localStorage.setItem('inventario_movimientos', JSON.stringify(movs));
   };
 
   // Filtrar productos
@@ -128,69 +129,6 @@ export function InventarioAvanzado() {
   const categorias = [...new Set(productos.map(p => p.categoria))];
   const secciones = [...new Set(productos.filter(p => !filtros.categoria || p.categoria === filtros.categoria).map(p => p.seccion))];
   const estantes = [...new Set(productos.filter(p => (!filtros.categoria || p.categoria === filtros.categoria) && (!filtros.seccion || p.seccion === filtros.seccion)).map(p => p.estante))];
-
-  // Agregar producto
-  const agregarProducto = () => {
-    if (!nuevoProducto.codigo || !nuevoProducto.nombre) {
-      showToast('Completa codigo y nombre', 'error');
-      return;
-    }
-
-    const producto: Producto = {
-      id: Date.now().toString(),
-      codigo: nuevoProducto.codigo || '',
-      nombre: nuevoProducto.nombre || '',
-      categoria: nuevoProducto.categoria || 'Sin Categoria',
-      seccion: nuevoProducto.seccion || 'Sin Seccion',
-      estante: nuevoProducto.estante || 'Sin Estante',
-      stockActual: nuevoProducto.stockActual || 0,
-      stockMinimo: nuevoProducto.stockMinimo || 5,
-      precioCompra: nuevoProducto.precioCompra || 0,
-      precioVenta: nuevoProducto.precioVenta || 0,
-      ubicacion: `${nuevoProducto.seccion} - ${nuevoProducto.estante}`,
-      ultimaActualizacion: new Date().toLocaleString('es-CO')
-    };
-
-    const updated = [...productos, producto];
-    setProductos(updated);
-    guardarDatos(updated);
-    setNuevoProducto({ codigo: '', nombre: '', categoria: '', seccion: '', estante: '', stockActual: 0, stockMinimo: 5, precioCompra: 0, precioVenta: 0 });
-    setShowNuevoProducto(false);
-    showToast('Producto agregado');
-  };
-
-  // Registrar movimiento
-  const registrarMovimiento = (productoId: string, tipo: 'entrada' | 'salida' | 'ajuste', cantidad: number, razon: string) => {
-    const prod = productos.find(p => p.id === productoId);
-    if (!prod) return;
-
-    let nuevoStock = prod.stockActual;
-    if (tipo === 'entrada') nuevoStock += cantidad;
-    else if (tipo === 'salida') nuevoStock = Math.max(0, nuevoStock - cantidad);
-    else nuevoStock = cantidad;
-
-    const updated = productos.map(p => 
-      p.id === productoId ? { ...p, stockActual: nuevoStock, ultimaActualizacion: new Date().toLocaleString('es-CO') } : p
-    );
-    setProductos(updated);
-    guardarDatos(updated);
-
-    const movimiento: MovimientoInventario = {
-      id: Date.now().toString(),
-      productoId,
-      tipo,
-      cantidad,
-      razon,
-      fecha: new Date().toLocaleString('es-CO'),
-      usuario: 'Usuario'
-    };
-
-    const updatedMov = [...movimientos, movimiento];
-    setMovimientos(updatedMov);
-    guardarDatos(updated, updatedMov);
-    showToast('Movimiento registrado');
-    setEditandoId(null);
-  };
 
   // Exportar a Excel
   const exportarExcel = () => {
@@ -242,7 +180,6 @@ export function InventarioAvanzado() {
 
         const updated = [...productos, ...nuevos];
         setProductos(updated);
-        guardarDatos(updated);
         showToast(`${nuevos.length} productos importados`);
       } catch (error) {
         showToast('Error importando archivo', 'error');
@@ -250,14 +187,6 @@ export function InventarioAvanzado() {
     };
     reader.readAsText(file);
     if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  // Eliminar producto
-  const eliminarProducto = (id: string) => {
-    const updated = productos.filter(p => p.id !== id);
-    setProductos(updated);
-    guardarDatos(updated);
-    showToast('Producto eliminado');
   };
 
   // Paginacion
@@ -339,9 +268,9 @@ export function InventarioAvanzado() {
           <Filter size={18} /> Filtros
         </button>
 
-        <button onClick={() => setShowNuevoProducto(!showNuevoProducto)} style={{
-          padding: '0.75rem 1.5rem',
-          background: '#16a34a',
+        <button onClick={cargarDatos} style={{
+          padding: '0.75rem 1rem',
+          background: '#3b82f6',
           color: 'white',
           border: 'none',
           borderRadius: '10px',
@@ -351,7 +280,7 @@ export function InventarioAvanzado() {
           alignItems: 'center',
           gap: '0.5rem'
         }}>
-          <Plus size={18} /> Nuevo Producto
+          Recargar
         </button>
 
         <button onClick={exportarExcel} style={{
@@ -436,28 +365,6 @@ export function InventarioAvanzado() {
         </div>
       )}
 
-      {/* Nuevo Producto */}
-      {showNuevoProducto && (
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '1.5rem', marginBottom: '1.5rem' }}>
-          <h3 style={{ margin: '0 0 1rem 0', color: 'var(--color-text)' }}>Agregar Producto</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-            <input type="text" placeholder="Codigo" value={nuevoProducto.codigo || ''} onChange={e => setNuevoProducto({ ...nuevoProducto, codigo: e.target.value })} style={{ padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', background: 'var(--color-surface-2)', color: 'var(--color-text)' }} />
-            <input type="text" placeholder="Nombre" value={nuevoProducto.nombre || ''} onChange={e => setNuevoProducto({ ...nuevoProducto, nombre: e.target.value })} style={{ padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', background: 'var(--color-surface-2)', color: 'var(--color-text)' }} />
-            <input type="text" placeholder="Categoria" value={nuevoProducto.categoria || ''} onChange={e => setNuevoProducto({ ...nuevoProducto, categoria: e.target.value })} style={{ padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', background: 'var(--color-surface-2)', color: 'var(--color-text)' }} />
-            <input type="text" placeholder="Seccion" value={nuevoProducto.seccion || ''} onChange={e => setNuevoProducto({ ...nuevoProducto, seccion: e.target.value })} style={{ padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', background: 'var(--color-surface-2)', color: 'var(--color-text)' }} />
-            <input type="text" placeholder="Estante" value={nuevoProducto.estante || ''} onChange={e => setNuevoProducto({ ...nuevoProducto, estante: e.target.value })} style={{ padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', background: 'var(--color-surface-2)', color: 'var(--color-text)' }} />
-            <input type="number" placeholder="Stock Actual" value={nuevoProducto.stockActual || 0} onChange={e => setNuevoProducto({ ...nuevoProducto, stockActual: parseInt(e.target.value) })} style={{ padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', background: 'var(--color-surface-2)', color: 'var(--color-text)' }} />
-            <input type="number" placeholder="Stock Minimo" value={nuevoProducto.stockMinimo || 5} onChange={e => setNuevoProducto({ ...nuevoProducto, stockMinimo: parseInt(e.target.value) })} style={{ padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', background: 'var(--color-surface-2)', color: 'var(--color-text)' }} />
-            <input type="number" placeholder="Precio Compra" value={nuevoProducto.precioCompra || 0} onChange={e => setNuevoProducto({ ...nuevoProducto, precioCompra: parseFloat(e.target.value) })} style={{ padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', background: 'var(--color-surface-2)', color: 'var(--color-text)' }} />
-            <input type="number" placeholder="Precio Venta" value={nuevoProducto.precioVenta || 0} onChange={e => setNuevoProducto({ ...nuevoProducto, precioVenta: parseFloat(e.target.value) })} style={{ padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', background: 'var(--color-surface-2)', color: 'var(--color-text)' }} />
-          </div>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <button onClick={agregarProducto} style={{ padding: '0.75rem 1.5rem', background: '#16a34a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Agregar</button>
-            <button onClick={() => setShowNuevoProducto(false)} style={{ padding: '0.75rem 1.5rem', background: 'var(--color-surface-2)', color: 'var(--color-text)', border: '1px solid var(--color-border)', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Cancelar</button>
-          </div>
-        </div>
-      )}
-
       {/* Vista Tabla */}
       {vista === 'tabla' && (
         <div style={{ background: 'var(--color-surface)', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
@@ -472,7 +379,6 @@ export function InventarioAvanzado() {
                   <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>STOCK</th>
                   <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>MINIMO</th>
                   <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>PRECIO VENTA</th>
-                  <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>ACCIONES</th>
                 </tr>
               </thead>
               <tbody>
@@ -485,14 +391,6 @@ export function InventarioAvanzado() {
                     <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: p.stockActual <= p.stockMinimo ? '#dc2626' : '#16a34a' }}>{p.stockActual}</td>
                     <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--color-text)' }}>{p.stockMinimo}</td>
                     <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text)' }}>{formatNum(p.precioVenta)}</td>
-                    <td style={{ padding: '1rem', textAlign: 'center', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                      <button onClick={() => setEditandoId(editandoId === p.id ? null : p.id)} title="Editar" style={{ padding: '0.5rem 0.75rem', background: 'var(--color-surface-2)', color: 'var(--color-text)', border: '1px solid var(--color-border)', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>
-                        {editandoId === p.id ? <EyeOff size={14} /> : <Eye size={14} />}
-                      </button>
-                      <button onClick={() => eliminarProducto(p.id)} title="Eliminar" style={{ padding: '0.5rem 0.75rem', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -552,59 +450,22 @@ export function InventarioAvanzado() {
               <thead>
                 <tr style={{ background: 'var(--color-surface-2)', borderBottom: '1px solid var(--color-border)' }}>
                   <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>FECHA</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>TIPO</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>RAZON</th>
-                  <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>CANTIDAD</th>
+                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>TOTAL VENDIDO</th>
+                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>GANANCIAS</th>
+                  <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>CAPITAL</th>
                 </tr>
               </thead>
               <tbody>
-                {movimientos.slice(-50).reverse().map((m, idx) => (
-                  <tr key={m.id} style={{ borderTop: '1px solid var(--color-border)', background: idx % 2 === 0 ? 'transparent' : 'var(--color-surface-2)' }}>
-                    <td style={{ padding: '1rem', fontSize: '0.875rem', color: 'var(--color-text)' }}>{m.fecha}</td>
-                    <td style={{ padding: '1rem', fontSize: '0.875rem', fontWeight: 600, color: m.tipo === 'entrada' ? '#16a34a' : '#dc2626' }}>{m.tipo}</td>
-                    <td style={{ padding: '1rem', fontSize: '0.875rem', color: 'var(--color-text)' }}>{m.razon}</td>
-                    <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)' }}>{m.cantidad}</td>
+                {inventarios.slice(0, 50).map((inv, idx) => (
+                  <tr key={inv.id} style={{ borderTop: '1px solid var(--color-border)', background: idx % 2 === 0 ? 'transparent' : 'var(--color-surface-2)' }}>
+                    <td style={{ padding: '1rem', fontSize: '0.875rem', color: 'var(--color-text)' }}>{new Date(inv.fecha).toLocaleDateString('es-CO')}</td>
+                    <td style={{ padding: '1rem', fontSize: '0.875rem', fontWeight: 600, color: '#3b82f6' }}>${inv.totalVendido.toLocaleString()}</td>
+                    <td style={{ padding: '1rem', fontSize: '0.875rem', fontWeight: 600, color: '#16a34a' }}>${inv.ganancias.toLocaleString()}</td>
+                    <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)' }}>${inv.capital.toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de Edicion */}
-      {editandoId && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setEditandoId(null)}>
-          <div style={{ background: 'var(--color-surface)', borderRadius: '16px', padding: '2rem', maxWidth: '400px', border: '1px solid var(--color-border)' }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ margin: '0 0 1.5rem 0', color: 'var(--color-text)' }}>Registrar Movimiento</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Tipo</label>
-                <select id="tipo" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', background: 'var(--color-surface)', color: 'var(--color-text)' }}>
-                  <option value="entrada">Entrada</option>
-                  <option value="salida">Salida</option>
-                  <option value="ajuste">Ajuste</option>
-                </select>
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Cantidad</label>
-                <input type="number" id="cantidad" placeholder="0" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', background: 'var(--color-surface)', color: 'var(--color-text)' }} />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Razon</label>
-                <input type="text" id="razon" placeholder="Motivo del movimiento" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', background: 'var(--color-surface)', color: 'var(--color-text)' }} />
-              </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button onClick={() => {
-                  const tipo = (document.getElementById('tipo') as HTMLSelectElement).value as 'entrada' | 'salida' | 'ajuste';
-                  const cantidad = parseInt((document.getElementById('cantidad') as HTMLInputElement).value) || 0;
-                  const razon = (document.getElementById('razon') as HTMLInputElement).value;
-                  if (cantidad > 0 && razon) registrarMovimiento(editandoId, tipo, cantidad, razon);
-                  else showToast('Completa todos los campos', 'error');
-                }} style={{ flex: 1, padding: '0.75rem', background: '#16a34a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Guardar</button>
-                <button onClick={() => setEditandoId(null)} style={{ flex: 1, padding: '0.75rem', background: 'var(--color-surface-2)', color: 'var(--color-text)', border: '1px solid var(--color-border)', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Cancelar</button>
-              </div>
-            </div>
           </div>
         </div>
       )}
