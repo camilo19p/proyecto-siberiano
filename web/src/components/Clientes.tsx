@@ -731,7 +731,7 @@ export function Clientes() {
               </h3>
             </div>
             <p style={{ color: 'var(--color-text)', marginBottom: '1.5rem' }}>
-              Estas seguro de que deseas eliminar este cliente? Esta accion no se puede deshacer.
+              ¿Estás seguro de que deseas eliminar este cliente? Esta acción no se puede deshacer.
             </p>
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button
@@ -847,7 +847,7 @@ export function Clientes() {
                         flex: 1,
                         padding: '0.875rem',
                         background: 'var(--color-surface-2)',
-                        color: 'var(--color_text)',
+                        color: 'var(--color-text)',
                         border: '1px solid var(--color-border)',
                         borderRadius: '8px',
                         cursor: 'pointer',

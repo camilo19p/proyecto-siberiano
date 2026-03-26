@@ -54,7 +54,7 @@ export function Proveedores() {
 
   const handleSaveProveedor = async () => {
     if (!newProveedor.nombre || !newProveedor.nit || !newProveedor.direccion) {
-      setError('Completa los campos obligatorios: Nombre, NIT y Direccion');
+      setError('Completa los campos obligatorios: Nombre, NIT y Dirección');
       return;
     }
 
@@ -102,7 +102,7 @@ export function Proveedores() {
   const handleRegistrarPago = (id: string) => {
     try {
       if (montoPago <= 0) {
-        setError('Ingresa un monto valido');
+        setError('Ingresa un monto válido');
         return;
       }
 
@@ -588,7 +588,7 @@ export function Proveedores() {
               </h3>
             </div>
             <p style={{ color: 'var(--color-text)', marginBottom: '1.5rem' }}>
-              Estoy seguro de que deseo eliminar este proveedor? Esta accion no se puede deshacer.
+              ¿Estás seguro de que deseas eliminar este proveedor? Esta acción no se puede deshacer.
             </p>
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button

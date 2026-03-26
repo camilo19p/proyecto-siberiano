@@ -6,18 +6,21 @@ export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const isDocker = env.DOCKER_ENV === 'true' || process.env.DOCKER_ENV === 'true'
   const apiUrl = env.API_URL || process.env.API_URL || 'http://localhost:3001'
+  
+  // Permitir puerto alternativo desde variable de entorno
+  const port = parseInt(process.env.VITE_PORT || '4173')
 
   return {
     plugins: [react()],
     publicDir: 'public',
     server: {
       host: '0.0.0.0',
-      port: 4173,
-      strictPort: true,
+      port: port,
+      strictPort: false, // Cambiado a false para permitir puertos alternativos
       // Deshabilitar HMR en Docker para evitar problemas
       hmr: isDocker ? false : {
         host: 'localhost',
-        port: 4173,
+        port: port,
         protocol: 'http'
       },
       proxy: {

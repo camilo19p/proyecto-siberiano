@@ -504,7 +504,8 @@ export function POS() {
 
         {/* Cliente */}
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', padding: '0.75rem' }}>
-          <button
+          <div
+            role="button"
             onClick={() => setShowClienteModal(!showClienteModal)}
             style={{
               width: '100%',
@@ -521,20 +522,17 @@ export function POS() {
               fontSize: '0.875rem'
             }}
           >
-            <span>{selectedCliente ? `?? ${selectedCliente.nombres}` : '?? Cliente'}</span>
+            <span>{selectedCliente ? `Cliente: ${selectedCliente.nombres}` : 'Cliente'}</span>
             {selectedCliente && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedCliente(null);
-                  setPaymentMethod('EFECTIVO');
-                }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#16a34a' }}
+              <span
+                onClick={(e) => { e.stopPropagation(); setSelectedCliente(null); setPaymentMethod('EFECTIVO'); }}
+                style={{ cursor: 'pointer', color: '#16a34a', fontWeight: 700 }}
+                aria-label="Quitar cliente"
               >
-                ?
-              </button>
+                ×
+              </span>
             )}
-          </button>
+          </div>
 
           {showClienteModal && (
             <div style={{ marginTop: '0.75rem', position: 'relative', zIndex: 100 }}>
@@ -562,7 +560,7 @@ export function POS() {
                     Sin clientes
                   </div>
                 ) : (
-                  filteredClientes.map(cliente => (
+                  filteredClientes.map((cliente) => (
                     <button
                       key={cliente.id}
                       onClick={() => {
@@ -587,10 +585,10 @@ export function POS() {
                       }}
                     >
                       <span>{cliente.nombres}</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{cliente.telefono}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{cliente.telefono || '-'}</span>
                     </button>
                   ))
-                }
+                )}
               </div>
             </div>
           )}
@@ -860,169 +858,107 @@ export function POS() {
               </button>
               <button
                 onClick={handleConfirmSale}
-                disabled={paymentMethod === 'EFECTIVO' && isAmountInsufficient}
                 style={{
                   flex: 1,
                   padding: '0.75rem',
-                  background: (paymentMethod === 'EFECTIVO' && isAmountInsufficient) ? '#ccc' : '#10b981',
+                  background: '#10b981',
                   color: 'white',
                   border: 'none',
                   borderRadius: '6px',
-                  cursor: (paymentMethod === 'EFECTIVO' && isAmountInsufficient) ? 'not-allowed' : 'pointer',
+                  cursor: 'pointer',
                   fontWeight: 600
                 }}
               >
-                Confirmar Venta
+                Confirmar
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal de Ticket */}
+      {/* Ticket de venta */}
       {showTicket && lastSale && (
         <div style={{
           position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1001
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'white',
+          borderRadius: '8px',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+          padding: '1.5rem',
+          zIndex: 1500,
+          minWidth: '300px'
         }}>
-          <div style={{
-            background: 'var(--color-surface)',
-            border: '1px solid var(--color-border)',
-            borderRadius: '12px',
-            padding: '2rem',
-            maxWidth: '400px',
-            maxHeight: '80vh',
-            overflowY: 'auto'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>? Venta Completada</h2>
-              <button
-                onClick={() => setShowTicket(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem' }}
-              >
-                ?
-              </button>
+          <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+            <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Gracias por su compra!</h2>
+            <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
+              Ticket de venta
+            </p>
+          </div>
+          <div style={{ marginBottom: '1rem', fontSize: '0.875rem', lineHeight: 1.4 }}>
+            <div style={{ marginBottom: '0.5rem' }}>
+              <strong>Hora:</strong> {lastSale.timestamp}
             </div>
-
-            <div style={{ background: 'var(--color-surface-2)', padding: '1.5rem', borderRadius: '8px', marginBottom: '1.5rem', fontFamily: 'monospace', fontSize: '0.85rem' }}>
-              <div style={{ textAlign: 'center', marginBottom: '1rem', fontWeight: 700 }}>
-                ====== RECIBO DE VENTA ======
-              </div>
-              <div style={{ marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
-                <span>Venta #</span>
-                <span>{lastSale.id.slice(0, 8)}</span>
-              </div>
-              <div style={{ marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
-                <span>Fecha</span>
-                <span>{new Date(lastSale.fecha).toLocaleDateString('es-CO')}</span>
-              </div>
-              <div style={{ marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
-                <span>Hora</span>
-                <span>{lastSale.timestamp}</span>
-              </div>
-              {lastSale.cliente && (
-                <div style={{ marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Cliente</span>
-                  <span>{lastSale.cliente.nombres}</span>
-                </div>
-              )}
-              <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between' }}>
-                <span>Turno</span>
-                <span>{lastSale.turno}</span>
-              </div>
-
-              <div style={{ borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)', paddingTop: '0.75rem', paddingBottom: '0.75rem', marginBottom: '0.75rem' }}>
-                <div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>PRODUCTOS</div>
-                {lastSale.items.map((item, idx) => (
-                  <div key={idx} style={{ fontSize: '0.8rem', marginBottom: '0.5rem' }}>
-                    <div>{item.product.name}</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>{item.quantity} x {formatNum(item.product.precioVenta)}</span>
-                      <span style={{ fontWeight: 600 }}>{formatNum(item.subtotal)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
-                <span>Subtotal</span>
-                <span>{formatNum(lastSale.subtotal)}</span>
-              </div>
-              {lastSale.descuento > 0 && (
-                <div style={{ marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', color: '#10b981' }}>
-                  <span>Descuento</span>
-                  <span>-{formatNum(lastSale.descuento)}</span>
-                </div>
-              )}
-              <div style={{ marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 700 }}>
-                <span>TOTAL</span>
-                <span style={{ color: '#EAB308' }}>{formatNum(lastSale.total)}</span>
-              </div>
-              <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between' }}>
-                <span>Método</span>
-                <span style={{ fontWeight: 700, color: getPaymentMethodColor(lastSale.paymentMethod).bg }}>
-                  {lastSale.paymentMethod}
-                </span>
-              </div>
-
-              {lastSale.paymentMethod === 'EFECTIVO' && lastSale.change !== undefined && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10b981', fontWeight: 600 }}>
-                  <span>Cambio</span>
-                  <span>{formatNum(lastSale.change)}</span>
-                </div>
-              )}
-
-              <div style={{ textAlign: 'center', marginTop: '1rem', color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>
-                ¡Gracias por su compra!
-              </div>
+            <div style={{ marginBottom: '0.5rem' }}>
+              <strong>Turno:</strong> {lastSale.turno}
             </div>
-
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <button
-                onClick={() => {
-                  window.print();
-                }}
-                style={{
-                  flex: 1,
-                  padding: '0.75rem',
-                  background: '#2563EB',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem'
-                }}
-              >
-                <Printer size={16} /> Imprimir
-              </button>
-              <button
-                onClick={() => setShowTicket(false)}
-                style={{
-                  flex: 1,
-                  padding: '0.75rem',
-                  background: 'var(--color-surface-2)',
-                  color: 'var(--color-text)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontWeight: 600
-                }}
-              >
-                Cerrar
-              </button>
+            <div style={{ marginBottom: '0.5rem' }}>
+              <strong>Caja:</strong> {cajas.find(c => c.id === lastSale.cajaId)?.nombre}
             </div>
+            {lastSale.cliente && (
+              <div style={{ marginBottom: '0.5rem' }}>
+                <strong>Cliente:</strong> {lastSale.cliente.nombres}
+              </div>
+            )}
+          </div>
+          <div style={{ marginBottom: '1rem', fontSize: '0.875rem', borderTop: '1px solid var(--color-border)', paddingTop: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+              <span>Producto</span>
+              <span style={{ textAlign: 'right' }}>Subtotal</span>
+            </div>
+            {lastSale.items.map(item => (
+              <div key={item.product.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span>{item.product.name} (x{item.quantity})</span>
+                <span style={{ textAlign: 'right' }}>{formatNum(item.subtotal)}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginBottom: '1rem', fontSize: '1rem', fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Total:</span>
+            <span style={{ color: '#f5c800' }}>{formatNum(lastSale.total)}</span>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={() => setShowTicket(false)}
+              style={{
+                flex: 1,
+                padding: '0.75rem',
+                background: 'var(--color-primary)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+            >
+              Imprimir <Printer size={16} style={{ marginLeft: '0.25rem' }} />
+            </button>
+            <button
+              onClick={() => setShowTicket(false)}
+              style={{
+                flex: 1,
+                padding: '0.75rem',
+                background: 'var(--color-surface-2)',
+                color: 'var(--color-text)',
+                border: '1px solid var(--color-border)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+            >
+              Cerrar
+            </button>
           </div>
         </div>
       )}

@@ -375,7 +375,7 @@ export function CierreCaja() {
                       fontWeight: 600,
                       fontSize: '0.875rem'
                     }}>
-                      {c.diferencia === 0 ? '✓ Cuadrado' : `⚠ Dif: $${c.diferencia}`}
+                      {c.diferencia === 0 ? '✓ Cuadrado' : `⚠️ Dif: $${c.diferencia}`}
                     </span>
                     {isAdmin && (
                       <button
@@ -488,7 +488,7 @@ export function CierreCaja() {
         padding: '1.5rem',
         marginBottom: '2rem'
       }}>
-        <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--color-text)' }}>➕ Registrar Movimiento</h3>
+        <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)' }}>💰 Depósitos del día</h3>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <button
@@ -644,7 +644,7 @@ export function CierreCaja() {
 
           {/* Resumen por método de pago */}
           <div style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--color-border)' }}>
-            <p style={{ margin: '0 0 1rem 0', fontWeight: 700, color: 'var(--color-text)' }}>Ingresos por Método de Pago:</p>
+            <p style={{ margin: '0 0 1rem 0', fontWeight: 700, color: 'var(--color-text)', fontSize: '0.95rem' }}>Ingresos por Método de Pago:</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
               <div style={{ background: 'var(--color-surface-2)', padding: '0.75rem', borderRadius: '8px' }}>
                 <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>EFECTIVO</p>
