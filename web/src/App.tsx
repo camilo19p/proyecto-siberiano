@@ -125,7 +125,7 @@ export default function App() {
     { id: 'productos' as Page, label: 'Productos', icon: <Package size={18} />, desc: 'Gestiona el inventario', badge: alertas.stockCritico > 0 ? alertas.stockCritico : undefined },
     { id: 'inventario' as Page, label: 'Inventario Diario', icon: <ClipboardList size={18} />, desc: 'Control diario' },
     { id: 'inventario_avanzado' as Page, label: 'Inventario Avanzado', icon: <Package size={18} />, desc: '15000+ productos' },
-    { id: 'clientes' as Page, label: 'Clientes', icon: <Users size={18} />, desc: 'Gestión de clientes', badge: alertas.fiadosPendientes > 0 ? alertas.fiadosPendientes : undefined },
+    { id: 'clientes' as Page, label: 'Gestión de Clientes', icon: <Users size={18} />, desc: 'Gestión de clientes', badge: alertas.fiadosPendientes > 0 ? alertas.fiadosPendientes : undefined },
     { id: 'proveedores' as Page, label: 'Gestión de Proveedores', icon: <Building2 size={18} />, desc: 'Gestión de proveedores', badge: alertas.cuentasVencidas > 0 ? alertas.cuentasVencidas : undefined },
     { id: 'ganancias' as Page, label: 'Análisis de Ganancias', icon: <TrendingUp size={18} />, desc: 'Análisis de ingresos' },
     { id: 'facturas' as Page, label: 'Facturación', icon: <FileText size={18} />, desc: 'Factura electrónica' },

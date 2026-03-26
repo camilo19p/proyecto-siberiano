@@ -587,10 +587,10 @@ export function POS() {
                       }}
                     >
                       <span>{cliente.nombres}</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{cliente.telefono}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted' }}>{cliente.telefono}</span>
                     </button>
                   ))
-                )}
+                }
               </div>
             </div>
           )}
@@ -738,22 +738,22 @@ export function POS() {
 
         {/* Panel de Depósitos */}
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', padding: '1rem' }}>
-          <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)' }}>?? Depósitos</h3>
+          <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)' }}>?? Depósitos del día</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.8rem' }}>
             <div style={{ background: 'var(--color-surface-2)', borderRadius: '6px', padding: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--color-text-muted)' }}>EFE</span>
+              <span style={{ color: 'var(--color-text-muted)' }}>EFECTIVO</span>
               <span style={{ color: '#F5C800', fontWeight: 700 }}>{formatNum(depositos.efectivo)}</span>
             </div>
             <div style={{ background: 'var(--color-surface-2)', borderRadius: '6px', padding: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--color-text-muted)' }}>NEQ</span>
+              <span style={{ color: 'var(--color-text-muted)' }}>NEQUI</span>
               <span style={{ color: '#7C3AED', fontWeight: 700 }}>{formatNum(depositos.nequi)}</span>
             </div>
             <div style={{ background: 'var(--color-surface-2)', borderRadius: '6px', padding: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--color-text-muted)' }}>TRA</span>
+              <span style={{ color: 'var(--color-text-muted)' }}>TRANSFERENCIA</span>
               <span style={{ color: '#2563EB', fontWeight: 700 }}>{formatNum(depositos.transferencia)}</span>
             </div>
             <div style={{ background: 'var(--color-surface-2)', borderRadius: '6px', padding: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--color-text-muted)' }}>FIA</span>
+              <span style={{ color: 'var(--color-text-muted)' }}>FIADO</span>
               <span style={{ color: '#DC2626', fontWeight: 700 }}>{formatNum(depositos.fiado)}</span>
             </div>
           </div>
