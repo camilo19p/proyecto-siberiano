@@ -63,7 +63,7 @@ const MOCK_EMPLEADOS_VENTAS: EmpleadoVenta[] = [
     promedioPorTransaccion: 49555.56,
     detalles: [
       { id: '1-1', nombre: 'Aguardiente Amarillo L', codigo: 'AAM001', cantidad: 5, total: 195000, ganancia: 70000, timestamp: '' },
-      { id: '1-2', nombre: 'Medellín 375 (3 años)', codigo: 'MED375', quantity: 4, total: 112000, ganancia: 40000, timestamp: '' },
+      { id: '1-2', nombre: 'Medellín 375 (3 años)', codigo: 'MED375', cantidad: 4, total: 112000, ganancia: 40000, timestamp: '' },
     ]
   },
   {
