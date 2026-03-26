@@ -823,7 +823,7 @@ export function POS() {
                         border: `1px solid ${isAmountInsufficient ? '#dc2626' : 'var(--color-border)'}`,
                         borderRadius: '6px',
                         background: 'var(--color-surface)',
-                        color: 'var(--color-text'
+                        color: 'var(--color-text)'
                       }}
                     />
                   </div>
