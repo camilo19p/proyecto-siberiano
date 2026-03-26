@@ -17,6 +17,23 @@ interface SaleDay {
 // Formateador de números corto para moneda
 const formatNum = (n: number) => '$' + n.toLocaleString('es-CO');
 
+const generateMockWeeklyData = (): SaleDay[] => {
+  const mockData: SaleDay[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toLocaleDateString('es-CO');
+    const isToday = i === 0;
+    
+    // Hoy siempre en $0, días anteriores con valores variados
+    const total = isToday ? 0 : Math.floor(Math.random() * 270000 + 80000);
+    const ganancia = Math.floor(total * 0.28);
+    
+    mockData.push({ fecha: dateStr, total, ganancia });
+  }
+  return mockData;
+};
+
 export function Dashboard() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<number>(new Date().getDate());
@@ -38,6 +55,7 @@ export function Dashboard() {
   const [stockCritico, setStockCritico] = useState(0);
   const [fiadosPendientes, setFiadosPendientes] = useState(0);
   const [ventasSemana, setVentasSemana] = useState<SaleDay[]>([]);
+  const [isMockData, setIsMockData] = useState(false);
 
   // Cargar KPIs
   useEffect(() => {
@@ -457,7 +475,7 @@ export function Dashboard() {
                 <span style={{ fontWeight: 700, color: '#dc2626' }}>{formatNum(inventarioSelected?.deudaRestante ?? 0)}</span>
               </div>
               <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--color-text-muted)' }}>CAPITAL</span>
+                <span style={{ color: 'var(--color(text-muted)' }}>CAPITAL</span>
                 <span style={{ fontWeight: 700, color: '#7c3aed' }}>{formatNum(inventarioSelected?.capital ?? 0)}</span>
               </div>
             </div>

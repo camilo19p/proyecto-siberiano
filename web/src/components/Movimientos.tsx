@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Activity, Search } from 'lucide-react';
+import { Activity, Search, Wallet } from 'lucide-react';
 import axios from 'axios';
 
 interface Movimiento {
@@ -302,8 +302,8 @@ export function Movimientos() {
           padding: '1.5rem',
           height: 'fit-content'
         }}>
-          <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--color-text)', fontSize: '0.95rem', fontWeight: 700 }}>
-            ?? Depósitos
+          <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--color-text)', fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Wallet size={18} /> Depósitos
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

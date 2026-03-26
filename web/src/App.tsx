@@ -103,12 +103,12 @@ export default function App() {
     { id: 'clientes' as Page, label: 'Clientes', icon: <Users size={18} />, desc: 'Gestión de clientes', badge: alertas.fiadosPendientes > 0 ? alertas.fiadosPendientes : undefined },
     { id: 'proveedores' as Page, label: 'Gestión de Proveedores', icon: <Building2 size={18} />, desc: 'Gestión de proveedores', badge: alertas.cuentasVencidas > 0 ? alertas.cuentasVencidas : undefined },
     ...(userRole === 'ADMIN' ? [{ id: 'ganancias' as Page, label: 'Análisis de Ganancias', icon: <TrendingUp size={18} />, desc: 'Análisis de ingresos' }] : []),
-    { id: 'facturas' as Page, label: 'Facturas', icon: <FileText size={18} />, desc: 'Electrónica' },
+    { id: 'facturas' as Page, label: 'Facturación', icon: <FileText size={18} />, desc: 'Factura electrónica' },
     ...(userRole === 'ADMIN' ? [{ id: 'reportes' as Page, label: 'Reportes', icon: <BarChart2 size={18} />, desc: 'Análisis y datos' }] : []),
     ...(userRole === 'ADMIN' ? [{ id: 'reportes_avanzados' as Page, label: 'Reportes Avanzados', icon: <TrendingUp size={18} />, desc: 'Por empleado y producto' }] : []),
     { id: 'cuentas_pagar' as Page, label: 'Cuentas por Pagar', icon: <CreditCard size={18} />, desc: 'Deudas' },
     { id: 'cierre_caja' as Page, label: 'Cierre de Caja', icon: <Landmark size={18} />, desc: 'Cuadre diario' },
-    ...(userRole === 'ADMIN' ? [{ id: 'usuarios' as Page, label: 'Usuarios', icon: <Users size={18} />, desc: 'Gestión de permisos' }] : []),
+    ...(userRole === 'ADMIN' ? [{ id: 'usuarios' as Page, label: 'Gestión de Usuarios', icon: <Users size={18} />, desc: 'Gestión de permisos' }] : []),
     { id: 'historial' as Page, label: 'Historial', icon: <History size={18} />, desc: 'Registros anteriores' },
   ];
 
