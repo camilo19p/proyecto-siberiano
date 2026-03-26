@@ -17,10 +17,10 @@ import { Clientes } from './components/Clientes';
 import { Proveedores } from './components/Proveedores';
 import { CierreCaja } from './components/CierreCaja';
 import SiberianoLogo from './assets/Siberiano.png';
-import { Package, ClipboardList, TrendingUp, History, FileText, CreditCard, Users, Landmark, ShoppingCart, BarChart2, LayoutDashboard, LogOut, Building2, Activity, AlertCircle } from 'lucide-react';
+import { Package, ClipboardList, TrendingUp, History, FileText, CreditCard, Users, Landmark, ShoppingCart, BarChart2, LayoutDashboard, LogOut, Building2, Activity, AlertCircle, Lock } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 
-type Page = 'inicio' | 'pos' | 'movimientos' | 'productos' | 'inventario' | 'inventario_avanzado' | 'ganancias' | 'facturas' | 'reportes' | 'reportes_avanzados' | 'cuentas_pagar' | 'usuarios' | 'cierre_caja' | 'historial' | 'clientes' | 'proveedores';
+type Page = 'inicio' | 'pos' | 'movimientos' | 'productos' | 'inventario' | 'inventario_avanzado' | 'ganancias' | 'facturas' | 'reportes' | 'reportes_avanzados' | 'cuentas_pagar' | 'usuarios' | 'cierre_caja' | 'historial' | 'clientes' | 'proveedores' | 'acceso_denegado';
 
 interface Alertas {
   stockCritico: number;
@@ -28,11 +28,29 @@ interface Alertas {
   cuentasVencidas: number;
 }
 
+// Definir permisos por rol
+const rolePermissions: { [key: string]: Page[] } = {
+  'admin': [
+    'inicio', 'pos', 'movimientos', 'productos', 'inventario', 'inventario_avanzado',
+    'clientes', 'proveedores', 'ganancias', 'facturas', 'reportes', 'reportes_avanzados',
+    'cuentas_pagar', 'cierre_caja', 'usuarios', 'historial'
+  ],
+  'gerente': [
+    'inicio', 'movimientos', 'productos', 'inventario', 'inventario_avanzado',
+    'clientes', 'proveedores', 'ganancias', 'facturas', 'reportes', 'reportes_avanzados',
+    'cuentas_pagar', 'historial'
+  ],
+  'vendedor': [
+    'inicio', 'pos', 'clientes', 'historial'
+  ]
+};
+
 export default function App() {
   const [logged, setLogged] = useState(() => !!localStorage.getItem('authToken'));
   const [page, setPage] = useState<Page>('inicio');
   const [alertas, setAlertas] = useState<Alertas>({ stockCritico: 0, fiadosPendientes: 0, cuentasVencidas: 0 });
-  const userRole = localStorage.getItem('userRole') || 'VENDEDOR';
+  const userRole = (localStorage.getItem('userRole') || 'vendedor').toLowerCase();
+  const [notificationMsg, setNotificationMsg] = useState<string | null>(null);
 
   // Cargar alertas cada 60 segundos
   useEffect(() => {
@@ -83,17 +101,24 @@ export default function App() {
     setLogged(false);
   };
 
+  // Validar permisos y cambiar página
   const handlePageChange = (newPage: Page) => {
-    if ((newPage === 'ganancias' || newPage === 'reportes') && userRole !== 'ADMIN') {
-      setPage('inicio');
+    const permissions = rolePermissions[userRole] || [];
+    
+    if (!permissions.includes(newPage)) {
+      setPage('acceso_denegado');
+      setNotificationMsg(`No tienes permisos para acceder a esta sección`);
+      setTimeout(() => setNotificationMsg(null), 4000);
       return;
     }
+    
     setPage(newPage);
   };
 
   if (!logged) return <Login onLogin={() => { setLogged(true); setPage('inicio'); }} />;
 
-  const nav = [
+  // Construir menú dinámicamente según rol
+  const allNavItems = [
     { id: 'inicio' as Page, label: 'Dashboard', icon: <LayoutDashboard size={18} />, desc: 'Inicio y calendario' },
     { id: 'pos' as Page, label: 'Punto de Venta', icon: <ShoppingCart size={18} />, desc: 'POS - Ventas rápidas' },
     { id: 'movimientos' as Page, label: 'Movimientos', icon: <Activity size={18} />, desc: 'Registro de ingresos' },
@@ -102,15 +127,19 @@ export default function App() {
     { id: 'inventario_avanzado' as Page, label: 'Inventario Avanzado', icon: <Package size={18} />, desc: '15000+ productos' },
     { id: 'clientes' as Page, label: 'Clientes', icon: <Users size={18} />, desc: 'Gestión de clientes', badge: alertas.fiadosPendientes > 0 ? alertas.fiadosPendientes : undefined },
     { id: 'proveedores' as Page, label: 'Gestión de Proveedores', icon: <Building2 size={18} />, desc: 'Gestión de proveedores', badge: alertas.cuentasVencidas > 0 ? alertas.cuentasVencidas : undefined },
-    ...(userRole === 'ADMIN' ? [{ id: 'ganancias' as Page, label: 'Análisis de Ganancias', icon: <TrendingUp size={18} />, desc: 'Análisis de ingresos' }] : []),
+    { id: 'ganancias' as Page, label: 'Análisis de Ganancias', icon: <TrendingUp size={18} />, desc: 'Análisis de ingresos' },
     { id: 'facturas' as Page, label: 'Facturación', icon: <FileText size={18} />, desc: 'Factura electrónica' },
-    ...(userRole === 'ADMIN' ? [{ id: 'reportes' as Page, label: 'Reportes', icon: <BarChart2 size={18} />, desc: 'Análisis y datos' }] : []),
-    ...(userRole === 'ADMIN' ? [{ id: 'reportes_avanzados' as Page, label: 'Reportes Avanzados', icon: <TrendingUp size={18} />, desc: 'Por empleado y producto' }] : []),
+    { id: 'reportes' as Page, label: 'Reportes', icon: <BarChart2 size={18} />, desc: 'Análisis y datos' },
+    { id: 'reportes_avanzados' as Page, label: 'Reportes Avanzados', icon: <TrendingUp size={18} />, desc: 'Por empleado y producto' },
     { id: 'cuentas_pagar' as Page, label: 'Cuentas por Pagar', icon: <CreditCard size={18} />, desc: 'Deudas' },
     { id: 'cierre_caja' as Page, label: 'Cierre de Caja', icon: <Landmark size={18} />, desc: 'Cuadre diario' },
-    ...(userRole === 'ADMIN' ? [{ id: 'usuarios' as Page, label: 'Gestión de Usuarios', icon: <Users size={18} />, desc: 'Gestión de permisos' }] : []),
+    { id: 'usuarios' as Page, label: 'Gestión de Usuarios', icon: <Users size={18} />, desc: 'Gestión de permisos' },
     { id: 'historial' as Page, label: 'Historial', icon: <History size={18} />, desc: 'Registros anteriores' },
   ];
+
+  // Filtrar menú según permisos del rol
+  const permissions = rolePermissions[userRole] || [];
+  const nav = allNavItems.filter(item => permissions.includes(item.id));
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
@@ -145,6 +174,9 @@ export default function App() {
             <div>
               <div style={{ fontWeight: 700, fontSize: '1.25rem', color: 'var(--color-primary)' }}>SIBERIANO</div>
               <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Sistema de Control</div>
+              <div style={{ fontSize: '0.7rem', color: '#f5c800', marginTop: '0.25rem', fontWeight: 600 }}>
+                {userRole.toUpperCase()}
+              </div>
             </div>
           </div>
         </div>
@@ -243,6 +275,24 @@ export default function App() {
         overflow: 'auto',
         background: 'var(--color-surface)'
       }}>
+        {notificationMsg && (
+          <div style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            background: '#fee2e2',
+            border: '1px solid #dc2626',
+            color: '#dc2626',
+            padding: '1rem 1.5rem',
+            borderRadius: '8px',
+            fontWeight: 600,
+            zIndex: 2000,
+            animation: 'slideIn 0.3s ease'
+          }}>
+            ⚠️ {notificationMsg}
+          </div>
+        )}
+        
         <div style={{
           maxWidth: '1400px',
           margin: '0 auto'
@@ -263,6 +313,40 @@ export default function App() {
           {page === 'cierre_caja' && <CierreCaja />}
           {page === 'usuarios' && <GestionUsuarios />}
           {page === 'historial' && <Historial />}
+          {page === 'acceso_denegado' && (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '400px',
+              textAlign: 'center',
+              gap: '2rem'
+            }}>
+              <div style={{ fontSize: '4rem' }}>🔒</div>
+              <div>
+                <h1 style={{ margin: '0 0 0.5rem 0', color: 'var(--color-text)', fontSize: '2rem' }}>Acceso Denegado</h1>
+                <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '1rem' }}>
+                  No tienes permisos para acceder a esta sección. Tu rol es: <strong>{userRole.toUpperCase()}</strong>
+                </p>
+              </div>
+              <button
+                onClick={() => setPage('inicio')}
+                style={{
+                  padding: '0.75rem 2rem',
+                  background: '#f5c800',
+                  color: '#1a1a1a',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  fontSize: '1rem'
+                }}
+              >
+                ← Volver al Dashboard
+              </button>
+            </div>
+          )}
         </div>
       </main>
     <Toaster

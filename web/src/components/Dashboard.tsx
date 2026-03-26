@@ -92,7 +92,9 @@ export function Dashboard() {
         }
 
         // Ventas últimos 7 días
-        const last7Days: SaleDay[] = [];
+        let last7Days: SaleDay[] = [];
+        let hasRealData = false;
+        
         for (let i = 6; i >= 0; i--) {
           const date = new Date();
           date.setDate(date.getDate() - i);
@@ -106,11 +108,21 @@ export function Dashboard() {
               return sum + (s.items?.reduce((itemSum: number, item: any) => 
                 itemSum + ((item.product.precioVenta - item.product.precioCompra) * item.quantity), 0) || 0);
             }, 0);
+            if (total > 0) hasRealData = true;
             last7Days.push({ fecha: dateStr, total, ganancia });
           } else {
             last7Days.push({ fecha: dateStr, total: 0, ganancia: 0 });
           }
         }
+        
+        // Si no hay datos reales, usar mock data
+        if (!hasRealData) {
+          last7Days = generateMockWeeklyData();
+          setIsMockData(true);
+        } else {
+          setIsMockData(false);
+        }
+        
         setVentasSemana(last7Days);
       } catch (e) {
         console.warn('Error loading KPIs:', e);
@@ -177,7 +189,7 @@ export function Dashboard() {
     setNotasPorDia({ ...notasPorDia, [key]: newNote });
     setNewNote('');
     setIsEditing(false);
-  };
+  }
 
   // Editar nota del día seleccionado
   const handleEditNote = () => {
@@ -185,13 +197,13 @@ export function Dashboard() {
     const savedNote = notasPorDia[key] || '';
     setNewNote(savedNote);
     setIsEditing(true);
-  };
+  }
 
   // Cancelar edición de nota
   const handleCancelEdit = () => {
     setNewNote('');
     setIsEditing(false);
-  };
+  }
 
   // Borrar nota del día seleccionado
   const handleDeleteNote = () => {
@@ -202,27 +214,27 @@ export function Dashboard() {
     setNotasPorDia(updated);
     setNewNote('');
     setIsEditing(false);
-  };
+  }
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  };
+  }
 
   const getFirstDayOfMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-  };
+  }
 
   const handlePrevMonth = () => {
     const prev = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
     setCurrentDate(prev);
     setSelectedDay(1);
-  };
+  }
 
   const handleNextMonth = () => {
     const next = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
     setCurrentDate(next);
     setSelectedDay(1);
-  };
+  }
 
   const daysInMonth = getDaysInMonth(currentDate);
   const firstDay = getFirstDayOfMonth(currentDate);
@@ -306,6 +318,11 @@ export function Dashboard() {
             Total semana: <span style={{ fontWeight: 700, color: '#EAB308' }}>
               {formatNum(ventasSemana.reduce((sum, v) => sum + v.total, 0))}
             </span>
+            {isMockData && (
+              <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                * Datos de ejemplo - conecta el backend para ver datos reales
+              </div>
+            )}
           </div>
         </div>
 
@@ -428,7 +445,7 @@ export function Dashboard() {
                   <button
                     onClick={handleSaveNote}
                     style={{ background: '#EAB308', color: '#0a0a0a', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '1.2rem', width: '40px', height: '40px', cursor: 'pointer' }}
-                    title="Guardar nota"
+                    title=" guardar nota"
                   >
                     +
                   </button>
@@ -475,7 +492,7 @@ export function Dashboard() {
                 <span style={{ fontWeight: 700, color: '#dc2626' }}>{formatNum(inventarioSelected?.deudaRestante ?? 0)}</span>
               </div>
               <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--color(text-muted)' }}>CAPITAL</span>
+                <span style={{ color: 'var(--color-text-muted)' }}>CAPITAL</span>
                 <span style={{ fontWeight: 700, color: '#7c3aed' }}>{formatNum(inventarioSelected?.capital ?? 0)}</span>
               </div>
             </div>

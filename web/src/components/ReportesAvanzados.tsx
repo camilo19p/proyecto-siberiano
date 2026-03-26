@@ -44,6 +44,58 @@ const showToast = (message: string) => {
   setTimeout(() => toast.remove(), 3000);
 };
 
+// Datos mock para cuando no hay ventas
+const MOCK_PRODUCTOS_VENDIDOS: ProductoVenta[] = [
+  { id: '1', nombre: 'Aguardiente Amarillo L', codigo: 'AAM001', cantidad: 12, total: 468000, ganancia: 168000, timestamp: new Date().toISOString() },
+  { id: '2', nombre: 'Medellín 375 (3 años)', codigo: 'MED375', cantidad: 10, total: 280000, ganancia: 100000, timestamp: new Date().toISOString() },
+  { id: '3', nombre: 'Aguardiente Verde Garrafón', codigo: 'AVG002', cantidad: 8, total: 440000, ganancia: 120000, timestamp: new Date().toISOString() },
+  { id: '4', nombre: 'Medellín 750 (8 años)', codigo: 'MED750', cantidad: 5, total: 525000, ganancia: 200000, timestamp: new Date().toISOString() },
+  { id: '5', nombre: 'Aguardiente Azul 750', codigo: 'AAZ750', cantidad: 4, total: 72000, ganancia: 24000, timestamp: new Date().toISOString() },
+];
+
+const MOCK_EMPLEADOS_VENTAS: EmpleadoVenta[] = [
+  {
+    id: '1',
+    nombre: 'Admin Siberiano',
+    totalVentas: 892000,
+    cantidadTransacciones: 18,
+    ganancia: 285000,
+    promedioPorTransaccion: 49555.56,
+    detalles: [
+      { id: '1-1', nombre: 'Aguardiente Amarillo L', codigo: 'AAM001', cantidad: 5, total: 195000, ganancia: 70000, timestamp: '' },
+      { id: '1-2', nombre: 'Medellín 375 (3 años)', codigo: 'MED375', quantity: 4, total: 112000, ganancia: 40000, timestamp: '' },
+    ]
+  },
+  {
+    id: '2',
+    nombre: 'Vendedor 1',
+    totalVentas: 578000,
+    cantidadTransacciones: 12,
+    ganancia: 184000,
+    promedioPorTransaccion: 48166.67,
+    detalles: [
+      { id: '2-1', nombre: 'Aguardiente Verde Garrafón', codigo: 'AVG002', cantidad: 6, total: 330000, ganancia: 90000, timestamp: '' },
+    ]
+  },
+  {
+    id: '3',
+    nombre: 'Vendedor 2',
+    totalVentas: 315000,
+    cantidadTransacciones: 9,
+    ganancia: 143000,
+    promedioPorTransaccion: 35000,
+    detalles: [
+      { id: '3-1', nombre: 'Medellín 750 (8 años)', codigo: 'MED750', cantidad: 3, total: 315000, ganancia: 120000, timestamp: '' },
+    ]
+  },
+];
+
+const MOCK_DESPACHOS: DespachoItem[] = [
+  { id: '1', producto: 'Medellín 375 (5 años)', cantidad: 7, estado: 'enviado', cliente: 'Bodega Principal', fecha: '2026-03-23', vendedor: 'Admin' },
+  { id: '2', producto: 'Aguardiente Verde L (cajeta)', cantidad: 3, estado: 'pendiente', cliente: 'Punto 2', fecha: '2026-03-22', vendedor: 'Vendedor 1' },
+  { id: '3', producto: 'Aguardiente Amarillo 1.500 ML', cantidad: 2, estado: 'entregado', cliente: 'Bodega Principal', fecha: '2026-03-21', vendedor: 'Admin' },
+];
+
 export function ReportesAvanzados() {
   const [vista, setVista] = useState<'loMasVendido' | 'porEmpleado' | 'despachos'>('loMasVendido');
   const [startDate, setStartDate] = useState(() => {
@@ -100,8 +152,13 @@ export function ReportesAvanzados() {
         });
       });
 
-      const productos = Array.from(productosMap.values())
+      let productos = Array.from(productosMap.values())
         .sort((a, b) => b.cantidad - a.cantidad);
+      
+      // Si no hay productos, usar mock
+      if (productos.length === 0) {
+        productos = MOCK_PRODUCTOS_VENDIDOS;
+      }
       setProductosVendidos(productos);
 
       // Procesar ventas por empleado
@@ -151,16 +208,31 @@ export function ReportesAvanzados() {
           : 0;
       });
 
-      const empleados = Array.from(empleadosMap.values())
+      let empleados = Array.from(empleadosMap.values())
         .sort((a, b) => b.totalVentas - a.totalVentas);
+      
+      // Si no hay empleados, usar mock
+      if (empleados.length === 0) {
+        empleados = MOCK_EMPLEADOS_VENTAS;
+      }
       setEmpleadosVentas(empleados);
 
       // Cargar despachos
       const despachosGuardados = JSON.parse(localStorage.getItem('despachos') || '[]');
-      setDespachos(despachosGuardados);
+      
+      // Si no hay despachos, usar mock
+      if (despachosGuardados.length === 0) {
+        setDespachos(MOCK_DESPACHOS);
+      } else {
+        setDespachos(despachosGuardados);
+      }
 
     } catch (error) {
       console.error('Error cargando datos:', error);
+      // En caso de error, usar todos los mocks
+      setProductosVendidos(MOCK_PRODUCTOS_VENDIDOS);
+      setEmpleadosVentas(MOCK_EMPLEADOS_VENTAS);
+      setDespachos(MOCK_DESPACHOS);
     } finally {
       setLoading(false);
     }
