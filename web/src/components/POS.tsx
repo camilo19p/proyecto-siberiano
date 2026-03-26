@@ -587,7 +587,7 @@ export function POS() {
                       }}
                     >
                       <span>{cliente.nombres}</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted' }}>{cliente.telefono}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{cliente.telefono}</span>
                     </button>
                   ))
                 }
