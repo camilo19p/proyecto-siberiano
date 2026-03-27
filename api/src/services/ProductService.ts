@@ -62,10 +62,13 @@ export class ProductService {
           codigo: productData.codigo,
           name: productData.name,
           type: productData.type,
+          categoria: productData.type || 'GENERAL',
           precioCompra: productData.precioCompra,
           precioVenta: productData.precioVenta,
           stock: productData.stock,
-          stockInicial: productData.stockInicial ?? productData.stock
+          stockInicial: productData.stock ?? 0,
+          imagen: '',
+          descripcion: ''
         }
       });
     });
