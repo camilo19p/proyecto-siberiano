@@ -36,7 +36,13 @@ export function Login({ onLogin }: LoginProps) {
 
       if (res.ok) {
         const data = await res.json();
-        try { localStorage.setItem('authToken', data.token); localStorage.setItem('userRole', data.user?.role || 'VENDEDOR'); } catch {}
+        try { 
+          localStorage.setItem('authToken', data.token); 
+          localStorage.setItem('userRole', data.user?.role || 'VENDEDOR');
+          if (data.user) {
+            localStorage.setItem('user', JSON.stringify(data.user));
+          }
+        } catch {}
         onLogin();
         setLoading(false);
         return;
@@ -50,7 +56,11 @@ export function Login({ onLogin }: LoginProps) {
       const validUser = 'admin';
       const validPass = 'admin123';
       if ((user === validUser && pass === validPass) && (!res || !res.ok)) {
-        try { localStorage.setItem('authToken', 'ok'); localStorage.setItem('userRole', 'ADMIN'); } catch {}
+        try { 
+          localStorage.setItem('authToken', 'ok'); 
+          localStorage.setItem('userRole', 'ADMIN');
+          localStorage.setItem('user', JSON.stringify({ id: 1, username: 'admin', name: 'Administrador', role: 'ADMIN' }));
+        } catch {}
         onLogin();
         setLoading(false);
         return;
@@ -62,7 +72,11 @@ export function Login({ onLogin }: LoginProps) {
       const validUser = 'admin';
       const validPass = 'admin123';
       if (user === validUser && pass === validPass) {
-        try { localStorage.setItem('authToken', 'ok'); localStorage.setItem('userRole', 'ADMIN'); } catch {}
+        try { 
+          localStorage.setItem('authToken', 'ok'); 
+          localStorage.setItem('userRole', 'ADMIN');
+          localStorage.setItem('user', JSON.stringify({ id: 1, username: 'admin', name: 'Administrador', role: 'ADMIN' }));
+        } catch {}
         onLogin();
         setLoading(false);
         return;
