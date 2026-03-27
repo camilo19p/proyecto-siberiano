@@ -23,6 +23,15 @@ export class FacturaService {
     }
 
     try {
+      // Validar que el usuario existe
+      const user = await prisma.user.findUnique({
+        where: { id: data.userId }
+      });
+
+      if (!user) {
+        throw new Error(`Usuario con ID ${data.userId} no encontrado en la base de datos`);
+      }
+
       // Usar transacción para crear factura y descontar stock
       const sale = await prisma.$transaction(async (tx) => {
         // Crear venta

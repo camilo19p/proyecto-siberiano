@@ -4,8 +4,11 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  // Limpiar toda la base de datos excepto usuarios
+  // Limpiar toda la base de datos
   console.info('Limpiando base de datos...');
+  
+  // Eliminar usuarios también para poder crear con IDs específicos
+  try { await prisma.user.deleteMany({}); } catch (e) {}
   
   // Eliminar en orden para respetar las relaciones
   try { await prisma.paymentHistory.deleteMany({}); } catch (e) {}
@@ -24,15 +27,17 @@ async function main() {
   
   console.info('Base de datos limpiada.');
 
-  // Crear usuarios de prueba
+  // Crear usuarios de prueba con IDs específicos (1 y 2)
   const users = [
     {
+      id: 1,
       username: 'admin',
       password: 'admin123',
       name: 'Administrador',
       role: 'ADMIN'
     },
     {
+      id: 2,
       username: 'vendedor',
       password: 'vendedor123',
       name: 'Vendedor Principal',
@@ -42,19 +47,14 @@ async function main() {
 
   for (const u of users) {
     const hashedPassword = await bcrypt.hash(u.password, 10);
-    await prisma.user.upsert({
-      where: { username: u.username },
-      create: {
+    await prisma.user.create({
+      data: {
+        id: u.id,
         username: u.username,
         password: hashedPassword,
         name: u.name,
         role: u.role,
         estado: 'ACTIVO'
-      },
-      update: {
-        password: hashedPassword,
-        name: u.name,
-        role: u.role,
       }
     });
   }

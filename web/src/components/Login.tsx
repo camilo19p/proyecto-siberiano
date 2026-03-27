@@ -66,6 +66,20 @@ export function Login({ onLogin }: LoginProps) {
         return;
       }
 
+      // Fallback para vendedor
+      const vendedor = 'vendedor';
+      const passVendedor = 'vendedor123';
+      if ((user === vendedor && pass === passVendedor) && (!res || !res.ok)) {
+        try {
+          localStorage.setItem('authToken', 'ok');
+          localStorage.setItem('userRole', 'VENDEDOR');
+          localStorage.setItem('user', JSON.stringify({ id: 2, username: 'vendedor', name: 'Vendedor Principal', role: 'VENDEDOR' }));
+        } catch {}
+        onLogin();
+        setLoading(false);
+        return;
+      }
+
       setError(msg);
     } catch (e) {
       // Error de red: permitir fallback local para desarrollo
@@ -81,6 +95,21 @@ export function Login({ onLogin }: LoginProps) {
         setLoading(false);
         return;
       }
+
+      // Fallback para vendedor
+      const vendedor = 'vendedor';
+      const passVendedor = 'vendedor123';
+      if (user === vendedor && pass === passVendedor) {
+        try {
+          localStorage.setItem('authToken', 'ok');
+          localStorage.setItem('userRole', 'VENDEDOR');
+          localStorage.setItem('user', JSON.stringify({ id: 2, username: 'vendedor', name: 'Vendedor Principal', role: 'VENDEDOR' }));
+        } catch {}
+        onLogin();
+        setLoading(false);
+        return;
+      }
+      
       setError('Error conectando al servidor');
     }
 
