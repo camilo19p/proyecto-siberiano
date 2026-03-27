@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { productService, Product, clienteService, Cliente } from '../services/api';
+import { productService, Product, clienteService, Cliente, facturaService } from '../services/api';
 import { ShoppingCart, Users, Package, CreditCard, FileText, Trash2, Plus, Minus, Search, Printer, X } from 'lucide-react';
 import axios from 'axios';
 
@@ -288,8 +288,19 @@ export function POS() {
   const change = Math.max(0, amountReceived - total);
   const isAmountInsufficient = amountReceived > 0 && amountReceived < total;
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cart.length === 0) return;
+
+    // Obtener usuario del localStorage
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    const userId = user?.id;
+
+    if (!userId) {
+      showToast('Usuario no autenticado', 'error');
+      return;
+    }
+
     const newSale: Sale = {
       id: Date.now().toString(),
       timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
@@ -305,40 +316,65 @@ export function POS() {
       cajaId: cajaActiva,
       fecha: new Date().toISOString()
     };
-    setSales([...sales, newSale]);
-    const today = new Date().toLocaleDateString('es-CO');
-    localStorage.setItem(`sales-${today}`, JSON.stringify([...sales, newSale]));
-    
-    const updatedCajas = cajas.map(c => 
-      c.id === cajaActiva ? { ...c, saldo: c.saldo + total } : c
-    );
-    setCajas(updatedCajas);
-    localStorage.setItem('cajas', JSON.stringify(updatedCajas));
-    
-    const newDeps = { ...depositos };
-    if (paymentMethod === 'EFECTIVO') newDeps.efectivo += total;
-    else if (paymentMethod === 'NEQUI') newDeps.nequi += total;
-    else if (paymentMethod === 'TRANSFERENCIA') newDeps.transferencia += total;
-    else if (paymentMethod === 'FIADO') newDeps.fiado += total;
-    setDepositos(newDeps);
-    
-    // Actualizar deuda del cliente si es fiado
-    if (paymentMethod === 'FIADO' && selectedCliente) {
-      const clientesActualizados = clientes.map(c =>
-        c.id === selectedCliente.id 
-          ? { ...c, saldo: c.saldo + total }
-          : c
-      );
-      setClientes(clientesActualizados);
-      localStorage.setItem('clientes_list', JSON.stringify(clientesActualizados));
-    }
 
-    setLastSale(newSale);
-    setShowTicket(true);
-    showToast(`Venta registrada: ${formatNum(total)}`);
-    setCart([]);
-    setAmountReceived(0);
-    setDescuento(0);
+    try {
+      // Sincronizar venta con el servidor
+      const facturaData = {
+        numero: `POS-${Date.now()}`,
+        cliente_id: selectedCliente?.id?.toString() || '0',
+        monto_total: total,
+        estado: 'COMPLETADA',
+        userId,
+        iva: 0,
+        items: cart.map(item => ({
+          producto_id: item.product.id.toString(),
+          cantidad: item.quantity,
+          precio: item.product.precioVenta
+        }))
+      };
+
+      // Llamar al API para registrar la venta y descontar stock
+      await facturaService.createFactura(facturaData);
+
+      // Solo actualizar localStorage después de que el servidor confirme
+      setSales([...sales, newSale]);
+      const today = new Date().toLocaleDateString('es-CO');
+      localStorage.setItem(`sales-${today}`, JSON.stringify([...sales, newSale]));
+
+      const updatedCajas = cajas.map(c => 
+        c.id === cajaActiva ? { ...c, saldo: c.saldo + total } : c
+      );
+      setCajas(updatedCajas);
+      localStorage.setItem('cajas', JSON.stringify(updatedCajas));
+
+      const newDeps = { ...depositos };
+      if (paymentMethod === 'EFECTIVO') newDeps.efectivo += total;
+      else if (paymentMethod === 'NEQUI') newDeps.nequi += total;
+      else if (paymentMethod === 'TRANSFERENCIA') newDeps.transferencia += total;
+      else if (paymentMethod === 'FIADO') newDeps.fiado += total;
+      setDepositos(newDeps);
+
+      // Actualizar deuda del cliente si es fiado
+      if (paymentMethod === 'FIADO' && selectedCliente) {
+        const clientesActualizados = clientes.map(c =>
+          c.id === selectedCliente.id 
+            ? { ...c, saldo: c.saldo + total }
+            : c
+        );
+        setClientes(clientesActualizados);
+        localStorage.setItem('clientes_list', JSON.stringify(clientesActualizados));
+      }
+
+      setLastSale(newSale);
+      setShowTicket(true);
+      showToast(`Venta registrada: ${formatNum(total)}`);
+      setCart([]);
+      setAmountReceived(0);
+      setDescuento(0);
+    } catch (error) {
+      showToast(`Error al registrar venta: ${(error as Error).message}`, 'error');
+      console.error('Error en venta:', error);
+    }
   };
 
   const handleClearCart = () => {
@@ -349,16 +385,16 @@ export function POS() {
     setDescuento(0);
   };
 
-  const handleConfirmSale = () => {
+  const handleConfirmSale = async () => {
     if (paymentMethod === 'FIADO' && !selectedCliente) {
-      showToast('Selecciona un cliente para venta a cr�dito', 'error');
+      showToast('Selecciona un cliente para venta a credito', 'error');
       return;
     }
     if (paymentMethod === 'EFECTIVO' && isAmountInsufficient) {
       showToast('Monto insuficiente', 'error');
       return;
     }
-    handleCheckout();
+    await handleCheckout();
     setShowConfirmation(false);
   };
 
@@ -394,14 +430,14 @@ export function POS() {
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '1.5rem', height: '100vh', overflow: 'hidden' }}>
-      {/* �rea de productos */}
+      {/* area de productos */}
       <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <h1 style={{ margin: '0 0 1rem 0', fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <ShoppingCart size={28} />
           Punto de Venta
         </h1>
 
-        {/* B�squeda */}
+        {/* Busqueda */}
         <div style={{ marginBottom: '1rem' }}>
           <input
             ref={searchRef}
@@ -420,7 +456,7 @@ export function POS() {
           />
         </div>
 
-        {/* Categor�as */}
+        {/* Categorias */}
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
           {categories.map(cat => (
             <button
@@ -529,7 +565,7 @@ export function POS() {
                 style={{ cursor: 'pointer', color: '#16a34a', fontWeight: 700 }}
                 aria-label="Quitar cliente"
               >
-                �
+                <X size={16} />
               </span>
             )}
           </div>
@@ -667,7 +703,7 @@ export function POS() {
             </div>
           </div>
 
-          {/* M�todo de pago - Botones */}
+          {/* Metodo de pago - Botones */}
           <div style={{ padding: '1rem', borderTop: '1px solid var(--color-border)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
             {(['EFECTIVO', 'NEQUI', 'TRANSFERENCIA', 'FIADO'] as const).map((method) => {
               const isVisible = method !== 'FIADO' || selectedCliente;
@@ -734,9 +770,9 @@ export function POS() {
           </div>
         </div>
 
-        {/* Panel de Dep�sitos */}
+        {/* Panel de Depositos */}
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', padding: '1rem' }}>
-          <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)' }}>Dep�sitos del d�a</h3>
+          <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)' }}>Depositos del dia</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.8rem' }}>
             <div style={{ background: 'var(--color-surface-2)', borderRadius: '6px', padding: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--color-text-muted)' }}>EFECTIVO</span>
@@ -758,7 +794,7 @@ export function POS() {
         </div>
       </div>
 
-      {/* Modal de confirmaci�n */}
+      {/* Modal de confirmacion */}
       {showConfirmation && (
         <div style={{
           position: 'fixed',
@@ -797,7 +833,7 @@ export function POS() {
                 <span style={{ fontWeight: 700, color: '#f5c800' }}>{formatNum(total)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span>M�todo:</span>
+                <span>Metodo:</span>
                 <span style={{ fontWeight: 700, color: getPaymentMethodColor(paymentMethod).bg }}>{paymentMethod}</span>
               </div>
               {selectedCliente && (

@@ -36,7 +36,7 @@ export function Movimientos() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fecha por defecto: últimos 30 días
+  // Fecha por defecto: ultimos 30 dias
   const [fechaInicial, setFechaInicial] = useState(() => {
     const date = new Date();
     date.setDate(date.getDate() - 30);
@@ -66,8 +66,8 @@ export function Movimientos() {
         total: 0
       });
     } catch (err) {
-      // Si el endpoint no existe, mostrar vacío sin romper la UI
-      console.warn('Endpoint /api/movimientos no disponible aún');
+      // Si el endpoint no existe, mostrar vacio sin romper la UI
+      console.warn('Endpoint /api/movimientos no disponible aun');
       setMovimientos([]);
       setDepositos({
         efectivo: 0,
@@ -208,7 +208,7 @@ export function Movimientos() {
           {movimientos.length === 0 ? (
             <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
               <Activity size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-              <p>Sin movimientos en el período seleccionado</p>
+              <p>Sin movimientos en el periodo seleccionado</p>
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
@@ -217,8 +217,8 @@ export function Movimientos() {
                   <tr style={{ background: 'var(--color-surface-2)', borderBottom: '1px solid var(--color-border)' }}>
                     <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>SERIAL</th>
                     <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>CONCEPTO</th>
-                    <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>MÉTODO</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>DESCRIPCIÓN</th>
+                    <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>METODO</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>DESCRIPCION</th>
                     <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>INGRESO</th>
                     <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>EGRESO</th>
                     <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>UTILIDAD</th>
@@ -294,7 +294,7 @@ export function Movimientos() {
           )}
         </div>
 
-        {/* Panel lateral de depósitos */}
+        {/* Panel lateral de depositos */}
         <div style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
@@ -303,7 +303,7 @@ export function Movimientos() {
           height: 'fit-content'
         }}>
           <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--color-text)', fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Wallet size={18} /> Depósitos
+            <Wallet size={18} /> Depositos
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

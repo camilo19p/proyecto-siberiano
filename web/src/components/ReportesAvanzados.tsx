@@ -47,9 +47,9 @@ const showToast = (message: string) => {
 // Datos mock para cuando no hay ventas
 const MOCK_PRODUCTOS_VENDIDOS: ProductoVenta[] = [
   { id: '1', nombre: 'Aguardiente Amarillo L', codigo: 'AAM001', cantidad: 12, total: 468000, ganancia: 168000, timestamp: new Date().toISOString() },
-  { id: '2', nombre: 'Medellín 375 (3 años)', codigo: 'MED375', cantidad: 10, total: 280000, ganancia: 100000, timestamp: new Date().toISOString() },
-  { id: '3', nombre: 'Aguardiente Verde Garrafón', codigo: 'AVG002', cantidad: 8, total: 440000, ganancia: 120000, timestamp: new Date().toISOString() },
-  { id: '4', nombre: 'Medellín 750 (8 años)', codigo: 'MED750', cantidad: 5, total: 525000, ganancia: 200000, timestamp: new Date().toISOString() },
+  { id: '2', nombre: 'Medellin 375 (3 aÃ±os)', codigo: 'MED375', cantidad: 10, total: 280000, ganancia: 100000, timestamp: new Date().toISOString() },
+  { id: '3', nombre: 'Aguardiente Verde Garrafon', codigo: 'AVG002', cantidad: 8, total: 440000, ganancia: 120000, timestamp: new Date().toISOString() },
+  { id: '4', nombre: 'Medellin 750 (8 aÃ±os)', codigo: 'MED750', cantidad: 5, total: 525000, ganancia: 200000, timestamp: new Date().toISOString() },
   { id: '5', nombre: 'Aguardiente Azul 750', codigo: 'AAZ750', cantidad: 4, total: 72000, ganancia: 24000, timestamp: new Date().toISOString() },
 ];
 
@@ -63,7 +63,7 @@ const MOCK_EMPLEADOS_VENTAS: EmpleadoVenta[] = [
     promedioPorTransaccion: 49555.56,
     detalles: [
       { id: '1-1', nombre: 'Aguardiente Amarillo L', codigo: 'AAM001', cantidad: 5, total: 195000, ganancia: 70000, timestamp: '' },
-      { id: '1-2', nombre: 'Medellín 375 (3 años)', codigo: 'MED375', cantidad: 4, total: 112000, ganancia: 40000, timestamp: '' },
+      { id: '1-2', nombre: 'Medellin 375 (3 aÃ±os)', codigo: 'MED375', cantidad: 4, total: 112000, ganancia: 40000, timestamp: '' },
     ]
   },
   {
@@ -74,7 +74,7 @@ const MOCK_EMPLEADOS_VENTAS: EmpleadoVenta[] = [
     ganancia: 184000,
     promedioPorTransaccion: 48166.67,
     detalles: [
-      { id: '2-1', nombre: 'Aguardiente Verde Garrafón', codigo: 'AVG002', cantidad: 6, total: 330000, ganancia: 90000, timestamp: '' },
+      { id: '2-1', nombre: 'Aguardiente Verde Garrafon', codigo: 'AVG002', cantidad: 6, total: 330000, ganancia: 90000, timestamp: '' },
     ]
   },
   {
@@ -85,13 +85,13 @@ const MOCK_EMPLEADOS_VENTAS: EmpleadoVenta[] = [
     ganancia: 143000,
     promedioPorTransaccion: 35000,
     detalles: [
-      { id: '3-1', nombre: 'Medellín 750 (8 años)', codigo: 'MED750', cantidad: 3, total: 315000, ganancia: 120000, timestamp: '' },
+      { id: '3-1', nombre: 'Medellin 750 (8 aÃ±os)', codigo: 'MED750', cantidad: 3, total: 315000, ganancia: 120000, timestamp: '' },
     ]
   },
 ];
 
 const MOCK_DESPACHOS: DespachoItem[] = [
-  { id: '1', producto: 'Medellín 375 (5 años)', cantidad: 7, estado: 'enviado', cliente: 'Bodega Principal', fecha: '2026-03-23', vendedor: 'Admin' },
+  { id: '1', producto: 'Medellin 375 (5 aÃ±os)', cantidad: 7, estado: 'enviado', cliente: 'Bodega Principal', fecha: '2026-03-23', vendedor: 'Admin' },
   { id: '2', producto: 'Aguardiente Verde L (cajeta)', cantidad: 3, estado: 'pendiente', cliente: 'Punto 2', fecha: '2026-03-22', vendedor: 'Vendedor 1' },
   { id: '3', producto: 'Aguardiente Amarillo 1.500 ML', cantidad: 2, estado: 'entregado', cliente: 'Bodega Principal', fecha: '2026-03-21', vendedor: 'Admin' },
 ];

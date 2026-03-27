@@ -4,6 +4,26 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
+  // Limpiar toda la base de datos excepto usuarios
+  console.info('Limpiando base de datos...');
+  
+  // Eliminar en orden para respetar las relaciones
+  try { await prisma.paymentHistory.deleteMany({}); } catch (e) {}
+  try { await prisma.payable.deleteMany({}); } catch (e) {}
+  try { await prisma.cashMovement.deleteMany({}); } catch (e) {}
+  try { await prisma.caja.deleteMany({}); } catch (e) {}
+  try { await prisma.cajaAudit.deleteMany({}); } catch (e) {}
+  
+  await prisma.inventarioItem.deleteMany({});
+  await prisma.inventario.deleteMany({});
+  await prisma.saleItem.deleteMany({});
+  await prisma.sale.deleteMany({});
+  await prisma.client.deleteMany({});
+  await prisma.product.deleteMany({});
+  await prisma.nota.deleteMany({});
+  
+  console.info('Base de datos limpiada.');
+
   // Crear usuarios de prueba
   const users = [
     {
@@ -41,24 +61,24 @@ async function main() {
 
   console.info(`Seed completado: ${users.length} usuarios creados/actualizados.`);
 
-  // Productos con precios actualizados
+  // Productos con datos reales proporcionados
   const productos = [
     { name: 'Aguardiente Azul 750', stock: 2, precioCompra: 47575, precioVenta: 57000 },
-    { name: 'Aguardiente Azul 375', stock: 0, precioCompra: 24995, precioVenta: 33000 },
+    { name: 'Aguardiente Azul 370', stock: 0, precioCompra: 24995, precioVenta: 33000 },
     { name: 'Aguardiente Costeño', stock: 2, precioCompra: 18800, precioVenta: 27000 },
     { name: 'Aguardiente Verde 750', stock: 17, precioCompra: 43220, precioVenta: 55000 },
-    { name: 'Aguardiente Verde 375', stock: 26, precioCompra: 22660, precioVenta: 31000 },
+    { name: 'Aguardiente Verde 370', stock: 26, precioCompra: 22660, precioVenta: 31000 },
     { name: 'Aguardiente Amarillo 750', stock: 2, precioCompra: 43925, precioVenta: 53000 },
-    { name: 'Aguardiente L Rojo (caja)', stock: 3, precioCompra: 47645, precioVenta: 55000 },
-    { name: 'Aguardiente Verde L (caja)', stock: 16, precioCompra: 53610, precioVenta: 65000 },
+    { name: 'Aguardiente L Rojo (cajeta)', stock: 3, precioCompra: 47645, precioVenta: 55000 },
+    { name: 'Aguardiente Verde L (cajeta)', stock: 16, precioCompra: 53610, precioVenta: 65000 },
     { name: 'Aguardiente Amarillo L', stock: 4, precioCompra: 56300, precioVenta: 68000 },
     { name: 'Aguardiente Verde Garrafón', stock: 3, precioCompra: 99237, precioVenta: 114000 },
     { name: 'Aguardiente Amarillo 1.500 ML', stock: 2, precioCompra: 77000, precioVenta: 87000 },
     { name: 'Aguardiente Amarillo Real 750', stock: 0, precioCompra: 43925, precioVenta: 53000 },
-    { name: 'Aguardiente Amarillo 375', stock: 1, precioCompra: 22697, precioVenta: 33000 },
+    { name: 'Aguardiente Amarillo 370', stock: 1, precioCompra: 22697, precioVenta: 33000 },
     { name: 'Black L', stock: 0, precioCompra: 63500, precioVenta: 74000 },
     { name: 'Black 750', stock: 0, precioCompra: 46900, precioVenta: 57000 },
-    { name: 'Licor de Ron Medellín 750', stock: 3, precioCompra: 35701, precioVenta: 50000 },
+    { name: 'Licor de Ron Medellín', stock: 3, precioCompra: 35701, precioVenta: 50000 },
     { name: 'Medellín 750 (3 años)', stock: 3, precioCompra: 52035, precioVenta: 62000 },
     { name: 'Medellín L (3 años)', stock: 1, precioCompra: 76265, precioVenta: 86000 },
     { name: 'Medellín 375 (3 años)', stock: 25, precioCompra: 26895, precioVenta: 35000 },

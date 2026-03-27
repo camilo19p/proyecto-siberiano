@@ -172,4 +172,39 @@ export class ProductService {
       updatedAt: p.updatedAt
     }));
   }
+
+  // Ajustar stock (sumar o restar cantidad)
+  async adjustStock(id: string, adjustment: number, reason?: string): Promise<Product | null> {
+    try {
+      const product = await prisma.product.findUnique({
+        where: { id: parseInt(id) }
+      });
+
+      if (!product) {
+        throw new Error('Producto no encontrado');
+      }
+
+      const newStock = Math.max(0, product.stock + adjustment);
+
+      const updated = await prisma.product.update({
+        where: { id: parseInt(id) },
+        data: { stock: newStock }
+      });
+
+      return {
+        id: updated.id.toString(),
+        codigo: updated.codigo,
+        name: updated.name,
+        type: updated.type as 'ron' | 'cerveza',
+        precioCompra: updated.precioCompra,
+        precioVenta: updated.precioVenta,
+        stock: updated.stock,
+        stockInicial: updated.stockInicial,
+        createdAt: updated.createdAt,
+        updatedAt: updated.updatedAt
+      };
+    } catch (error) {
+      throw new Error('Error al ajustar stock: ' + (error as Error).message);
+    }
+  }
 }

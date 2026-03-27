@@ -76,4 +76,23 @@ export class ProductController {
       return next(err);
     }
   }
+
+  async adjustStock(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params as { id: string };
+      const { adjustment, reason } = req.body as { adjustment: number; reason?: string };
+
+      if (typeof adjustment !== 'number' || adjustment === 0) {
+        return res.status(400).json({ error: 'adjustment debe ser un número diferente de 0' });
+      }
+
+      const updated = await productService.adjustStock(id, adjustment, reason);
+      if (!updated) {
+        return res.status(404).json({ error: 'Producto no encontrado' });
+      }
+      return res.json(updated);
+    } catch (err) {
+      return next(err);
+    }
+  }
 }

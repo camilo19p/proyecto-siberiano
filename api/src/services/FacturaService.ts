@@ -3,15 +3,15 @@ import prisma from '../lib/prisma';
 export class FacturaService {
   async create(data: {
     numero: string;
-    cliente_id: string;
+    cliente_id?: string | number;
     monto_total: number;
     estado: string;
     userId: number;
     iva?: number;
-    items: Array<{ producto_id: string; cantidad: number; precio: number }>;
+    items: Array<{ producto_id: string | number; cantidad: number; precio: number }>;
   }) {
     // Validar campos obligatorios
-    if (!data.numero || !data.cliente_id || data.monto_total <= 0 || !data.userId) {
+    if (!data.numero || data.monto_total <= 0 || !data.userId) {
       throw new Error('Datos incompletos para crear factura');
     }
 
@@ -26,10 +26,11 @@ export class FacturaService {
       // Usar transacción para crear factura y descontar stock
       const sale = await prisma.$transaction(async (tx) => {
         // Crear venta
+        const clienteId = data.cliente_id ? parseInt(data.cliente_id.toString()) : null;
         const newSale = await tx.sale.create({
           data: {
             numero: data.numero,
-            clienteId: parseInt(data.cliente_id),
+            clienteId,
             userId: data.userId,
             subtotal: data.monto_total,
             iva: data.iva ?? 0,
@@ -40,7 +41,7 @@ export class FacturaService {
 
         // Crear items y descontar stock
         for (const item of data.items) {
-          const productId = parseInt(item.producto_id);
+          const productId = parseInt(item.producto_id.toString());
           
           // Obtener producto
           const product = await tx.product.findUnique({
@@ -66,7 +67,7 @@ export class FacturaService {
             }
           });
 
-          // Descontar stock
+          // Descontar stock en Product
           await tx.product.update({
             where: { id: productId },
             data: { stock: product.stock - item.cantidad }
@@ -111,27 +112,103 @@ export class FacturaService {
 
   async update(id: string, data: { estado?: string; monto_total?: number }) {
     try {
-      const factura = await prisma.sale.update({
+      const sale = await prisma.sale.findUnique({
         where: { id: parseInt(id) },
-        data: {
-          estado: data.estado,
-          total: data.monto_total,
-        },
+        include: { items: true }
       });
-      return factura;
+
+      if (!sale) {
+        throw new Error('Factura no encontrada');
+      }
+
+      // Si se está cambiando a ANULADA, restaurar stock
+      if (data.estado === 'ANULADA' && sale.estado !== 'ANULADA') {
+        await prisma.$transaction(async (tx) => {
+          // Restaurar stock de todos los items
+          for (const item of sale.items) {
+            const product = await tx.product.findUnique({
+              where: { id: item.productId }
+            });
+
+            if (product) {
+              await tx.product.update({
+                where: { id: item.productId },
+                data: { stock: product.stock + item.cantidad }
+              });
+            }
+          }
+
+          // Actualizar factura
+          await tx.sale.update({
+            where: { id: parseInt(id) },
+            data: {
+              estado: data.estado,
+              total: data.monto_total || sale.total,
+            }
+          });
+        });
+      } else {
+        // Actualización sin cambiar estado o manteniendo el actual
+        const factura = await prisma.sale.update({
+          where: { id: parseInt(id) },
+          data: {
+            estado: data.estado,
+            total: data.monto_total,
+          },
+        });
+        return factura;
+      }
+
+      return await prisma.sale.findUnique({
+        where: { id: parseInt(id) },
+        include: { items: true }
+      });
     } catch (error) {
-      throw new Error('Error al actualizar factura');
+      throw new Error('Error al actualizar factura: ' + (error as Error).message);
     }
   }
 
   async delete(id: string) {
     try {
-      await prisma.sale.delete({
+      const sale = await prisma.sale.findUnique({
         where: { id: parseInt(id) },
+        include: { items: true }
       });
+
+      if (!sale) {
+        throw new Error('Factura no encontrada');
+      }
+
+      // Usar transacción para restaurar stock antes de eliminar
+      await prisma.$transaction(async (tx) => {
+        // Restaurar stock de todos los items
+        for (const item of sale.items) {
+          const product = await tx.product.findUnique({
+            where: { id: item.productId }
+          });
+
+          if (product) {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { stock: product.stock + item.cantidad }
+            });
+          }
+        }
+
+        // Eliminar items de venta primero (por relación FK)
+        await tx.saleItem.deleteMany({
+          where: { saleId: parseInt(id) }
+        });
+
+        // Luego eliminar la factura
+        await tx.sale.delete({
+          where: { id: parseInt(id) }
+        });
+      });
+
       return true;
     } catch (error) {
-      throw new Error('Error al eliminar factura');
+      throw new Error('Error al eliminar factura: ' + (error as Error).message);
     }
   }
 }
