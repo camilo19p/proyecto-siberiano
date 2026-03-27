@@ -351,7 +351,7 @@ export function POS() {
 
   const handleConfirmSale = () => {
     if (paymentMethod === 'FIADO' && !selectedCliente) {
-      showToast('Selecciona un cliente para venta a crédito', 'error');
+      showToast('Selecciona un cliente para venta a crï¿½dito', 'error');
       return;
     }
     if (paymentMethod === 'EFECTIVO' && isAmountInsufficient) {
@@ -394,14 +394,14 @@ export function POS() {
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '1.5rem', height: '100vh', overflow: 'hidden' }}>
-      {/* Área de productos */}
+      {/* ï¿½rea de productos */}
       <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <h1 style={{ margin: '0 0 1rem 0', fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <ShoppingCart size={28} />
           Punto de Venta
         </h1>
 
-        {/* Búsqueda */}
+        {/* Bï¿½squeda */}
         <div style={{ marginBottom: '1rem' }}>
           <input
             ref={searchRef}
@@ -420,7 +420,7 @@ export function POS() {
           />
         </div>
 
-        {/* Categorías */}
+        {/* Categorï¿½as */}
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
           {categories.map(cat => (
             <button
@@ -529,7 +529,7 @@ export function POS() {
                 style={{ cursor: 'pointer', color: '#16a34a', fontWeight: 700 }}
                 aria-label="Quitar cliente"
               >
-                ×
+                ï¿½
               </span>
             )}
           </div>
@@ -588,7 +588,7 @@ export function POS() {
                       <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{cliente.telefono || '-'}</span>
                     </button>
                   ))
-                }
+                )}
               </div>
             </div>
           )}
@@ -606,7 +606,7 @@ export function POS() {
             {cart.length === 0 ? (
               <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', paddingTop: '2rem' }}>
                 <ShoppingCart size={32} style={{ opacity: 0.5, margin: '0 auto 0.5rem' }} />
-                <p style={{ margin: 0, fontSize: '0.875rem' }}>Carrito vacío</p>
+                <p style={{ margin: 0, fontSize: '0.875rem' }}>Carrito vacï¿½o</p>
               </div>
             ) : (
               cart.map(item => (
@@ -614,7 +614,7 @@ export function POS() {
                   <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.25rem' }}>{item.product.name}</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <button onClick={() => handleDecreaseQuantity(item.product.id)} style={{ padding: '0.25rem 0.5rem', background: '#f5c800', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>?</button>
+                      <button onClick={() => handleDecreaseQuantity(item.product.id)} style={{ padding: '0.25rem 0.5rem', background: '#f5c800', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>-</button>
                       <span style={{ minWidth: '2rem', textAlign: 'center', fontWeight: 600 }}>{item.quantity}</span>
                       <button onClick={() => handleIncreaseQuantity(item.product.id)} style={{ padding: '0.25rem 0.5rem', background: '#f5c800', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>+</button>
                     </div>
@@ -667,7 +667,7 @@ export function POS() {
             </div>
           </div>
 
-          {/* Método de pago - Botones */}
+          {/* Mï¿½todo de pago - Botones */}
           <div style={{ padding: '1rem', borderTop: '1px solid var(--color-border)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
             {(['EFECTIVO', 'NEQUI', 'TRANSFERENCIA', 'FIADO'] as const).map((method) => {
               const isVisible = method !== 'FIADO' || selectedCliente;
@@ -734,9 +734,9 @@ export function POS() {
           </div>
         </div>
 
-        {/* Panel de Depósitos */}
+        {/* Panel de Depï¿½sitos */}
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', padding: '1rem' }}>
-          <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)' }}>Depósitos del día</h3>
+          <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)' }}>Depï¿½sitos del dï¿½a</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.8rem' }}>
             <div style={{ background: 'var(--color-surface-2)', borderRadius: '6px', padding: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--color-text-muted)' }}>EFECTIVO</span>
@@ -758,7 +758,7 @@ export function POS() {
         </div>
       </div>
 
-      {/* Modal de confirmación */}
+      {/* Modal de confirmaciï¿½n */}
       {showConfirmation && (
         <div style={{
           position: 'fixed',
@@ -797,7 +797,7 @@ export function POS() {
                 <span style={{ fontWeight: 700, color: '#f5c800' }}>{formatNum(total)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span>Método:</span>
+                <span>Mï¿½todo:</span>
                 <span style={{ fontWeight: 700, color: getPaymentMethodColor(paymentMethod).bg }}>{paymentMethod}</span>
               </div>
               {selectedCliente && (
@@ -827,7 +827,7 @@ export function POS() {
                   </div>
                   {isAmountInsufficient && (
                     <div style={{ color: '#dc2626', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>
-                      ? Monto insuficiente
+                      Monto insuficiente
                     </div>
                   )}
                   {change > 0 && (
