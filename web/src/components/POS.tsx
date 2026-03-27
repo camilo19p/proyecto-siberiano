@@ -321,7 +321,7 @@ export function POS() {
       // Sincronizar venta con el servidor
       const facturaData = {
         numero: `POS-${Date.now()}`,
-        cliente_id: selectedCliente?.id?.toString() || '0',
+        cliente_id: selectedCliente?.id ? selectedCliente.id.toString() : null,
         monto_total: total,
         estado: 'COMPLETADA',
         userId,

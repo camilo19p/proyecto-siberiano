@@ -32,10 +32,22 @@ export class FacturaService {
         throw new Error(`Usuario con ID ${data.userId} no encontrado en la base de datos`);
       }
 
+      // Validar que el cliente existe si se proporciona
+      let clienteId: number | null = null;
+      if (data.cliente_id) {
+        clienteId = parseInt(data.cliente_id.toString());
+        const client = await prisma.client.findUnique({
+          where: { id: clienteId }
+        });
+
+        if (!client) {
+          throw new Error(`Cliente con ID ${clienteId} no encontrado en la base de datos`);
+        }
+      }
+
       // Usar transacción para crear factura y descontar stock
       const sale = await prisma.$transaction(async (tx) => {
         // Crear venta
-        const clienteId = data.cliente_id ? parseInt(data.cliente_id.toString()) : null;
         const newSale = await tx.sale.create({
           data: {
             numero: data.numero,

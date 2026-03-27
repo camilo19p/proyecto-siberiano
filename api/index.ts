@@ -13,6 +13,7 @@ import clienteRoutes from './src/routes/clienteRoutes';
 import usuariosRoutes from './src/routes/usuariosRoutes';
 import payablesRoutes from './src/routes/payablesRoutes';
 import cajaRoutes from './src/routes/cajaRoutes';
+import movimientosRouter from './src/routes/movimientos';
 import { requestLogger } from './src/middlewares/logger';
 import { errorHandler } from './src/middlewares/errorHandler';
 import { crearBackup } from './src/services/BackupService';
@@ -47,6 +48,7 @@ app.use('/api', clienteRoutes);
 app.use('/api', usuariosRoutes);
 app.use('/api', payablesRoutes);
 app.use('/api', cajaRoutes);
+app.use('/api/movimientos', movimientosRouter);
 app.use('/api/backup', backupRouter);
 
 // Global error handler
