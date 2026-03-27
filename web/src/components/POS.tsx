@@ -588,7 +588,7 @@ export function POS() {
                       <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{cliente.telefono || '-'}</span>
                     </button>
                   ))
-                )}
+                }
               </div>
             </div>
           )}
@@ -736,7 +736,7 @@ export function POS() {
 
         {/* Panel de Depósitos */}
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', padding: '1rem' }}>
-          <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)' }}>?? Depósitos del día</h3>
+          <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)' }}>Depósitos del día</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.8rem' }}>
             <div style={{ background: 'var(--color-surface-2)', borderRadius: '6px', padding: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--color-text-muted)' }}>EFECTIVO</span>

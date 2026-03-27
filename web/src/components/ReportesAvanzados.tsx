@@ -124,7 +124,7 @@ export function ReportesAvanzados() {
       const salesKey = `sales-${today}`;
       const sales = JSON.parse(localStorage.getItem(salesKey) || '[]');
 
-      // Cargar cajas (para obtener vendedores)
+      // Cargar cajas (para obtener jugadores)
       const cajas = JSON.parse(localStorage.getItem('cajas') || '[]');
 
       // Procesar productos mas vendidos

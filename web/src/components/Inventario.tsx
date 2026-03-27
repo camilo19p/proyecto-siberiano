@@ -4,6 +4,8 @@ import { inventarioService } from '../services/api';
 
 interface PrepItem { id: string; codigo: string; name: string; precioCompra: number; precioVenta: number; stockInicial: number; }
 
+const formatNum = (n: number) => '$' + n.toLocaleString('es-CO');
+
 export function Inventario() {
   const [productos, setProductos] = useState<PrepItem[]>([]);
   const [cantidades, setCantidades] = useState<Record<string,number>>({});
@@ -291,40 +293,44 @@ export function Inventario() {
       {/* Totales */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         <div className="kpi-card" style={{
-          background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
           borderRadius: '16px',
           textAlign: 'center',
-          boxShadow: '0 4px 15px rgba(59, 130, 246, 0.2)'
+          padding: '1.5rem'
         }}>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-info)', fontWeight: 500 }}>TOTAL VENDIDO</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: 'var(--color-info)' }}>${totales.totalVendido.toLocaleString()}</p>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>TOTAL VENDIDO</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#2563EB' }}>{formatNum(totales.totalVendido)}</p>
         </div>
         <div className="kpi-card" style={{
-          background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
           borderRadius: '16px',
           textAlign: 'center',
-          boxShadow: '0 4px 15px rgba(34, 197, 94, 0.2)'
+          padding: '1.5rem'
         }}>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-success)', fontWeight: 500 }}>GANANCIAS</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: 'var(--color-success)' }}>${totales.ganancias.toLocaleString()}</p>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>GANANCIAS</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#16a34a' }}>{formatNum(totales.ganancias)}</p>
         </div>
         <div className="kpi-card" style={{
-          background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
           borderRadius: '16px',
           textAlign: 'center',
-          boxShadow: '0 4px 15px rgba(239, 68, 68, 0.2)'
+          padding: '1.5rem'
         }}>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-danger)', fontWeight: 500 }}>DEUDA RESTANTE</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: 'var(--color-danger)' }}>${totales.deudaRestante.toLocaleString()}</p>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>DEUDA RESTANTE</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#dc2626' }}>{formatNum(totales.deudaRestante)}</p>
         </div>
         <div className="kpi-card" style={{
-          background: 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
           borderRadius: '16px',
           textAlign: 'center',
-          boxShadow: '0 4px 15px rgba(168, 85, 247, 0.2)'
+          padding: '1.5rem'
         }}>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-primary)', fontWeight: 500 }}>CAPITAL</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.875rem', fontWeight: 700, color: 'var(--color-primary)' }}>${totales.capital.toLocaleString()}</p>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>CAPITAL</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#7c3aed' }}>{formatNum(totales.capital)}</p>
         </div>
       </div>
 
@@ -333,14 +339,14 @@ export function Inventario() {
         <button type="button" onClick={handleSubmit} disabled={saving}
           style={{
             padding: '0.875rem 2.5rem',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
+            background: '#EAB308',
+            color: '#0a0a0a',
             border: 'none',
             borderRadius: '12px',
             cursor: saving ? 'not-allowed' : 'pointer',
-            fontWeight: 600,
+            fontWeight: 700,
             fontSize: '1rem',
-            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+            boxShadow: '0 4px 15px rgba(234, 179, 8, 0.3)',
             transition: 'all 0.3s',
             opacity: saving ? 0.7 : 1
           }}>

@@ -54,8 +54,6 @@ export function Dashboard() {
   const [gananciaHoy, setGananciaHoy] = useState(0);
   const [stockCritico, setStockCritico] = useState(0);
   const [fiadosPendientes, setFiadosPendientes] = useState(0);
-  const [ventasSemana, setVentasSemana] = useState<SaleDay[]>([]);
-  const [isMockData, setIsMockData] = useState(false);
 
   // Cargar KPIs
   useEffect(() => {
@@ -90,40 +88,6 @@ export function Dashboard() {
           const fiados = clientes.filter((c: any) => c.saldo > 0);
           setFiadosPendientes(fiados.length);
         }
-
-        // Ventas últimos 7 días
-        let last7Days: SaleDay[] = [];
-        let hasRealData = false;
-        
-        for (let i = 6; i >= 0; i--) {
-          const date = new Date();
-          date.setDate(date.getDate() - i);
-          const dateStr = date.toLocaleDateString('es-CO');
-          const dailySales = localStorage.getItem(`sales-${dateStr}`);
-          
-          if (dailySales) {
-            const sales = JSON.parse(dailySales);
-            const total = sales.reduce((sum: number, s: any) => sum + (s.total || 0), 0);
-            const ganancia = sales.reduce((sum: number, s: any) => {
-              return sum + (s.items?.reduce((itemSum: number, item: any) => 
-                itemSum + ((item.product.precioVenta - item.product.precioCompra) * item.quantity), 0) || 0);
-            }, 0);
-            if (total > 0) hasRealData = true;
-            last7Days.push({ fecha: dateStr, total, ganancia });
-          } else {
-            last7Days.push({ fecha: dateStr, total: 0, ganancia: 0 });
-          }
-        }
-        
-        // Si no hay datos reales, usar mock data
-        if (!hasRealData) {
-          last7Days = generateMockWeeklyData();
-          setIsMockData(true);
-        } else {
-          setIsMockData(false);
-        }
-        
-        setVentasSemana(last7Days);
       } catch (e) {
         console.warn('Error loading KPIs:', e);
       }
@@ -247,9 +211,6 @@ export function Dashboard() {
   const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay);
   const selectedKey = `nota-${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
 
-  const maxVentaSemana = Math.max(...ventasSemana.map(v => v.total), 1);
-  const maxGananciaSemana = Math.max(...ventasSemana.map(v => v.ganancia), 1);
-
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '16px', alignItems: 'start', minHeight: '100vh', padding: '0' }}>
       {/* Columna izquierda: Calendario + Gráficas */}
@@ -280,49 +241,6 @@ export function Dashboard() {
               {fiadosPendientes}
               {fiadosPendientes > 0 && <span style={{ fontSize: '0.875rem', color: '#dc2626', display: 'block' }}>clientes con deuda</span>}
             </p>
-          </div>
-        </div>
-
-        {/* Gráfica de ventas */}
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '20px', padding: '2rem' }}>
-          <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <TrendingUp size={20} /> Ventas Últimos 7 Días
-          </h3>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.75rem', height: '200px' }}>
-            {ventasSemana.map((day, idx) => {
-              const heightPct = (day.total / maxVentaSemana) * 100;
-              const fecha = new Date(day.fecha);
-              const dayName = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sab'][fecha.getDay()];
-              return (
-                <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{
-                    width: '100%',
-                    height: `${heightPct}%`,
-                    background: 'linear-gradient(to top, #EAB308, #f5d547)',
-                    borderRadius: '8px 8px 0 0',
-                    minHeight: '8px',
-                    position: 'relative',
-                    transition: 'all 0.2s'
-                  }} title={formatNum(day.total)} />
-                  <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>
-                    {dayName}
-                  </div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--color-text)', fontWeight: 600 }}>
-                    {formatNum(day.total)}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--color-text-muted)', textAlign: 'center' }}>
-            Total semana: <span style={{ fontWeight: 700, color: '#EAB308' }}>
-              {formatNum(ventasSemana.reduce((sum, v) => sum + v.total, 0))}
-            </span>
-            {isMockData && (
-              <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>
-                * Datos de ejemplo - conecta el backend para ver datos reales
-              </div>
-            )}
           </div>
         </div>
 
@@ -468,34 +386,41 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* Último inventario */}
-        {inventarioSelected && (
+        {/* Inventario del día seleccionado - Solo mostrar si hay registro */}
+        {inventarioSelected ? (
           <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '20px', padding: '1.5rem' }}>
             <h3 style={{ margin: '0 0 1rem 0', color: 'var(--color-text)', fontSize: '1rem', fontWeight: 700 }}>
               📊 Inventario {new Date(inventarioSelected.fecha).toLocaleDateString('es-CO')}
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.875rem' }}>
-              <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--color-text-muted)' }}>VENDIDO</span>
-                <span style={{ fontWeight: 700, color: '#2563EB' }}>{formatNum(inventarioSelected?.totalVendido ?? 0)}</span>
+            {/* 5 KPI Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
+              <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '9px', color: 'var(--color-text-muted)', fontWeight: 600 }}>VENDIDO</p>
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '13px', fontWeight: 700, color: '#2563EB' }}>{formatNum(inventarioSelected?.totalVendido ?? 0)}</p>
               </div>
-              <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--color-text-muted)' }}>GANANCIAS</span>
-                <span style={{ fontWeight: 700, color: '#16a34a' }}>{formatNum(inventarioSelected?.ganancias ?? 0)}</span>
+              <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '9px', color: 'var(--color-text-muted)', fontWeight: 600 }}>GANANCIAS</p>
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '13px', fontWeight: 700, color: '#16a34a' }}>{formatNum(inventarioSelected?.ganancias ?? 0)}</p>
               </div>
-              <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--color-text-muted)' }}>PRÉSTAMO</span>
-                <span style={{ fontWeight: 700, color: '#EAB308' }}>{formatNum(inventarioSelected?.prestamo ?? 0)}</span>
+              <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '9px', color: 'var(--color-text-muted)', fontWeight: 600 }}>PRÉSTAMO</p>
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '13px', fontWeight: 700, color: '#EAB308' }}>{formatNum(inventarioSelected?.prestamo ?? 0)}</p>
               </div>
-              <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--color-text-muted)' }}>DEUDA REST.</span>
-                <span style={{ fontWeight: 700, color: '#dc2626' }}>{formatNum(inventarioSelected?.deudaRestante ?? 0)}</span>
+              <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '9px', color: 'var(--color-text-muted)', fontWeight: 600 }}>DEUDA REST.</p>
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '13px', fontWeight: 700, color: '#dc2626' }}>{formatNum(inventarioSelected?.deudaRestante ?? 0)}</p>
               </div>
-              <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--color-text-muted)' }}>CAPITAL</span>
-                <span style={{ fontWeight: 700, color: '#7c3aed' }}>{formatNum(inventarioSelected?.capital ?? 0)}</span>
+              <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '9px', color: 'var(--color-text-muted)', fontWeight: 600 }}>CAPITAL</p>
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '13px', fontWeight: 700, color: '#7c3aed' }}>{formatNum(inventarioSelected?.capital ?? 0)}</p>
               </div>
             </div>
+          </div>
+        ) : (
+          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '20px', padding: '1.5rem', textAlign: 'center' }}>
+            <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
+              Sin registro de inventario para {selectedDate.toLocaleDateString('es-CO')}
+            </p>
           </div>
         )}
       </div>
