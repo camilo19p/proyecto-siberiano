@@ -71,7 +71,7 @@ export function POS() {
   const [cajaActiva, setCajaActiva] = useState<string>('');
   const [showCajaModal, setShowCajaModal] = useState(false);
   const [showClienteModal, setShowClienteModal] = useState(false);
-  const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
+  const [selectedCliente, setSelectedCliente] = useState<Cliente | undefined>(undefined);
   const [showCuentaCobro, setShowCuentaCobro] = useState(false);
   const [depositos, setDepositos] = useState<Depositos>({ efectivo: 0, nequi: 0, transferencia: 0, fiado: 0 });
   const [descuento, setDescuento] = useState(0);
@@ -321,7 +321,7 @@ export function POS() {
       // Sincronizar venta con el servidor
       const facturaData = {
         numero: `POS-${Date.now()}`,
-        cliente_id: selectedCliente?.id ? selectedCliente.id.toString() : null,
+        cliente_id: selectedCliente?.id ? selectedCliente.id.toString() : undefined,
         monto_total: total,
         estado: 'COMPLETADA',
         userId,
@@ -381,7 +381,7 @@ export function POS() {
     setCart([]);
     setAmountReceived(0);
     setShowConfirmation(false);
-    setSelectedCliente(null);
+    setSelectedCliente(undefined);
     setDescuento(0);
   };
 
@@ -561,7 +561,7 @@ export function POS() {
             <span>{selectedCliente ? `Cliente: ${selectedCliente.nombres}` : 'Cliente'}</span>
             {selectedCliente && (
               <span
-                onClick={(e) => { e.stopPropagation(); setSelectedCliente(null); setPaymentMethod('EFECTIVO'); }}
+                onClick={(e) => { e.stopPropagation(); setSelectedCliente(undefined); setPaymentMethod('EFECTIVO'); }}
                 style={{ cursor: 'pointer', color: '#16a34a', fontWeight: 700 }}
                 aria-label="Quitar cliente"
               >

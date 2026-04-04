@@ -248,7 +248,7 @@ export const clienteService = {
 export interface Factura {
   id: string;
   numero: string;
-  cliente_id: string;
+  cliente_id: string | undefined;
   monto_total: number;
   estado: string;
   fecha: string;
