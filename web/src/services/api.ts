@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = '/api';
+// Usar VITE_API_URL si está disponible, sino usar /api como fallback
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Create a shared axios instance with a reasonable timeout.
 // If the backend is not running, requests will fail fast instead of hanging indefinitely.

@@ -126,6 +126,8 @@ async function main() {
         stockInicial: p.stock,
         stockMinimo: defaults.stockMinimo,
         estado: defaults.estado,
+        imagen: 'https://via.placeholder.com/300x300?text=' + encodeURIComponent(p.name),
+        descripcion: p.name,
       },
       update: {
         name: p.name,
