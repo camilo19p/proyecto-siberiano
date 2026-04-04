@@ -390,10 +390,10 @@ export function Dashboard() {
         {inventarioSelected ? (
           <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '20px', padding: '1.5rem' }}>
             <h3 style={{ margin: '0 0 1rem 0', color: 'var(--color-text)', fontSize: '1rem', fontWeight: 700 }}>
-              📊 Inventario {new Date(inventarioSelected.fecha).toLocaleDateString('es-CO')}
+              📊 Último registro — {selectedDate.toLocaleDateString('es-CO')}
             </h3>
             {/* 5 KPI Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', width: '100%' }}>
               <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', textAlign: 'center' }}>
                 <p style={{ margin: 0, fontSize: '9px', color: 'var(--color-text-muted)', fontWeight: 600 }}>VENDIDO</p>
                 <p style={{ margin: '0.25rem 0 0 0', fontSize: '13px', fontWeight: 700, color: '#2563EB' }}>{formatNum(inventarioSelected?.totalVendido ?? 0)}</p>
@@ -419,8 +419,30 @@ export function Dashboard() {
         ) : (
           <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '20px', padding: '1.5rem', textAlign: 'center' }}>
             <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
-              Sin registro de inventario para {selectedDate.toLocaleDateString('es-CO')}
+              Sin registro para {selectedDate.toLocaleDateString('es-CO')}
             </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', marginTop: '1rem', width: '100%' }}>
+              <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '9px', color: 'var(--color-text-muted)', fontWeight: 600 }}>VENDIDO</p>
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '13px', fontWeight: 700, color: '#2563EB' }}>$0</p>
+              </div>
+              <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '9px', color: 'var(--color-text-muted)', fontWeight: 600 }}>GANANCIAS</p>
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '13px', fontWeight: 700, color: '#16a34a' }}>$0</p>
+              </div>
+              <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '9px', color: 'var(--color-text-muted)', fontWeight: 600 }}>PRÉSTAMO</p>
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '13px', fontWeight: 700, color: '#EAB308' }}>$0</p>
+              </div>
+              <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '9px', color: 'var(--color-text-muted)', fontWeight: 600 }}>DEUDA REST.</p>
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '13px', fontWeight: 700, color: '#dc2626' }}>$0</p>
+              </div>
+              <div style={{ background: 'var(--color-surface-2)', borderRadius: '8px', padding: '0.75rem', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '9px', color: 'var(--color-text-muted)', fontWeight: 600 }}>CAPITAL</p>
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '13px', fontWeight: 700, color: '#7c3aed' }}>$0</p>
+              </div>
+            </div>
           </div>
         )}
       </div>
