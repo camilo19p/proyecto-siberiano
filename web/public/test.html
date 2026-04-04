@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API Connection</title>
+</head>
+<body>
+    <h1>Test API Connection</h1>
+    <div id="results"></div>
+    
+    <script>
+        async function testAPI() {
+            const results = document.getElementById('results');
+            
+            try {
+                // Test health
+                const health = await fetch('http://localhost:3001/api/health');
+                const healthData = await health.json();
+                results.innerHTML += `<p>✓ Health: ${health.status} - OK</p>`;
+                
+                // Test products
+                const products = await fetch('http://localhost:3001/api/products', {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                const productsData = await products.json();
+                results.innerHTML += `<p>✓ Products: ${products.status} - Fetched ${productsData.length} products</p>`;
+                
+                // Test login
+                const login = await fetch('http://localhost:3001/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                const loginData = await login.json();
+                results.innerHTML += `<p>✓ Login: ${login.status} - Token: ${loginData.token.substring(0, 20)}...</p>`;
+                
+            } catch (error) {
+                results.innerHTML += `<p>✗ Error: ${error.message}</p>`;
+            }
+        }
+        
+        testAPI();
+    </script>
+</body>
+</html>
