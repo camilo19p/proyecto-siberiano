@@ -115,33 +115,15 @@ export function Dashboard() {
     });
   }, []);
 
-  // Filtrar inventario por día seleccionado
+  // Filtrar inventario por día seleccionado - SOLO EXACTO
   useEffect(() => {
     const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay);
     
-    // Primero buscar exactamente en ese día
-    let found = inventarios.find(inv => {
+    // Solo buscar exactamente en ese día - sin fallback a anteriores
+    const found = inventarios.find(inv => {
       const invDate = new Date(inv.fecha);
       return invDate.toDateString() === selectedDate.toDateString();
     });
-
-    // Si no encuentra en ese día, buscar el más reciente anterior a esa fecha
-    if (!found) {
-      const filteredByDate = inventarios
-        .filter(inv => {
-          const invDate = new Date(inv.fecha);
-          return invDate <= selectedDate;
-        })
-        .sort((a, b) => {
-          const dateA = new Date(a.fecha).getTime();
-          const dateB = new Date(b.fecha).getTime();
-          return dateB - dateA; // Descendente para obtener el más reciente
-        });
-      
-      if (filteredByDate.length > 0) {
-        found = filteredByDate[0];
-      }
-    }
 
     setInventarioSelected(found || null);
   }, [inventarios, currentDate, selectedDay]);
@@ -390,7 +372,7 @@ export function Dashboard() {
         {inventarioSelected ? (
           <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '20px', padding: '1.5rem' }}>
             <h3 style={{ margin: '0 0 1rem 0', color: 'var(--color-text)', fontSize: '1rem', fontWeight: 700 }}>
-              📊 Último registro — {selectedDate.toLocaleDateString('es-CO')}
+              📊 Inventario — {selectedDate.toLocaleDateString('es-CO')}
             </h3>
             {/* 5 KPI Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', width: '100%' }}>
