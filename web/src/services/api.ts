@@ -1,7 +1,12 @@
 import axios from 'axios';
 
 // Usar VITE_API_URL si está disponible, sino usar /api como fallback
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+// Si VITE_API_URL es una URL completa (ej: http://localhost:3001), agregar /api
+let API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+if (API_BASE_URL && !API_BASE_URL.includes('/api', API_BASE_URL.lastIndexOf('/'))) {
+  // Si no termina con /api, agregarlo
+  API_BASE_URL = API_BASE_URL.endsWith('/') ? API_BASE_URL + 'api' : API_BASE_URL + '/api';
+}
 
 // Create a shared axios instance with a reasonable timeout.
 // If the backend is not running, requests will fail fast instead of hanging indefinitely.
