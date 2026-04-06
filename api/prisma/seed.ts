@@ -156,30 +156,6 @@ async function main() {
       direccion: 'Cra 50 #80-20',
       barrio: 'Laureles',
       cupo: 500000
-    },
-    {
-      nombres: 'María',
-      apellidos: 'Rodríguez Martinez',
-      documento: '0987654321',
-      tipoDocumento: 'CC',
-      telefono: '3101234567',
-      email: 'maria.rodriguez@email.com',
-      ciudad: 'Medellín',
-      direccion: 'Cra 45 #70-10',
-      barrio: 'Envigado',
-      cupo: 300000
-    },
-    {
-      nombres: 'Carlos',
-      apellidos: 'Pérez Díaz',
-      documento: '1122334455',
-      tipoDocumento: 'CC',
-      telefono: '3201234567',
-      email: 'carlos.perez@email.com',
-      ciudad: 'Medellín',
-      direccion: 'Cra 55 #90-30',
-      barrio: 'Sabaneta',
-      cupo: 400000
     }
   ];
 
@@ -193,7 +169,7 @@ async function main() {
     });
   }
 
-  console.info(`Seed completado: ${clientes.length} clientes creados.`);
+  console.info(`Seed completado: ${clientes.length} cliente creado.`);
 }
 
 main()
