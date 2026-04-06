@@ -146,7 +146,12 @@ export function POS() {
   const loadClientes = async () => {
     try {
       const data = await clienteService.getClientes();
+      console.log('Clientes cargados del API:', data);
       setClientes(data || []);
+      // Guardar en localStorage para sincronización
+      if (data && data.length > 0) {
+        localStorage.setItem('clientes_list', JSON.stringify(data));
+      }
     } catch (error: any) {
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
@@ -158,7 +163,13 @@ export function POS() {
       // Intentar cargar desde localStorage
       const saved = localStorage.getItem('clientes_list');
       if (saved) {
-        setClientes(JSON.parse(saved));
+        try {
+          const clientesSaved = JSON.parse(saved);
+          console.log('Clientes cargados del localStorage:', clientesSaved);
+          setClientes(clientesSaved);
+        } catch (e) {
+          console.error('Error parseando localStorage:', e);
+        }
       }
     }
   };
@@ -301,7 +312,7 @@ export function POS() {
       return;
     }
 
-    const newSale: Sale = {
+    const newSale = {
       id: Date.now().toString(),
       timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
       items: [...cart],
@@ -573,28 +584,47 @@ export function POS() {
 
           {showClienteModal && (
             <div style={{ marginTop: '0.75rem', position: 'relative', zIndex: 100 }}>
-              <div style={{ position: 'relative', marginBottom: '0.75rem' }}>
-                <Search size={16} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
-                <input
-                  type="text"
-                  placeholder="Buscar cliente..."
-                  value={searchClienteText}
-                  onChange={(e) => setSearchClienteText(e.target.value)}
+              <div style={{ position: 'relative', marginBottom: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <Search size={16} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+                  <input
+                    type="text"
+                    placeholder="Buscar cliente..."
+                    value={searchClienteText}
+                    onChange={(e) => setSearchClienteText(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 0.5rem 0.5rem 2rem',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem',
+                      background: 'var(--color-surface)',
+                      color: 'var(--color-text)'
+                    }}
+                  />
+                </div>
+                <button
+                  onClick={() => loadClientes()}
                   style={{
-                    width: '100%',
-                    padding: '0.5rem 0.5rem 0.5rem 2rem',
-                    border: '1px solid var(--color-border)',
+                    padding: '0.5rem 0.75rem',
+                    background: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
                     borderRadius: '6px',
-                    fontSize: '0.875rem',
-                    background: 'var(--color-surface)',
-                    color: 'var(--color-text)'
+                    cursor: 'pointer',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap'
                   }}
-                />
+                  title="Recargar clientes desde servidor"
+                >
+                  🔄 Recargar
+                </button>
               </div>
               <div style={{ maxHeight: '200px', overflowY: 'auto', background: 'var(--color-surface-2)', borderRadius: '6px' }}>
                 {filteredClientes.length === 0 ? (
                   <div style={{ padding: '0.75rem', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
-                    Sin clientes
+                    {clientes.length === 0 ? 'Sin clientes registrados' : 'No coinciden resultados'}
                   </div>
                 ) : (
                   filteredClientes.map((cliente) => (
