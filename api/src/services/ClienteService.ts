@@ -75,6 +75,50 @@ export class ClienteService {
     }
   }
 
+  async getAllConDeuda() {
+    try {
+      const clientes = await prisma.client.findMany({
+        include: {
+          facturas: { where: { credito: true, estado: 'APROBADO' } },
+          pagos: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      // Enriquecer con datos calculados
+      const clientesEnriquecidos = clientes.map((cliente) => {
+        const deudaTotal = cliente.facturas.reduce((sum, f) => sum + f.total, 0);
+        const totalPagado = cliente.pagos.reduce((sum, p) => sum + p.monto, 0);
+        const deudaActual = deudaTotal - totalPagado;
+
+        let diasMora = 0;
+        if (deudaActual > 0 && cliente.facturas.length > 0) {
+          const facturasMasAntigua = cliente.facturas.sort(
+            (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
+          )[0];
+          const ahora = new Date();
+          diasMora = Math.floor(
+            (ahora.getTime() - new Date(facturasMasAntigua.fecha).getTime()) / (1000 * 60 * 60 * 24)
+          );
+        }
+
+        return {
+          ...cliente,
+          deudaTotal,
+          totalPagado,
+          deudaActual,
+          diasMora,
+          facturas: undefined,
+          pagos: undefined,
+        };
+      });
+
+      return clientesEnriquecidos;
+    } catch (error) {
+      throw new Error('Error al obtener clientes con deuda: ' + (error as Error).message);
+    }
+  }
+
   async getById(id: string) {
     try {
       const cliente = await prisma.client.findUnique({
@@ -86,6 +130,35 @@ export class ClienteService {
       return cliente;
     } catch (error) {
       throw new Error('Error al obtener cliente');
+    }
+  }
+
+  async getByIdConDeuda(id: string) {
+    try {
+      const cliente = await prisma.client.findUnique({
+        where: { id: parseInt(id) },
+        include: {
+          facturas: { where: { credito: true }, orderBy: { fecha: 'desc' } },
+          pagos: { orderBy: { fecha: 'desc' } }
+        }
+      });
+
+      if (!cliente) {
+        throw new Error('Cliente no encontrado');
+      }
+
+      const deudaTotal = cliente.facturas.reduce((sum, f) => sum + f.total, 0);
+      const totalPagado = cliente.pagos.reduce((sum, p) => sum + p.monto, 0);
+      const deudaActual = deudaTotal - totalPagado;
+
+      return {
+        ...cliente,
+        deudaTotal,
+        totalPagado,
+        deudaActual
+      };
+    } catch (error) {
+      throw new Error('Error al obtener cliente: ' + (error as Error).message);
     }
   }
 
@@ -141,6 +214,81 @@ export class ClienteService {
       return cliente;
     } catch (error) {
       throw new Error('Error al actualizar estado del cliente');
+    }
+  }
+
+  async registrarPago(clienteId: number, monto: number, nota?: string) {
+    try {
+      if (monto <= 0) {
+        throw new Error('El monto debe ser mayor a 0');
+      }
+
+      // Validar que el cliente existe y obtener deuda
+      const cliente = await prisma.client.findUnique({
+        where: { id: clienteId },
+        include: {
+          facturas: { where: { credito: true, estado: 'APROBADO' } },
+          pagos: true
+        }
+      });
+
+      if (!cliente) {
+        throw new Error('Cliente no encontrado');
+      }
+
+      const deudaTotal = cliente.facturas.reduce((sum, f) => sum + f.total, 0);
+      const totalPagado = cliente.pagos.reduce((sum, p) => sum + p.monto, 0);
+      const deudaActual = deudaTotal - totalPagado;
+
+      if (monto > deudaActual) {
+        throw new Error(`Monto excede deuda actual ($${deudaActual})`);
+      }
+
+      const pago = await prisma.pagoCliente.create({
+        data: {
+          clienteId,
+          monto,
+          nota,
+          fecha: new Date()
+        }
+      });
+
+      return pago;
+    } catch (error) {
+      throw new Error('Error al registrar pago: ' + (error as Error).message);
+    }
+  }
+
+  async getStats() {
+    try {
+      const clientes = await prisma.client.findMany({
+        include: {
+          facturas: { where: { credito: true, estado: 'APROBADO' } },
+          pagos: true
+        }
+      });
+
+      const stats = {
+        totalClientes: clientes.length,
+        clientesActivos: clientes.filter(c => c.estado === 'ACTIVO').length,
+        clientesConDeuda: 0,
+        totalDeuda: 0
+      };
+
+      clientes.forEach(cliente => {
+        const deudaTotal = cliente.facturas.reduce((sum, f) => sum + f.total, 0);
+        const totalPagado = cliente.pagos.reduce((sum, p) => sum + p.monto, 0);
+        const deudaActual = deudaTotal - totalPagado;
+
+        if (deudaActual > 0) {
+          stats.clientesConDeuda++;
+          stats.totalDeuda += deudaActual;
+        }
+      });
+
+      return stats;
+    } catch (error) {
+      throw new Error('Error al obtener estadísticas: ' + (error as Error).message);
     }
   }
 }

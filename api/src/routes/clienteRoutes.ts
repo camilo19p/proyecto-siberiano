@@ -10,5 +10,8 @@ router.get('/clientes/:id', (req, res) => controller.getById(req, res));
 router.put('/clientes/:id', (req, res) => controller.update(req, res));
 router.patch('/clientes/:id/estado', (req, res) => controller.updateEstado(req, res));
 router.delete('/clientes/:id', (req, res) => controller.delete(req, res));
+router.get('/clientes/:id/deuda', (req, res) => controller.getAllConDeuda(req, res));
+router.get('/clientes/stats', (req, res) => controller.getStats(req, res));
+router.post('/clientes/:id/pagos', (req, res) => controller.registrarPago(req, res));
 
 export default router;

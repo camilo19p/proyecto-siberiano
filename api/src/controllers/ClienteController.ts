@@ -22,9 +22,27 @@ export class ClienteController {
     }
   }
 
+  async getAllConDeuda(req: Request, res: Response) {
+    try {
+      const clientes = await this.service.getAllConDeuda();
+      res.json(clientes);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  }
+
+  async getStats(req: Request, res: Response) {
+    try {
+      const stats = await this.service.getStats();
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  }
+
   async getById(req: Request, res: Response) {
     try {
-      const cliente = await this.service.getById(req.params.id);
+      const cliente = await this.service.getByIdConDeuda(req.params.id);
       res.json(cliente);
     } catch (error) {
       res.status(404).json({ error: (error as Error).message });
@@ -56,6 +74,16 @@ export class ClienteController {
       res.json({ message: 'Cliente eliminado' });
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
+    }
+  }
+
+  async registrarPago(req: Request, res: Response) {
+    try {
+      const { clienteId, monto, nota } = req.body;
+      const pago = await this.service.registrarPago(clienteId, monto, nota);
+      res.status(201).json(pago);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
     }
   }
 }
