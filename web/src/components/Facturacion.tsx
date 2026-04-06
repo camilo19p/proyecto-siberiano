@@ -97,6 +97,7 @@ export function Facturacion() {
   const getStatusColor = (estado: string) => {
     switch(estado) {
       case 'APROBADO': return { bg: '#dcfce7', text: '#16a34a', border: '#22c55e' };
+      case 'COMPLETADA': return { bg: '#dcfce7', text: '#16a34a', border: '#22c55e' };
       case 'PENDIENTE': return { bg: '#fef3c7', text: '#b45309', border: '#f59e0b' };
       case 'ANULADO': return { bg: '#fee2e2', text: '#dc2626', border: '#ef4444' };
       default: return { bg: '#f1f5f9', text: '#64748b', border: '#cbd5e1' };
