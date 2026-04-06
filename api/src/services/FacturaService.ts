@@ -130,7 +130,7 @@ export class FacturaService {
               productoNombre: item.productoNombre || itemData.product.name,
               cantidad: item.cantidad,
               precioUnitario: itemData.precioUnitario,
-              precioCompra: itemData.precioCompra,
+              precioCompra: itemData.precioCompra,  // ✅ USAR VALOR CALCULADO
               subtotal: itemSubtotal
             }
           });
