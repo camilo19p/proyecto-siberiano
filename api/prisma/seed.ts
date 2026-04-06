@@ -142,34 +142,6 @@ async function main() {
   }
 
   console.info(`Seed completado: ${productos.length} productos (upsert).`);
-
-  // Crear clientes de prueba
-  const clientes = [
-    {
-      nombres: 'Juan',
-      apellidos: 'García López',
-      documento: '1234567890',
-      tipoDocumento: 'CC',
-      telefono: '3001234567',
-      email: 'juan.garcia@email.com',
-      ciudad: 'Medellín',
-      direccion: 'Cra 50 #80-20',
-      barrio: 'Laureles',
-      cupo: 500000
-    }
-  ];
-
-  for (const c of clientes) {
-    await prisma.client.create({
-      data: {
-        ...c,
-        estado: 'ACTIVO',
-        saldo: 0
-      }
-    });
-  }
-
-  console.info(`Seed completado: ${clientes.length} cliente creado.`);
 }
 
 main()
