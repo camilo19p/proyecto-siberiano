@@ -329,7 +329,8 @@ export function POS() {
         items: cart.map(item => ({
           producto_id: item.product.id.toString(),
           cantidad: item.quantity,
-          precio: item.product.precioVenta
+          precio: item.product.precioVenta,
+          precioCompra: item.product.precioCompra
         }))
       };
 
