@@ -59,34 +59,79 @@ export function Dashboard() {
   useEffect(() => {
     const loadKPIs = async () => {
       try {
-        // Ventas hoy
-        const today = new Date().toLocaleDateString('es-CO');
-        const salesData = localStorage.getItem(`sales-${today}`);
-        if (salesData) {
-          const sales = JSON.parse(salesData);
-          const total = sales.reduce((sum: number, s: any) => sum + (s.total || 0), 0);
-          const ganancia = sales.reduce((sum: number, s: any) => {
-            return sum + (s.items?.reduce((itemSum: number, item: any) => 
-              itemSum + ((item.product.precioVenta - item.product.precioCompra) * item.quantity), 0) || 0);
-          }, 0);
-          setVentasHoy(total);
-          setGananciaHoy(ganancia);
+        // Ventas y ganancias de hoy desde Factura API
+        const today = new Date();
+        const fechaInicio = today.toISOString().split('T')[0];
+        const fechaFin = new Date(today.getTime() + 86400000).toISOString().split('T')[0];
+
+        try {
+          const response = await axios.get('/api/facturas', {
+            params: {
+              fechaInicio: fechaInicio,
+              fechaFin: fechaFin,
+              estado: 'TODOS'
+            }
+          });
+
+          if (response.data && Array.isArray(response.data)) {
+            const totalVentas = response.data
+              .filter((f: any) => f.estado !== 'ANULADO')
+              .reduce((sum: number, f: any) => sum + (f.total || 0), 0);
+            
+            const totalGanancia = response.data
+              .filter((f: any) => f.estado !== 'ANULADO')
+              .reduce((sum: number, f: any) => sum + (f.utilidad || 0), 0);
+
+            setVentasHoy(totalVentas);
+            setGananciaHoy(totalGanancia);
+          }
+        } catch (err) {
+          // Fallback a localStorage si API falla
+          console.warn('API facturas no disponible, usando localStorage');
+          const todayStr = new Date().toLocaleDateString('es-CO');
+          const salesData = localStorage.getItem(`sales-${todayStr}`);
+          if (salesData) {
+            const sales = JSON.parse(salesData);
+            const total = sales.reduce((sum: number, s: any) => sum + (s.total || 0), 0);
+            const ganancia = sales.reduce((sum: number, s: any) => {
+              return sum + (s.items?.reduce((itemSum: number, item: any) => 
+                itemSum + ((item.product.precioVenta - item.product.precioCompra) * item.quantity), 0) || 0);
+            }, 0);
+            setVentasHoy(total);
+            setGananciaHoy(ganancia);
+          }
         }
 
         // Stock crítico
-        const productosData = localStorage.getItem('productos_list');
-        if (productosData) {
-          const productos = JSON.parse(productosData);
-          const critico = productos.filter((p: any) => p.stock <= (p.minimo || 5)).length;
-          setStockCritico(critico);
+        try {
+          const response = await axios.get('/api/products');
+          if (response.data && Array.isArray(response.data)) {
+            const critico = response.data.filter((p: any) => p.stock <= (p.stockMinimo || 5)).length;
+            setStockCritico(critico);
+          }
+        } catch (err) {
+          const productosData = localStorage.getItem('productos_list');
+          if (productosData) {
+            const productos = JSON.parse(productosData);
+            const critico = productos.filter((p: any) => p.stock <= (p.minimo || 5)).length;
+            setStockCritico(critico);
+          }
         }
 
         // Fiados pendientes
-        const clientesData = localStorage.getItem('clientes_list');
-        if (clientesData) {
-          const clientes = JSON.parse(clientesData);
-          const fiados = clientes.filter((c: any) => c.saldo > 0);
-          setFiadosPendientes(fiados.length);
+        try {
+          const response = await axios.get('/api/clientes');
+          if (response.data && Array.isArray(response.data)) {
+            const fiados = response.data.filter((c: any) => c.saldo > 0).length;
+            setFiadosPendientes(fiados);
+          }
+        } catch (err) {
+          const clientesData = localStorage.getItem('clientes_list');
+          if (clientesData) {
+            const clientes = JSON.parse(clientesData);
+            const fiados = clientes.filter((c: any) => c.saldo > 0).length;
+            setFiadosPendientes(fiados);
+          }
         }
       } catch (e) {
         console.warn('Error loading KPIs:', e);

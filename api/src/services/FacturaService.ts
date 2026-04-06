@@ -64,33 +64,15 @@ export class FacturaService {
         });
         const nextNumero = (lastFactura?.numero || 0) + 1;
 
-        // Crear factura
-        const newFactura = await tx.factura.create({
-          data: {
-            numero: nextNumero,
-            tipo: 'FACTURA',
-            estado: data.estado || 'APROBADO',
-            fecha: new Date(),
-            metodoPago: data.metodoPago || 'EFECTIVO',
-            subtotal: subtotal,
-            total: total,
-            utilidad: data.utilidad || 0,
-            credito: data.credito || false,
-            descuento: data.descuento || 0,
-            clienteId: clienteId,
-            userId: data.userId
-          }
-        });
+        // Calcular utilidad total basado en items
+        let totalUtilidad = 0;
+        const itemsConUtilidad = [];
 
-        // Crear items y descontar stock
+        // Primero obtener todos los productos y calcular utilidad
         for (const item of data.items) {
           const rawProductId = item.productoId || item.producto_id;
           const productId = rawProductId ? parseInt(rawProductId.toString()) : 0;
-          const precioCompra = item.precioCompra || 0;
-          const precioUnitario = item.precioUnitario || item.precio || 0;
-          const productoNombre = item.productoNombre || '';
-
-          // Obtener producto
+          
           const product = await tx.product.findUnique({
             where: { id: productId }
           });
@@ -103,25 +85,60 @@ export class FacturaService {
             throw new Error(`Stock insuficiente para ${product.name}`);
           }
 
-          const itemSubtotal = item.cantidad * precioUnitario;
+          const precioCompra = item.precioCompra || product.precioCompra || 0;
+          const precioUnitario = item.precioUnitario || item.precio || product.precioVenta || 0;
+          const itemUtilidad = (precioUnitario - precioCompra) * item.cantidad;
+          totalUtilidad += itemUtilidad;
 
-          // Crear item de factura
+          itemsConUtilidad.push({
+            product,
+            precioCompra,
+            precioUnitario,
+            itemUtilidad
+          });
+        }
+
+        // Crear factura con utilidad calculada correctamente
+        const newFactura = await tx.factura.create({
+          data: {
+            numero: nextNumero,
+            tipo: 'FACTURA',
+            estado: data.estado || 'APROBADO',
+            fecha: new Date(),
+            metodoPago: data.metodoPago || 'EFECTIVO',
+            subtotal: subtotal,
+            total: total,
+            utilidad: totalUtilidad,
+            credito: data.credito || false,
+            descuento: data.descuento || 0,
+            clienteId: clienteId,
+            userId: data.userId
+          }
+        });
+
+        // Crear items de factura con utilidad correcta
+        for (let i = 0; i < data.items.length; i++) {
+          const item = data.items[i];
+          const itemData = itemsConUtilidad[i];
+
+          const itemSubtotal = item.cantidad * itemData.precioUnitario;
+
           await tx.facturaItem.create({
             data: {
               facturaId: newFactura.id,
-              productoId: productId,
-              productoNombre: productoNombre || product.name,
+              productoId: itemData.product.id,
+              productoNombre: item.productoNombre || itemData.product.name,
               cantidad: item.cantidad,
-              precioUnitario: precioUnitario,
-              precioCompra: precioCompra,
+              precioUnitario: itemData.precioUnitario,
+              precioCompra: itemData.precioCompra,
               subtotal: itemSubtotal
             }
           });
 
           // Descontar stock
           await tx.product.update({
-            where: { id: productId },
-            data: { stock: product.stock - item.cantidad }
+            where: { id: itemData.product.id },
+            data: { stock: itemData.product.stock - item.cantidad }
           });
         }
 

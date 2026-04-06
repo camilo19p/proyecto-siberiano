@@ -89,7 +89,7 @@ export function Facturacion() {
     total: facturas.length,
     totalIngresos: facturas.filter(f => f.estado !== 'ANULADO').reduce((s, f) => s + f.total, 0),
     totalUtilidad: facturas.filter(f => f.estado !== 'ANULADO').reduce((s, f) => s + f.utilidad, 0),
-    aprobadas: facturas.filter(f => f.estado === 'APROBADO').length,
+    aprobadas: facturas.filter(f => f.estado === 'APROBADO' || f.estado === 'COMPLETADA').length,
     pendientes: facturas.filter(f => f.estado === 'PENDIENTE').length,
     anuladas: facturas.filter(f => f.estado === 'ANULADO').length
   };
