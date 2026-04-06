@@ -707,7 +707,6 @@ export function POS() {
           {/* Metodo de pago - Botones */}
           <div style={{ padding: '1rem', borderTop: '1px solid var(--color-border)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
             {(['EFECTIVO', 'NEQUI', 'TRANSFERENCIA', 'FIADO'] as const).map((method) => {
-              const isVisible = method !== 'FIADO' || selectedCliente;
               const isActive = paymentMethod === method;
               const colors = getPaymentMethodColor(method);
               return (
@@ -722,11 +721,8 @@ export function POS() {
                     borderRadius: '6px',
                     cursor: 'pointer',
                     fontWeight: 600,
-                    fontSize: '0.75rem',
-                    opacity: isVisible ? 1 : 0.3,
-                    pointerEvents: isVisible ? 'auto' : 'none'
+                    fontSize: '0.75rem'
                   }}
-                  disabled={!isVisible}
                 >
                   {method}
                 </button>
