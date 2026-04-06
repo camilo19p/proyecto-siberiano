@@ -142,6 +142,58 @@ async function main() {
   }
 
   console.info(`Seed completado: ${productos.length} productos (upsert).`);
+
+  // Crear clientes de prueba
+  const clientes = [
+    {
+      nombres: 'Juan',
+      apellidos: 'García López',
+      documento: '1234567890',
+      tipoDocumento: 'CC',
+      telefono: '3001234567',
+      email: 'juan.garcia@email.com',
+      ciudad: 'Medellín',
+      direccion: 'Cra 50 #80-20',
+      barrio: 'Laureles',
+      cupo: 500000
+    },
+    {
+      nombres: 'María',
+      apellidos: 'Rodríguez Martinez',
+      documento: '0987654321',
+      tipoDocumento: 'CC',
+      telefono: '3101234567',
+      email: 'maria.rodriguez@email.com',
+      ciudad: 'Medellín',
+      direccion: 'Cra 45 #70-10',
+      barrio: 'Envigado',
+      cupo: 300000
+    },
+    {
+      nombres: 'Carlos',
+      apellidos: 'Pérez Díaz',
+      documento: '1122334455',
+      tipoDocumento: 'CC',
+      telefono: '3201234567',
+      email: 'carlos.perez@email.com',
+      ciudad: 'Medellín',
+      direccion: 'Cra 55 #90-30',
+      barrio: 'Sabaneta',
+      cupo: 400000
+    }
+  ];
+
+  for (const c of clientes) {
+    await prisma.client.create({
+      data: {
+        ...c,
+        estado: 'ACTIVO',
+        saldo: 0
+      }
+    });
+  }
+
+  console.info(`Seed completado: ${clientes.length} clientes creados.`);
 }
 
 main()
