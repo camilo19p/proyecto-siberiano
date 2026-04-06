@@ -334,7 +334,7 @@ export function POS() {
       };
 
       // Llamar al API para registrar la venta y descontar stock
-      await facturaService.createFactura(facturaData);
+      const facturaResponse = await facturaService.createFactura(facturaData);
 
       // Solo actualizar localStorage después de que el servidor confirme
       setSales([...sales, newSale]);
@@ -367,7 +367,7 @@ export function POS() {
 
       setLastSale(newSale);
       setShowTicket(true);
-      showToast(`Venta registrada: ${formatNum(total)}`);
+      showToast(`Venta completada - Factura #${facturaResponse.numero}`);
       setCart([]);
       setAmountReceived(0);
       setDescuento(0);

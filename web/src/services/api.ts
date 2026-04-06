@@ -246,13 +246,28 @@ export const clienteService = {
 };
 
 export interface Factura {
-  id: string;
-  numero: string;
-  cliente_id: string | undefined;
-  monto_total: number;
+  id: number;
+  numero: number;
+  tipo: string;
   estado: string;
   fecha: string;
-  items?: Array<{ producto_id: string; cantidad: number; precio: number }>;
+  metodoPago: string;
+  subtotal: number;
+  total: number;
+  utilidad: number;
+  credito: boolean;
+  descuento: number;
+  clienteId?: number;
+  userId?: number;
+  items?: Array<{
+    id: number;
+    productoId: number;
+    productoNombre: string;
+    cantidad: number;
+    precioUnitario: number;
+    precioCompra: number;
+    subtotal: number;
+  }>;
 }
 
 export const facturaService = {
@@ -264,7 +279,7 @@ export const facturaService = {
       throw new Error(toErrorMessage(err));
     }
   },
-  async createFactura(data: Omit<Factura, 'id' | 'fecha'>): Promise<Factura> {
+  async createFactura(data: any): Promise<Factura> {
     try {
       const res = await api.post('/facturas', data);
       return res.data;

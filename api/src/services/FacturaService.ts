@@ -2,128 +2,188 @@ import prisma from '../lib/prisma';
 
 export class FacturaService {
   async create(data: {
-    numero: string;
+    numero?: string;
     cliente_id?: string | number;
-    monto_total: number;
-    estado: string;
+    clienteId?: string | number;
+    monto_total?: number;
+    estado?: string;
     userId: number;
     iva?: number;
-    items: Array<{ producto_id: string | number; cantidad: number; precio: number }>;
+    items: Array<{
+      producto_id?: string | number;
+      productoId?: string | number;
+      cantidad: number;
+      precio?: number;
+      precioUnitario?: number;
+      precioCompra?: number;
+      productoNombre?: string;
+    }>;
+    metodoPago?: string;
+    descuento?: number;
+    subtotal?: number;
+    total?: number;
+    utilidad?: number;
+    credito?: boolean;
   }) {
-    // Validar campos obligatorios
-    if (!data.numero || data.monto_total <= 0 || !data.userId) {
-      throw new Error('Datos incompletos para crear factura');
-    }
-
-    // Validar que no haya precios o cantidades iguales o menores a cero
-    for (const item of data.items) {
-      if (item.cantidad <= 0 || item.precio <= 0) {
-        throw new Error('Cantidad y precio deben ser positivos (> 0)');
-      }
-    }
-
     try {
+      // Normalizar nombres de campos
+      const clienteId = data.clienteId || data.cliente_id ? parseInt((data.clienteId || data.cliente_id).toString()) : null;
+      const total = data.total || data.monto_total || 0;
+      const subtotal = data.subtotal || total;
+
+      // Validar campos obligatorios
+      if (!data.userId || data.items.length === 0) {
+        throw new Error('UserId y items son obligatorios');
+      }
+
       // Validar que el usuario existe
       const user = await prisma.user.findUnique({
         where: { id: data.userId }
       });
 
       if (!user) {
-        throw new Error(`Usuario con ID ${data.userId} no encontrado en la base de datos`);
+        throw new Error(`Usuario con ID ${data.userId} no encontrado`);
       }
 
-      // Validar que el cliente existe si se proporciona
-      let clienteId: number | null = null;
-      if (data.cliente_id) {
-        clienteId = parseInt(data.cliente_id.toString());
+      // Validar cliente si se proporciona
+      if (clienteId) {
         const client = await prisma.client.findUnique({
           where: { id: clienteId }
         });
-
         if (!client) {
-          throw new Error(`Cliente con ID ${clienteId} no encontrado en la base de datos`);
+          throw new Error(`Cliente con ID ${clienteId} no encontrado`);
         }
       }
 
-      // Usar transacción para crear factura y descontar stock
-      const sale = await prisma.$transaction(async (tx) => {
-        // Crear venta
-        const newSale = await tx.sale.create({
+      // Usar transacción para crear factura
+      const factura = await prisma.$transaction(async (tx) => {
+        // Generar número correlativo de factura
+        const lastFactura = await tx.factura.findFirst({
+          orderBy: { numero: 'desc' }
+        });
+        const nextNumero = (lastFactura?.numero || 0) + 1;
+
+        // Crear factura
+        const newFactura = await tx.factura.create({
           data: {
-            numero: data.numero,
-            clienteId,
-            userId: data.userId,
-            subtotal: data.monto_total,
-            iva: data.iva ?? 0,
-            total: data.monto_total,
-            estado: data.estado || 'COMPLETADA',
-          },
+            numero: nextNumero,
+            tipo: 'FACTURA',
+            estado: data.estado || 'APROBADO',
+            fecha: new Date(),
+            metodoPago: data.metodoPago || 'EFECTIVO',
+            subtotal: subtotal,
+            total: total,
+            utilidad: data.utilidad || 0,
+            credito: data.credito || false,
+            descuento: data.descuento || 0,
+            clienteId: clienteId,
+            userId: data.userId
+          }
         });
 
         // Crear items y descontar stock
         for (const item of data.items) {
-          const productId = parseInt(item.producto_id.toString());
-          
+          const productId = parseInt((item.productoId || item.producto_id).toString());
+          const precioCompra = item.precioCompra || 0;
+          const precioUnitario = item.precioUnitario || item.precio || 0;
+          const productoNombre = item.productoNombre || '';
+
           // Obtener producto
           const product = await tx.product.findUnique({
             where: { id: productId }
           });
 
           if (!product) {
-            throw new Error(`Producto ${item.producto_id} no encontrado`);
+            throw new Error(`Producto ${productId} no encontrado`);
           }
 
           if (product.stock < item.cantidad) {
             throw new Error(`Stock insuficiente para ${product.name}`);
           }
 
-          // Crear item de venta
-          await tx.saleItem.create({
+          const itemSubtotal = item.cantidad * precioUnitario;
+
+          // Crear item de factura
+          await tx.facturaItem.create({
             data: {
-              saleId: newSale.id,
-              productId,
+              facturaId: newFactura.id,
+              productoId: productId,
+              productoNombre: productoNombre || product.name,
               cantidad: item.cantidad,
-              precioUnit: item.precio,
-              subtotal: item.cantidad * item.precio
+              precioUnitario: precioUnitario,
+              precioCompra: precioCompra,
+              subtotal: itemSubtotal
             }
           });
 
-          // Descontar stock en Product
+          // Descontar stock
           await tx.product.update({
             where: { id: productId },
             data: { stock: product.stock - item.cantidad }
           });
         }
 
-        return newSale;
+        return newFactura;
       });
 
-      return sale;
+      // Retornar factura con items
+      return await this.getById(factura.id.toString());
     } catch (error) {
       throw new Error('Error al crear factura: ' + (error as Error).message);
     }
   }
 
-  async getAll(filters?: { estado?: string; cliente_id?: string }) {
+  async getAll(filters?: {
+    estado?: string;
+    clienteId?: string | number;
+    fechaInicio?: string;
+    fechaFin?: string;
+    metodoPago?: string;
+  }) {
     try {
-      const facturas = await prisma.sale.findMany({
-        where: filters ? {
-          estado: filters.estado,
-          clienteId: filters.cliente_id ? parseInt(filters.cliente_id) : undefined
-        } : undefined,
-        include: { items: true, client: true }
+      const where: any = {};
+
+      if (filters?.estado && filters.estado !== 'TODOS') {
+        where.estado = filters.estado;
+      }
+
+      if (filters?.clienteId) {
+        where.clienteId = parseInt(filters.clienteId.toString());
+      }
+
+      if (filters?.metodoPago) {
+        where.metodoPago = filters.metodoPago;
+      }
+
+      if (filters?.fechaInicio || filters?.fechaFin) {
+        where.fecha = {};
+        if (filters.fechaInicio) {
+          where.fecha.gte = new Date(filters.fechaInicio);
+        }
+        if (filters.fechaFin) {
+          const fechaFin = new Date(filters.fechaFin);
+          fechaFin.setHours(23, 59, 59, 999);
+          where.fecha.lte = fechaFin;
+        }
+      }
+
+      const facturas = await prisma.factura.findMany({
+        where,
+        include: { items: true },
+        orderBy: { fecha: 'desc' }
       });
+
       return facturas;
     } catch (error) {
-      throw new Error('Error al obtener facturas');
+      throw new Error('Error al obtener facturas: ' + (error as Error).message);
     }
   }
 
-  async getById(id: string) {
+  async getById(id: string | number) {
     try {
-      const factura = await prisma.sale.findUnique({
-        where: { id: parseInt(id) },
-        include: { items: true, client: true }
+      const factura = await prisma.factura.findUnique({
+        where: { id: parseInt(id.toString()) },
+        include: { items: true }
       });
       return factura;
     } catch (error) {
@@ -131,99 +191,90 @@ export class FacturaService {
     }
   }
 
-  async update(id: string, data: { estado?: string; monto_total?: number }) {
+  async update(id: string | number, data: { estado?: string; monto_total?: number }) {
     try {
-      const sale = await prisma.sale.findUnique({
-        where: { id: parseInt(id) },
+      const factura = await prisma.factura.findUnique({
+        where: { id: parseInt(id.toString()) },
         include: { items: true }
       });
 
-      if (!sale) {
+      if (!factura) {
         throw new Error('Factura no encontrada');
       }
 
-      // Si se está cambiando a ANULADA, restaurar stock
-      if (data.estado === 'ANULADA' && sale.estado !== 'ANULADA') {
+      // Si se cambia a ANULADO, restaurar stock
+      if (data.estado === 'ANULADO' && factura.estado !== 'ANULADO') {
         await prisma.$transaction(async (tx) => {
-          // Restaurar stock de todos los items
-          for (const item of sale.items) {
+          // Restaurar stock
+          for (const item of factura.items) {
             const product = await tx.product.findUnique({
-              where: { id: item.productId }
+              where: { id: item.productoId }
             });
 
             if (product) {
               await tx.product.update({
-                where: { id: item.productId },
+                where: { id: item.productoId },
                 data: { stock: product.stock + item.cantidad }
               });
             }
           }
 
           // Actualizar factura
-          await tx.sale.update({
-            where: { id: parseInt(id) },
-            data: {
-              estado: data.estado,
-              total: data.monto_total || sale.total,
-            }
+          await tx.factura.update({
+            where: { id: parseInt(id.toString()) },
+            data: { estado: data.estado }
           });
         });
       } else {
-        // Actualización sin cambiar estado o manteniendo el actual
-        const factura = await prisma.sale.update({
-          where: { id: parseInt(id) },
+        await prisma.factura.update({
+          where: { id: parseInt(id.toString()) },
           data: {
             estado: data.estado,
-            total: data.monto_total,
-          },
+            total: data.monto_total
+          }
         });
-        return factura;
       }
 
-      return await prisma.sale.findUnique({
-        where: { id: parseInt(id) },
-        include: { items: true }
-      });
+      return await this.getById(id);
     } catch (error) {
       throw new Error('Error al actualizar factura: ' + (error as Error).message);
     }
   }
 
-  async delete(id: string) {
+  async delete(id: string | number) {
     try {
-      const sale = await prisma.sale.findUnique({
-        where: { id: parseInt(id) },
+      const factura = await prisma.factura.findUnique({
+        where: { id: parseInt(id.toString()) },
         include: { items: true }
       });
 
-      if (!sale) {
+      if (!factura) {
         throw new Error('Factura no encontrada');
       }
 
-      // Usar transacción para restaurar stock antes de eliminar
+      // Restaurar stock antes de eliminar
       await prisma.$transaction(async (tx) => {
-        // Restaurar stock de todos los items
-        for (const item of sale.items) {
+        for (const item of factura.items) {
           const product = await tx.product.findUnique({
-            where: { id: item.productId }
+            where: { id: item.productoId }
           });
 
           if (product) {
             await tx.product.update({
-              where: { id: item.productId },
+              where: { id: item.productoId },
               data: { stock: product.stock + item.cantidad }
             });
           }
         }
 
-        // Eliminar items de venta primero (por relación FK)
-        await tx.saleItem.deleteMany({
-          where: { saleId: parseInt(id) }
+        // Eliminar items
+        await tx.facturaItem.deleteMany({
+          where: { facturaId: parseInt(id.toString()) }
         });
 
-        // Luego eliminar la factura
-        await tx.sale.delete({
-          where: { id: parseInt(id) }
+        // Eliminar factura
+        await tx.factura.delete({
+          where: { id: parseInt(id.toString()) }
         });
       });
 

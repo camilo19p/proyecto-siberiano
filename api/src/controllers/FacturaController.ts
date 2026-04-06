@@ -15,7 +15,15 @@ export class FacturaController {
 
   async getAll(req: Request, res: Response) {
     try {
-      const facturas = await this.service.getAll();
+      const { estado, clienteId, fechaInicio, fechaFin, metodoPago } = req.query;
+      const filtros = {
+        estado: estado as string,
+        clienteId: clienteId as string,
+        fechaInicio: fechaInicio as string,
+        fechaFin: fechaFin as string,
+        metodoPago: metodoPago as string
+      };
+      const facturas = await this.service.getAll(filtros);
       res.json(facturas);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
@@ -37,6 +45,19 @@ export class FacturaController {
   async update(req: Request, res: Response) {
     try {
       const factura = await this.service.update(req.params.id, req.body);
+      res.json(factura);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  }
+
+  async updateEstado(req: Request, res: Response) {
+    try {
+      const { estado } = req.body;
+      if (!estado) {
+        return res.status(400).json({ error: 'Estado es requerido' });
+      }
+      const factura = await this.service.update(req.params.id, { estado });
       res.json(factura);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });

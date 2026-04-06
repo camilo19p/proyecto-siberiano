@@ -1,541 +1,572 @@
 import { useState, useEffect } from 'react';
-import { facturaService, clienteService, productService, Factura } from '../services/api';
+import { facturaService } from '../services/api';
+import { Calendar, Trash2, X } from 'lucide-react';
 
-interface Invoice {
-  id: string;
+interface FacturaData {
+  id: number;
   numero: string;
-  fecha: string;
-  cliente_id: string;
-  cliente?: string;
-  monto_total: number;
+  tipo: string;
   estado: string;
-  items?: {
-    producto_id: string;
-    producto?: string;
+  fecha: string;
+  metodoPago: string;
+  subtotal: number;
+  total: number;
+  utilidad: number;
+  credito: boolean;
+  clienteId?: number;
+  userId?: number;
+  descuento: number;
+  items: Array<{
+    id: number;
+    productoId: number;
+    productoNombre: string;
     cantidad: number;
-    precio: number;
-    subtotal?: number;
-  }[];
+    precioUnitario: number;
+    precioCompra: number;
+    subtotal: number;
+  }>;
+
+  fechaInicio?: string;
+  fechaFin?: string;
 }
 
+const formatNum = (n: number) => '$' + n.toLocaleString('es-CO');
+
 export function Facturacion() {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [filter, setFilter] = useState<'TODOS' | 'PENDIENTE' | 'APROBADO' | 'ANULADO'>('TODOS');
-  const [showForm, setShowForm] = useState(false);
+  const [facturas, setFacturas] = useState<FacturaData[]>([]);
+  const [selectedFactura, setSelectedFactura] = useState<FacturaData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [newInvoice, setNewInvoice] = useState({
-    cliente_id: '',
-    items: [{ producto_id: '', cantidad: 1, precio: 0 }]
-  });
+  const [filterEstado, setFilterEstado] = useState<string>('TODOS');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [fechaInicio, setFechaInicio] = useState('');
+  const [fechaFin, setFechaFin] = useState('');
 
   useEffect(() => {
-    loadInvoices();
+    loadFacturas();
   }, []);
 
-  const loadInvoices = async () => {
+  const loadFacturas = async () => {
     setLoading(true);
     setError(null);
     try {
+      // Llamar al endpoint GET /api/facturas
       const data = await facturaService.getFacturas();
-      setInvoices(data);
+      setFacturas(data as unknown as FacturaData[]);
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Error al cargar facturas';
       setError(errorMsg);
-      console.error('Error loading invoices:', e);
+      console.error('Error loading facturas:', e);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const generateInvoiceNumber = () => {
-    const lastInv = invoices[invoices.length - 1];
-    const lastNum = lastInv ? parseInt(lastInv.numero) : 0;
-    return String(lastNum + 1).padStart(6, '0');
-  };
-
-  const createInvoice = async () => {
-    if (!newInvoice.cliente_id || newInvoice.items.some(i => !i.producto_id || i.cantidad <= 0 || i.precio <= 0)) {
-      setError('Por favor completa todos los datos requeridos');
-      return;
-    }
+  const handleAnularFactura = async (facturaId: number) => {
+    if (!window.confirm('¿Estás seguro de que deseas anular esta factura?')) return;
 
     try {
       setError(null);
-      const monto_total = newInvoice.items.reduce((sum, item) => sum + (item.cantidad * item.precio), 0);
-      
-      const invoiceData = {
-        numero: `FAC-${generateInvoiceNumber()}`,
-        cliente_id: newInvoice.cliente_id,
-        monto_total,
-        estado: 'PENDIENTE',
-        items: newInvoice.items
-      };
-
-      await facturaService.createFactura(invoiceData);
-      await loadInvoices();
-      
-      setNewInvoice({ cliente_id: '', items: [{ producto_id: '', cantidad: 1, precio: 0 }] });
-      setShowForm(false);
+      await facturaService.updateFactura(facturaId.toString(), { estado: 'ANULADO' });
+      await loadFacturas();
+      setSelectedFactura(null);
+      alert('Factura anulada exitosamente');
     } catch (e) {
-      const errorMsg = e instanceof Error ? e.message : 'Error al crear factura';
+      const errorMsg = e instanceof Error ? e.message : 'Error al anular factura';
       setError(errorMsg);
     }
   };
 
-  const updateInvoiceStatus = async (id: string, newStatus: string) => {
-    try {
-      setError(null);
-      await facturaService.updateFactura(id, { estado: newStatus });
-      await loadInvoices();
-      if (selectedInvoice?.id === id) {
-        setSelectedInvoice({ ...selectedInvoice, estado: newStatus });
-      }
-    } catch (e) {
-      const errorMsg = e instanceof Error ? e.message : 'Error al actualizar estado';
-      setError(errorMsg);
-    }
-  };
-
-  const deleteInvoice = async (id: string) => {
-    if (window.confirm('¿Eliminar esta factura?')) {
-      try {
-        setError(null);
-        await facturaService.deleteFactura(id);
-        await loadInvoices();
-        setSelectedInvoice(null);
-      } catch (e) {
-        const errorMsg = e instanceof Error ? e.message : 'Error al eliminar factura';
-        setError(errorMsg);
-      }
-    }
-  };
-
-  const filteredInvoices = filter === 'TODOS' 
-    ? invoices 
-    : invoices.filter(inv => inv.estado === filter);
+  const filteredFacturas = facturas.filter(f => {
+    const matchEstado = filterEstado === 'TODOS' || f.estado === filterEstado;
+    const matchSearch = !searchTerm || 
+      f.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      f.items.some(item => item.productoNombre.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchEstado && matchSearch;
+  });
 
   const stats = {
-    total: invoices.length,
-    pendientes: invoices.filter(i => i.estado === 'PENDIENTE').length,
-    aprobadas: invoices.filter(i => i.estado === 'APROBADO').length,
-    anuladas: invoices.filter(i => i.estado === 'ANULADO').length,
-    totalMonto: invoices.filter(i => i.estado !== 'ANULADO').reduce((s, i) => s + i.monto_total, 0)
+    total: facturas.length,
+    totalIngresos: facturas.filter(f => f.estado !== 'ANULADO').reduce((s, f) => s + f.total, 0),
+    totalUtilidad: facturas.filter(f => f.estado !== 'ANULADO').reduce((s, f) => s + f.utilidad, 0),
+    aprobadas: facturas.filter(f => f.estado === 'APROBADO').length,
+    pendientes: facturas.filter(f => f.estado === 'PENDIENTE').length,
+    anuladas: facturas.filter(f => f.estado === 'ANULADO').length
   };
 
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case 'PENDIENTE': return { bg: '#fef3c7', text: '#dc2626', border: '#f59e0b' };
+  const getStatusColor = (estado: string) => {
+    switch(estado) {
       case 'APROBADO': return { bg: '#dcfce7', text: '#16a34a', border: '#22c55e' };
-      case 'ANULADO': return { bg: '#fee2e2', text: '#7f1d1d', border: '#ef4444' };
+      case 'PENDIENTE': return { bg: '#fef3c7', text: '#b45309', border: '#f59e0b' };
+      case 'ANULADO': return { bg: '#fee2e2', text: '#dc2626', border: '#ef4444' };
       default: return { bg: '#f1f5f9', text: '#64748b', border: '#cbd5e1' };
     }
   };
 
   return (
-    <div>
-      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: '#1e293b' }}>Facturación Electrónica</h1>
+    <div style={{ padding: '2rem' }}>
+      <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)' }}>Facturación</h1>
 
-      {/* Stats */}
+      {/* KPIs */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
         gap: '1.5rem',
         marginBottom: '2rem'
       }}>
-        <div className="kpi-card" style={{
+        <div style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
-          borderRadius: '16px',
+          borderRadius: '12px',
           padding: '1.5rem',
           textAlign: 'center'
         }}>
-          <p style={{ margin: 0, color: 'var(--color-text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>TOTAL</p>
+          <p style={{ margin: 0, color: 'var(--color-text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>TOTAL FACTURAS</p>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#f5c800' }}>{stats.total}</p>
         </div>
-
-        <div className="kpi-card" style={{
+        <div style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
-          borderRadius: '16px',
+          borderRadius: '12px',
           padding: '1.5rem',
           textAlign: 'center'
         }}>
-          <p style={{ margin: 0, color: '#dc2626', fontWeight: 600, fontSize: '0.875rem' }}>PENDIENTES</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#dc2626' }}>{stats.pendientes}</p>
+          <p style={{ margin: 0, color: 'var(--color-text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>INGRESOS</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#16a34a' }}>{formatNum(stats.totalIngresos)}</p>
         </div>
-
-        <div className="kpi-card" style={{
+        <div style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
-          borderRadius: '16px',
+          borderRadius: '12px',
+          padding: '1.5rem',
+          textAlign: 'center'
+        }}>
+          <p style={{ margin: 0, color: 'var(--color-text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>UTILIDAD</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#f5c800' }}>{formatNum(stats.totalUtilidad)}</p>
+        </div>
+        <div style={{
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
+          borderRadius: '12px',
           padding: '1.5rem',
           textAlign: 'center'
         }}>
           <p style={{ margin: 0, color: '#16a34a', fontWeight: 600, fontSize: '0.875rem' }}>APROBADAS</p>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#16a34a' }}>{stats.aprobadas}</p>
         </div>
-
-        <div className="kpi-card" style={{
-          background: 'var(--color-surface)',
-          border: '1px solid var(--color-border)',
-          borderRadius: '16px',
-          padding: '1.5rem',
-          textAlign: 'center'
-        }}>
-          <p style={{ margin: 0, color: 'var(--color-text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>MONTO TOTAL</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#f5c800' }}>
-            ${stats.totalMonto.toLocaleString()}
-          </p>
-        </div>
       </div>
 
-      {/* Acciones */}
+      {/* Filtros */}
       <div style={{
-        display: 'flex',
-        gap: '1rem',
-        marginBottom: '2rem',
-        flexWrap: 'wrap'
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
+        borderRadius: '12px',
+        padding: '1.5rem',
+        marginBottom: '2rem'
       }}>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          style={{
-            padding: '0.75rem 1.5rem',
-            background: '#f5c800',
-            color: '#0a0a0a',
-            border: 'none',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            fontWeight: 600,
-            fontSize: '0.95rem',
-            boxShadow: '0 4px 15px rgba(245,200,0,0.25)',
-            transition: 'all 0.2s'
-          }}
-        >
-          {showForm ? 'Cancelar' : '+ Nueva Factura'}
-        </button>
-
-        {['TODOS', 'PENDIENTE', 'APROBADO', 'ANULADO'].map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f as any)}
-            style={{
-              padding: '0.75rem 1.5rem',
-              background: filter === f ? '#f5c800' : '#f1f5f9',
-              color: filter === f ? '#0a0a0a' : '#475569',
-              border: 'none',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: '0.95rem',
-              transition: 'all 0.2s'
-            }}
-          >
-            {f === 'TODOS' ? 'Todos' : f === 'PENDIENTE' ? 'Pendientes' : f === 'APROBADO' ? 'Aprobadas' : 'Anuladas'}
-          </button>
-        ))}
-      </div>
-
-      {/* Form Nueva Factura */}
-      {showForm && (
+        <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)' }}>Filtros</h3>
+        
         <div style={{
-          background: 'white',
-          borderRadius: '20px',
-          padding: '1.5rem',
-          marginBottom: '2rem',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.08)'
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '1rem'
         }}>
-          <h3 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>Nueva Factura</h3>
-          
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#475569', fontWeight: 600 }}>
-              Cliente
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
+              Fecha Inicial
             </label>
             <input
-              type="text"
-              value={newInvoice.cliente_id}
-              onChange={e => setNewInvoice({ ...newInvoice, cliente_id: e.target.value })}
-              placeholder="ID del cliente"
+              type="date"
+              value={fechaInicio}
+              onChange={(e) => setFechaInicio(e.target.value)}
               style={{
                 width: '100%',
                 padding: '0.75rem',
-                border: '1px solid #e2e8f0',
-                borderRadius: '10px',
-                fontSize: '1rem',
-                outline: 'none'
+                border: '1px solid var(--color-border)',
+                borderRadius: '8px',
+                background: 'var(--color-surface-2)',
+                color: 'var(--color-text)',
+                fontSize: '0.875rem'
               }}
             />
           </div>
-
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '1rem', color: '#475569', fontWeight: 600 }}>
-              Productos
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
+              Fecha Final
             </label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {newInvoice.items.map((item, idx) => (
-                <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '1rem', alignItems: 'end' }}>
-                  <input
-                    type="text"
-                    placeholder="ID Producto"
-                    value={item.producto_id}
-                    onChange={e => {
-                      const updated = [...newInvoice.items];
-                      updated[idx].producto_id = e.target.value;
-                      setNewInvoice({ ...newInvoice, items: updated });
-                    }}
-                    style={{
-                      padding: '0.75rem',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '0.95rem'
-                    }}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Cant"
-                    value={item.cantidad}
-                    onChange={e => {
-                      const updated = [...newInvoice.items];
-                      updated[idx].cantidad = parseInt(e.target.value) || 0;
-                      setNewInvoice({ ...newInvoice, items: updated });
-                    }}
-                    style={{
-                      padding: '0.75rem',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '0.95rem'
-                    }}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Precio"
-                    value={item.precio}
-                    onChange={e => {
-                      const updated = [...newInvoice.items];
-                      updated[idx].precio = parseInt(e.target.value) || 0;
-                      setNewInvoice({ ...newInvoice, items: updated });
-                    }}
-                    style={{
-                      padding: '0.75rem',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '0.95rem'
-                    }}
-                  />
-                  <button
-                    onClick={() => {
-                      const updated = newInvoice.items.filter((_, i) => i !== idx);
-                      setNewInvoice({ ...newInvoice, items: updated });
-                    }}
-                    style={{
-                      padding: '0.75rem 1rem',
-                      background: '#fee2e2',
-                      color: '#dc2626',
-                      border: 'none',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontWeight: 600
-                    }}
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              ))}
-              <button
-                onClick={() => setNewInvoice({
-                  ...newInvoice,
-                  items: [...newInvoice.items, { producto_id: '', cantidad: 1, precio: 0 }]
-                })}
-                style={{
-                  padding: '0.75rem 1rem',
-                  background: '#ecfdf5',
-                  color: '#16a34a',
-                  border: '1px dashed #86efac',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: '0.95rem'
-                }}
-              >
-                Añadir Producto
-              </button>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-            <button
-              onClick={createInvoice}
+            <input
+              type="date"
+              value={fechaFin}
+              onChange={(e) => setFechaFin(e.target.value)}
               style={{
-                padding: '0.75rem 1.5rem',
-                background: '#f5c800',
-                color: '#0a0a0a',
-                border: 'none',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                fontWeight: 600,
-                fontSize: '0.95rem'
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid var(--color-border)',
+                borderRadius: '8px',
+                background: 'var(--color-surface-2)',
+                color: 'var(--color-text)',
+                fontSize: '0.875rem'
+              }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
+              Estado
+            </label>
+            <select
+              value={filterEstado}
+              onChange={(e) => setFilterEstado(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid var(--color-border)',
+                borderRadius: '8px',
+                background: 'var(--color-surface-2)',
+                color: 'var(--color-text)',
+                fontSize: '0.875rem'
               }}
             >
-              Crear Factura
-            </button>
+              <option value="TODOS">Todos</option>
+              <option value="APROBADO">Aprobadas</option>
+              <option value="PENDIENTE">Pendientes</option>
+              <option value="ANULADO">Anuladas</option>
+            </select>
           </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
+              Buscar
+            </label>
+            <input
+              type="text"
+              placeholder="N° factura o producto..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid var(--color-border)',
+                borderRadius: '8px',
+                background: 'var(--color-surface-2)',
+                color: 'var(--color-text)',
+                fontSize: '0.875rem'
+              }}
+            />
+          </div>
+        </div>
+
+        <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
+          <button
+            onClick={loadFacturas}
+            style={{
+              padding: '0.75rem 1.5rem',
+              background: '#f5c800',
+              color: '#0a0a0a',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: '0.875rem'
+            }}
+          >
+            Buscar
+          </button>
+          <button
+            onClick={() => {
+              setFechaInicio('');
+              setFechaFin('');
+              setFilterEstado('TODOS');
+              setSearchTerm('');
+              loadFacturas();
+            }}
+            style={{
+              padding: '0.75rem 1.5rem',
+              background: 'var(--color-surface-2)',
+              color: 'var(--color-text)',
+              border: '1px solid var(--color-border)',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: '0.875rem'
+            }}
+          >
+            Limpiar
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div style={{
+          background: '#fee2e2',
+          border: '1px solid #fecaca',
+          color: '#dc2626',
+          padding: '1rem',
+          borderRadius: '8px',
+          marginBottom: '1rem'
+        }}>
+          {error}
         </div>
       )}
 
-      {/* Lista de Facturas */}
-      <div style={{
-        display: selectedInvoice ? 'grid' : 'block',
-        gridTemplateColumns: selectedInvoice ? '1fr 1fr' : undefined,
-        gap: '1.5rem'
-      }}>
-        {/* Tabla */}
-        <div style={{
-          background: 'white',
-          borderRadius: '20px',
-          overflow: 'hidden',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.08)'
-        }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>N°</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>CLIENTE</th>
-                  <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>MONTO</th>
-                  <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>ESTADO</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredInvoices.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
-                      Sin facturas
-                    </td>
-                  </tr>
-                ) : (
-                  filteredInvoices.map(inv => {
-                    const statusColor = getStatusColor(inv.estado);
-                    return (
-                      <tr
-                        key={inv.id}
-                        onClick={() => setSelectedInvoice(inv)}
-                        style={{
-                          borderTop: '1px solid #f1f5f9',
-                          cursor: 'pointer',
-                          background: selectedInvoice?.id === inv.id ? '#f0f9ff' : 'transparent',
-                          borderLeft: selectedInvoice?.id === inv.id ? '4px solid #667eea' : 'none',
-                          transition: 'all 0.2s'
-                        }}
-                      >
-                        <td style={{ padding: '1rem', fontWeight: 600, color: '#1e293b' }}>{inv.numero}</td>
-                        <td style={{ padding: '1rem', color: '#475569' }}>{inv.cliente}</td>
-                        <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: '#1e293b' }}>
-                          ${inv.monto_total.toLocaleString()}
-                        </td>
-                        <td style={{ padding: '1rem', textAlign: 'center' }}>
-                          <span style={{
-                            display: 'inline-block',
-                            padding: '0.5rem 0.75rem',
-                            background: statusColor.bg,
-                            color: statusColor.text,
-                            border: `2px solid ${statusColor.border}`,
-                            borderRadius: '6px',
-                            fontWeight: 600,
-                            fontSize: '0.75rem'
-                          }}>
-                            {inv.estado}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>
+          Cargando facturas...
         </div>
-
-        {/* Detalles */}
-        {selectedInvoice && (
+      ) : (
+        <div style={{
+          display: selectedFactura ? 'grid' : 'block',
+          gridTemplateColumns: selectedFactura ? '1fr 400px' : undefined,
+          gap: '2rem'
+        }}>
+          {/* Tabla de Facturas */}
           <div style={{
-            background: 'white',
-            borderRadius: '20px',
-            padding: '1.5rem',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
-            height: 'fit-content'
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '12px',
+            overflow: 'hidden'
           }}>
-            <h3 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>Detalles Factura #{selectedInvoice.numero}</h3>
-
-            <div style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #f1f5f9' }}>
-              <p style={{ margin: '0.5rem 0', color: '#475569' }}><strong>Cliente:</strong> {selectedInvoice.cliente}</p>
-              <p style={{ margin: '0.5rem 0', color: '#475569' }}><strong>Fecha:</strong> {new Date(selectedInvoice.fecha).toLocaleDateString('es-ES')}</p>
-              <p style={{ margin: '0.5rem 0', color: '#475569' }}><strong>Total:</strong> <span style={{ fontSize: '1.25rem', color: '#667eea', fontWeight: 700 }}>${selectedInvoice.monto_total.toLocaleString()}</span></p>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'var(--color-surface-2)', borderBottom: '2px solid var(--color-border)' }}>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 700, color: 'var(--color-text)', fontSize: '0.875rem' }}>#</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 700, color: 'var(--color-text)', fontSize: '0.875rem' }}>Tipo</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 700, color: 'var(--color-text)', fontSize: '0.875rem' }}>Estado</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 700, color: 'var(--color-text)', fontSize: '0.875rem' }}>Fecha</th>
+                    <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 700, color: 'var(--color-text)', fontSize: '0.875rem' }}>Total</th>
+                    <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 700, color: 'var(--color-text)', fontSize: '0.875rem' }}>Utilidad</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 700, color: 'var(--color-text)', fontSize: '0.875rem' }}>Método</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredFacturas.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                        Sin facturas
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredFacturas.map(factura => {
+                      const statusColor = getStatusColor(factura.estado);
+                      return (
+                        <tr
+                          key={factura.id}
+                          onClick={() => setSelectedFactura(factura)}
+                          style={{
+                            borderBottom: '1px solid var(--color-border)',
+                            cursor: 'pointer',
+                            background: selectedFactura?.id === factura.id ? 'var(--color-surface-2)' : 'transparent',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLTableRowElement).style.background = selectedFactura?.id === factura.id ? 'var(--color-surface-2)' : 'rgba(245, 200, 0, 0.05)';
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLTableRowElement).style.background = selectedFactura?.id === factura.id ? 'var(--color-surface-2)' : 'transparent';
+                          }}
+                        >
+                          <td style={{ padding: '1rem', fontWeight: 700, color: 'var(--color-text)' }}>{factura.numero}</td>
+                          <td style={{ padding: '1rem', color: 'var(--color-text)' }}>{factura.tipo}</td>
+                          <td style={{ padding: '1rem' }}>
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '0.4rem 0.8rem',
+                              background: statusColor.bg,
+                              color: statusColor.text,
+                              border: `1px solid ${statusColor.border}`,
+                              borderRadius: '6px',
+                              fontWeight: 600,
+                              fontSize: '0.75rem'
+                            }}>
+                              {factura.estado}
+                            </span>
+                          </td>
+                          <td style={{ padding: '1rem', color: 'var(--color-text)', fontSize: '0.875rem' }}>
+                            {new Date(factura.fecha).toLocaleDateString('es-CO')}
+                          </td>
+                          <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 700, color: '#f5c800' }}>{formatNum(factura.total)}</td>
+                          <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: '#16a34a' }}>{formatNum(factura.utilidad)}</td>
+                          <td style={{ padding: '1rem', color: 'var(--color-text)', fontSize: '0.875rem' }}>{factura.metodoPago}</td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <h4 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>Productos</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {selectedInvoice.items.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', fontSize: '0.95rem' }}>
-                    <span>{item.cantidad}x {item.producto}</span>
-                    <span style={{ fontWeight: 600 }}>${item.subtotal.toLocaleString()}</span>
+            {/* Fila de totales */}
+            {filteredFacturas.length > 0 && (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(7, 1fr)',
+                gap: 0,
+                padding: '1rem',
+                background: 'var(--color-surface-2)',
+                borderTop: '2px solid var(--color-border)',
+                fontWeight: 700,
+                fontSize: '0.875rem'
+              }}>
+                <div style={{ textAlign: 'left', color: 'var(--color-text-muted)' }}>TOTAL GENERAL</div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div style={{ textAlign: 'right', color: '#f5c800' }}>
+                  {formatNum(filteredFacturas.reduce((s, f) => s + f.total, 0))}
+                </div>
+                <div style={{ textAlign: 'right', color: '#16a34a' }}>
+                  {formatNum(filteredFacturas.reduce((s, f) => s + f.utilidad, 0))}
+                </div>
+                <div></div>
+              </div>
+            )}
+          </div>
+
+          {/* Panel Lateral - Detalles */}
+          {selectedFactura && (
+            <div style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              height: 'fit-content',
+              position: 'sticky',
+              top: '20px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)' }}>
+                  Factura #{selectedFactura.numero}
+                </h3>
+                <button
+                  onClick={() => setSelectedFactura(null)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--color-text-muted)'
+                  }}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid var(--color-border)' }}>
+                <p style={{ margin: '0.5rem 0', fontSize: '0.875rem' }}>
+                  <span style={{ color: 'var(--color-text-muted)' }}>Fecha:</span>
+                  <span style={{ fontWeight: 600, color: 'var(--color-text)', marginLeft: '0.5rem' }}>
+                    {new Date(selectedFactura.fecha).toLocaleDateString('es-CO')}
+                  </span>
+                </p>
+                <p style={{ margin: '0.5rem 0', fontSize: '0.875rem' }}>
+                  <span style={{ color: 'var(--color-text-muted)' }}>Método:</span>
+                  <span style={{ fontWeight: 600, color: 'var(--color-text)', marginLeft: '0.5rem' }}>
+                    {selectedFactura.metodoPago}
+                  </span>
+                </p>
+                <p style={{ margin: '0.5rem 0', fontSize: '0.875rem' }}>
+                  <span style={{ color: 'var(--color-text-muted)' }}>Estado:</span>
+                  <span style={{ 
+                    fontWeight: 600, 
+                    marginLeft: '0.5rem',
+                    padding: '0.2rem 0.5rem',
+                    borderRadius: '4px',
+                    ...getStatusColor(selectedFactura.estado)
+                  }}>
+                    {selectedFactura.estado}
+                  </span>
+                </p>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-text)' }}>ITEMS</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {selectedFactura.items.map(item => (
+                    <div key={item.id} style={{
+                      background: 'var(--color-surface-2)',
+                      padding: '0.75rem',
+                      borderRadius: '6px'
+                    }}>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text)', marginBottom: '0.25rem' }}>
+                        {item.productoNombre}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                        <span>Cant: {item.cantidad}</span>
+                        <span style={{ textAlign: 'right' }}>Precio: {formatNum(item.precioUnitario)}</span>
+                        <span>Costo: {formatNum(item.precioCompra)}</span>
+                        <span style={{ textAlign: 'right', fontWeight: 600, color: '#f5c800' }}>Subtotal: {formatNum(item.subtotal)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{
+                background: 'var(--color-surface-2)',
+                padding: '1rem',
+                borderRadius: '8px',
+                marginBottom: '1.5rem'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                  <span style={{ color: 'var(--color-text-muted)' }}>Subtotal:</span>
+                  <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{formatNum(selectedFactura.subtotal)}</span>
+                </div>
+                {selectedFactura.descuento > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#10b981' }}>
+                    <span>Descuento:</span>
+                    <span style={{ fontWeight: 600 }}>-{formatNum(selectedFactura.descuento)}</span>
                   </div>
-                ))}
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem', borderTop: '1px solid var(--color-border)', paddingTop: '0.5rem' }}>
+                  <span style={{ color: 'var(--color-text-muted)' }}>Total:</span>
+                  <span style={{ fontWeight: 700, color: '#f5c800', fontSize: '1rem' }}>{formatNum(selectedFactura.total)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                  <span style={{ color: 'var(--color-text-muted)' }}>Utilidad:</span>
+                  <span style={{ fontWeight: 600, color: '#16a34a' }}>{formatNum(selectedFactura.utilidad)}</span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {selectedFactura.estado === 'APROBADO' && (
+                  <button
+                    onClick={() => handleAnularFactura(selectedFactura.id)}
+                    style={{
+                      padding: '0.75rem',
+                      background: '#fee2e2',
+                      color: '#dc2626',
+                      border: '1px solid #fecaca',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: '0.875rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    <Trash2 size={16} />
+                    Anular
+                  </button>
+                )}
+                {selectedFactura.estado === 'ANULADO' && (
+                  <div style={{
+                    padding: '0.75rem',
+                    background: 'var(--color-surface-2)',
+                    color: 'var(--color-text-muted)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '8px',
+                    textAlign: 'center',
+                    fontWeight: 600,
+                    fontSize: '0.875rem'
+                  }}>
+                    Factura Anulada
+                  </div>
+                )}
               </div>
             </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <button
-                onClick={() => updateInvoiceStatus(selectedInvoice.id, 'APROBADO')}
-                disabled={selectedInvoice.estado === 'APROBADO'}
-                style={{
-                  padding: '0.75rem',
-                  background: selectedInvoice.estado === 'APROBADO' ? '#e5e7eb' : '#dcfce7',
-                  color: selectedInvoice.estado === 'APROBADO' ? '#9ca3af' : '#16a34a',
-                  border: 'none',
-                  borderRadius: '10px',
-                  cursor: selectedInvoice.estado === 'APROBADO' ? 'default' : 'pointer',
-                  fontWeight: 600,
-                  opacity: selectedInvoice.estado === 'APROBADO' ? 0.6 : 1
-                }}
-              >
-                Aprobar
-              </button>
-              <button
-                onClick={() => updateInvoiceStatus(selectedInvoice.id, 'ANULADO')}
-                disabled={selectedInvoice.estado === 'ANULADO'}
-                style={{
-                  padding: '0.75rem',
-                  background: selectedInvoice.estado === 'ANULADO' ? '#e5e7eb' : '#fee2e2',
-                  color: selectedInvoice.estado === 'ANULADO' ? '#9ca3af' : '#dc2626',
-                  border: 'none',
-                  borderRadius: '10px',
-                  cursor: selectedInvoice.estado === 'ANULADO' ? 'default' : 'pointer',
-                  fontWeight: 600,
-                  opacity: selectedInvoice.estado === 'ANULADO' ? 0.6 : 1
-                }}
-              >
-                Anular
-              </button>
-              <button
-                onClick={() => deleteInvoice(selectedInvoice.id)}
-                style={{
-                  padding: '0.75rem',
-                  background: '#f3f4f6',
-                  color: '#6b7280',
-                  border: 'none',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontWeight: 600
-                }}
-              >
-                Eliminar
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
