@@ -27,7 +27,8 @@ export class FacturaService {
   }) {
     try {
       // Normalizar nombres de campos
-      const clienteId = data.clienteId || data.cliente_id ? parseInt((data.clienteId || data.cliente_id).toString()) : null;
+      const rawClienteId = data.clienteId || data.cliente_id;
+      const clienteId = rawClienteId ? parseInt(rawClienteId.toString()) : null;
       const total = data.total || data.monto_total || 0;
       const subtotal = data.subtotal || total;
 
@@ -83,7 +84,8 @@ export class FacturaService {
 
         // Crear items y descontar stock
         for (const item of data.items) {
-          const productId = parseInt((item.productoId || item.producto_id).toString());
+          const rawProductId = item.productoId || item.producto_id;
+          const productId = rawProductId ? parseInt(rawProductId.toString()) : 0;
           const precioCompra = item.precioCompra || 0;
           const precioUnitario = item.precioUnitario || item.precio || 0;
           const productoNombre = item.productoNombre || '';
