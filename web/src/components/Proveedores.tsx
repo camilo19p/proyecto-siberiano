@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Building2, Search, AlertCircle, Check, Plus, Edit2, Trash2, DollarSign } from 'lucide-react';
+import { Building2, Search, AlertCircle, Check, Plus, Edit2, Trash2, DollarSign, History, FileText, X } from 'lucide-react';
 import { proveedorService, Proveedor } from '../services/api';
 
 const ITEMS_PER_PAGE = 10;
@@ -16,16 +16,22 @@ export function Proveedores() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [showPagoModal, setShowPagoModal] = useState<string | null>(null);
   const [montoPago, setMontoPago] = useState(0);
+  const [showCompraModal, setShowCompraModal] = useState<string | null>(null);
+  const [montoCompra, setMontoCompra] = useState(0);
+  const [descripcionCompra, setDescripcionCompra] = useState('');
+  const [showDetalleModal, setShowDetalleModal] = useState<string | null>(null);
+  const [detalleProveedor, setDetalleProveedor] = useState<Proveedor | null>(null);
+  const [loadingDetalle, setLoadingDetalle] = useState(false);
 
   const [newProveedor, setNewProveedor] = useState({
     nombre: '',
     nit: '',
     telefono: '',
+    telefono2: '',
     email: '',
     ciudad: '',
     direccion: '',
-    deudaActual: 0,
-    diasEnMora: 0
+    contacto: ''
   });
 
   useEffect(() => {
@@ -36,10 +42,8 @@ export function Proveedores() {
     setLoading(true);
     setError(null);
     try {
-      const saved = localStorage.getItem('proveedores_list');
-      if (saved) {
-        setProveedores(JSON.parse(saved));
-      }
+      const data = await proveedorService.getProveedores();
+      setProveedores(data);
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Error al cargar proveedores';
       setError(errorMsg);
@@ -48,49 +52,37 @@ export function Proveedores() {
     }
   };
 
-  const saveToStorage = (data: Proveedor[]) => {
-    localStorage.setItem('proveedores_list', JSON.stringify(data));
-  };
-
   const handleSaveProveedor = async () => {
-    if (!newProveedor.nombre || !newProveedor.nit || !newProveedor.direccion) {
-      setError('Completa los campos obligatorios: Nombre, NIT y Direcci髇');
+    if (!newProveedor.nombre || !newProveedor.direccion) {
+      setError('Completa los campos obligatorios: Nombre y Direcci贸n');
       return;
     }
 
     try {
       setError(null);
       if (selectedProveedor) {
-        const updated = proveedores.map(p =>
-          p.id === selectedProveedor.id
-            ? { ...selectedProveedor, ...newProveedor, estado: selectedProveedor.estado }
-            : p
-        );
-        setProveedores(updated);
-        saveToStorage(updated);
+        await proveedorService.updateProveedor(selectedProveedor.id.toString(), newProveedor);
       } else {
-        const proveedor: Proveedor = {
-          id: `proveedor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        await proveedorService.createProveedor({
           ...newProveedor,
-          estado: 'ACTIVO'
-        };
-        const updated = [...proveedores, proveedor];
-        setProveedores(updated);
-        saveToStorage(updated);
+          estado: 'ACTIVO',
+          deudaActual: 0,
+          diasEnMora: 0
+        });
       }
       resetForm();
+      loadProveedores();
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Error al guardar proveedor';
       setError(errorMsg);
     }
   };
 
-  const handleDeleteProveedor = (id: string) => {
+  const handleDeleteProveedor = async (id: string) => {
     try {
       setError(null);
-      const updated = proveedores.filter(p => p.id !== id);
-      setProveedores(updated);
-      saveToStorage(updated);
+      await proveedorService.deleteProveedor(id);
+      loadProveedores();
       setConfirmDelete(null);
       setSelectedProveedor(null);
     } catch (e) {
@@ -99,29 +91,58 @@ export function Proveedores() {
     }
   };
 
-  const handleRegistrarPago = (id: string) => {
+  const handleRegistrarPago = async (id: string) => {
     try {
       if (montoPago <= 0) {
-        setError('Ingresa un monto v醠ido');
+        setError('Ingresa un monto v谩lido');
         return;
       }
 
-      const updated = proveedores.map(p => {
-        if (p.id === id) {
-          const nuevaDeuda = Math.max(0, p.deudaActual - montoPago);
-          const diasEnMora = nuevaDeuda === 0 ? 0 : p.diasEnMora;
-          return { ...p, deudaActual: nuevaDeuda, diasEnMora };
-        }
-        return p;
-      });
-      setProveedores(updated);
-      saveToStorage(updated);
+      await proveedorService.registrarPago(id, montoPago);
       setShowPagoModal(null);
       setMontoPago(0);
       setError(null);
+      loadProveedores();
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Error al registrar pago';
       setError(errorMsg);
+    }
+  };
+
+  const handleRegistrarCompra = async (id: string) => {
+    try {
+      if (montoCompra <= 0) {
+        setError('Ingresa un monto v谩lido');
+        return;
+      }
+      if (!descripcionCompra.trim()) {
+        setError('Ingresa una descripci贸n');
+        return;
+      }
+
+      await proveedorService.registrarCompra(id, montoCompra, descripcionCompra);
+      setShowCompraModal(null);
+      setMontoCompra(0);
+      setDescripcionCompra('');
+      setError(null);
+      loadProveedores();
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : 'Error al registrar compra';
+      setError(errorMsg);
+    }
+  };
+
+  const handleVerDetalle = async (id: string) => {
+    try {
+      setLoadingDetalle(true);
+      setShowDetalleModal(id);
+      const data = await proveedorService.getProveedorById(id);
+      setDetalleProveedor(data);
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : 'Error al cargar detalle';
+      setError(errorMsg);
+    } finally {
+      setLoadingDetalle(false);
     }
   };
 
@@ -132,11 +153,11 @@ export function Proveedores() {
       nombre: '',
       nit: '',
       telefono: '',
+      telefono2: '',
       email: '',
       ciudad: '',
       direccion: '',
-      deudaActual: 0,
-      diasEnMora: 0
+      contacto: ''
     });
   };
 
@@ -144,13 +165,13 @@ export function Proveedores() {
     setSelectedProveedor(proveedor);
     setNewProveedor({
       nombre: proveedor.nombre,
-      nit: proveedor.nit,
-      telefono: proveedor.telefono,
+      nit: proveedor.nit || '',
+      telefono: proveedor.telefono || '',
+      telefono2: proveedor.telefono2 || '',
       email: proveedor.email || '',
       ciudad: proveedor.ciudad || '',
-      direccion: proveedor.direccion,
-      deudaActual: proveedor.deudaActual,
-      diasEnMora: proveedor.diasEnMora
+      direccion: proveedor.direccion || '',
+      contacto: proveedor.contacto || ''
     });
     setShowForm(true);
   };
@@ -159,11 +180,12 @@ export function Proveedores() {
     return proveedores.filter(p => {
       const matchSearch = search === '' ||
         p.nombre.toLowerCase().includes(search.toLowerCase()) ||
-        p.nit.includes(search) ||
+        (p.nit && p.nit.includes(search)) ||
         (p.telefono && p.telefono.includes(search));
       const matchEstado =
         filterEstado === 'TODOS' ||
-        (filterEstado === 'EN_MORA' ? p.diasEnMora > 0 : p.estado === filterEstado);
+        (filterEstado === 'EN_MORA' ? (p.diasMora || p.diasEnMora || 0) > 0 : 
+         p.activo !== undefined ? p.activo === (filterEstado === 'ACTIVO') : true);
       return matchSearch && matchEstado;
     });
   }, [proveedores, search, filterEstado]);
@@ -180,15 +202,17 @@ export function Proveedores() {
 
   const stats = {
     total: proveedores.length,
-    activos: proveedores.filter(p => p.estado === 'ACTIVO').length,
-    deudaTotal: proveedores.reduce((sum, p) => sum + p.deudaActual, 0),
-    enMora: proveedores.filter(p => p.diasEnMora > 0).length
+    activos: proveedores.filter(p => p.activo !== false).length,
+    deudaTotal: proveedores.reduce((sum, p) => sum + (p.deudaActual || 0), 0),
+    enMora: proveedores.filter(p => (p.diasMora || p.diasEnMora || 0) > 0).length
   };
+
+  const formatNum = (n: number) => '$' + n.toLocaleString('es-CO');
 
   return (
     <div>
       <h1 style={{ margin: '0 0 2rem 0', fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <Building2 size={32} /> Gestion de Proveedores
+        <Building2 size={32} /> Gesti贸n de Proveedores
       </h1>
 
       {error && (
@@ -213,7 +237,7 @@ export function Proveedores() {
 
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '1.5rem', textAlign: 'center' }}>
           <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>DEUDA TOTAL</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#dc2626' }}>${stats.deudaTotal.toLocaleString()}</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#dc2626' }}>{formatNum(stats.deudaTotal)}</p>
         </div>
 
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '1.5rem', textAlign: 'center' }}>
@@ -289,7 +313,7 @@ export function Proveedores() {
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>NIT / CC *</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>NIT</label>
               <input
                 type="text"
                 value={newProveedor.nit}
@@ -299,12 +323,22 @@ export function Proveedores() {
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Telefono *</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Tel茅fono</label>
               <input
                 type="tel"
                 value={newProveedor.telefono}
                 onChange={e => setNewProveedor({...newProveedor, telefono: e.target.value})}
-                placeholder="Telefono"
+                placeholder="Tel茅fono"
+                style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Tel茅fono 2</label>
+              <input
+                type="tel"
+                value={newProveedor.telefono2}
+                onChange={e => setNewProveedor({...newProveedor, telefono2: e.target.value})}
+                placeholder="Tel茅fono alternativo"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
@@ -314,7 +348,7 @@ export function Proveedores() {
                 type="email"
                 value={newProveedor.email}
                 onChange={e => setNewProveedor({...newProveedor, email: e.target.value})}
-                placeholder="Correo electronico"
+                placeholder="Correo electr贸nico"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
@@ -329,32 +363,22 @@ export function Proveedores() {
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Direccion *</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Direcci贸n *</label>
               <input
                 type="text"
                 value={newProveedor.direccion}
                 onChange={e => setNewProveedor({...newProveedor, direccion: e.target.value})}
-                placeholder="Direccion completa"
+                placeholder="Direcci贸n completa"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Deuda Actual</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Contacto</label>
               <input
-                type="number"
-                value={newProveedor.deudaActual}
-                onChange={e => setNewProveedor({...newProveedor, deudaActual: parseFloat(e.target.value) || 0})}
-                placeholder="0"
-                style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Dias de Mora</label>
-              <input
-                type="number"
-                value={newProveedor.diasEnMora}
-                onChange={e => setNewProveedor({...newProveedor, diasEnMora: parseInt(e.target.value) || 0})}
-                placeholder="0"
+                type="text"
+                value={newProveedor.contacto}
+                onChange={e => setNewProveedor({...newProveedor, contacto: e.target.value})}
+                placeholder="Persona de contacto"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
@@ -411,10 +435,10 @@ export function Proveedores() {
                   <tr style={{ background: 'var(--color-surface-2)', borderBottom: '1px solid var(--color-border)' }}>
                     <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>NOMBRE</th>
                     <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>NIT</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>TELEFONO</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>DIRECCION</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>TEL脡FONO</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>DIRECCI脫N</th>
                     <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>DEUDA</th>
-                    <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>DIAS EN MORA</th>
+                    <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>D脥AS MORA</th>
                     <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>ESTADO</th>
                     <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>ACCIONES</th>
                   </tr>
@@ -432,19 +456,19 @@ export function Proveedores() {
                         {p.nombre}
                       </td>
                       <td style={{ padding: '1rem', fontSize: '0.875rem', color: 'var(--color-text)' }}>
-                        {p.nit}
+                        {p.nit || '-'}
                       </td>
                       <td style={{ padding: '1rem', fontSize: '0.875rem', color: 'var(--color-text)' }}>
-                        {p.telefono}
+                        {p.telefono || '-'}
                       </td>
                       <td style={{ padding: '1rem', fontSize: '0.875rem', color: 'var(--color-text)' }}>
-                        {p.direccion}
+                        {p.direccion || '-'}
                       </td>
-                      <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: p.deudaActual > 0 ? '#dc2626' : '#16a34a' }}>
-                        ${p.deudaActual.toLocaleString()}
+                      <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: (p.deudaActual || 0) > 0 ? '#dc2626' : '#16a34a' }}>
+                        {formatNum(p.deudaActual || 0)}
                       </td>
-                      <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: p.diasEnMora > 0 ? '#dc2626' : '#16a34a' }}>
-                        {p.diasEnMora}
+                      <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: (p.diasMora || p.diasEnMora || 0) > 0 ? '#dc2626' : '#16a34a' }}>
+                        {p.diasMora || p.diasEnMora || 0}
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'center' }}>
                         <span style={{
@@ -453,16 +477,34 @@ export function Proveedores() {
                           borderRadius: '6px',
                           fontSize: '0.75rem',
                           fontWeight: 700,
-                          background: p.estado === 'ACTIVO' ? '#dcfce7' : '#fee2e2',
-                          color: p.estado === 'ACTIVO' ? '#16a34a' : '#dc2626'
+                          background: p.activo !== false ? '#dcfce7' : '#fee2e2',
+                          color: p.activo !== false ? '#16a34a' : '#dc2626'
                         }}>
-                          {p.estado === 'ACTIVO' ? '[+] ACTIVO' : '[-] INACTIVO'}
+                          {p.activo !== false ? '[+] ACTIVO' : '[-] INACTIVO'}
                         </span>
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'center', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                        {p.deudaActual > 0 && (
+                        <button
+                          onClick={() => handleVerDetalle(p.id.toString())}
+                          title="Ver detalle"
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            background: '#f0f9ff',
+                            color: '#0369a1',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}
+                        >
+                          <FileText size={14} />
+                        </button>
+                        {(p.deudaActual || 0) > 0 && (
                           <button
-                            onClick={() => setShowPagoModal(p.id)}
+                            onClick={() => setShowPagoModal(p.id.toString())}
                             title="Registrar pago"
                             style={{
                               padding: '0.5rem 0.75rem',
@@ -481,6 +523,24 @@ export function Proveedores() {
                           </button>
                         )}
                         <button
+                          onClick={() => setShowCompraModal(p.id.toString())}
+                          title="Registrar compra"
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            background: '#fef3c7',
+                            color: '#d97706',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}
+                        >
+                          <History size={14} />
+                        </button>
+                        <button
                           onClick={() => handleEdit(p)}
                           style={{
                             padding: '0.5rem 0.75rem',
@@ -498,7 +558,7 @@ export function Proveedores() {
                           <Edit2 size={14} />
                         </button>
                         <button
-                          onClick={() => setConfirmDelete(p.id)}
+                          onClick={() => setConfirmDelete(p.id.toString())}
                           style={{
                             padding: '0.5rem 0.75rem',
                             background: '#fee2e2',
@@ -540,7 +600,7 @@ export function Proveedores() {
                   Anterior
                 </button>
                 <span style={{ fontWeight: 600, color: 'var(--color-text)', minWidth: '80px', textAlign: 'center' }}>
-                  Pagina {currentPage} de {totalPages}
+                  P谩gina {currentPage} de {totalPages}
                 </span>
                 <button
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
@@ -584,11 +644,11 @@ export function Proveedores() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
               <AlertCircle size={24} color="#dc2626" />
               <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text)' }}>
-                Confirmar eliminacion
+                Confirmar eliminaci贸n
               </h3>
             </div>
             <p style={{ color: 'var(--color-text)', marginBottom: '1.5rem' }}>
-              縀st醩 seguro de que deseas eliminar este proveedor? Esta acci髇 no se puede deshacer.
+              驴Est谩s seguro de que deseas eliminar este proveedor? Esta acci贸n no se puede deshacer.
             </p>
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button
@@ -604,7 +664,7 @@ export function Proveedores() {
                   fontWeight: 700
                 }}
               >
-                Si, eliminar
+                S铆, eliminar
               </button>
               <button
                 onClick={() => setConfirmDelete(null)}
@@ -697,6 +757,237 @@ export function Proveedores() {
                 Cancelar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de registro de compra */}
+      {showCompraModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '20px',
+            padding: '2rem',
+            maxWidth: '400px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+              <History size={24} color="#d97706" />
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text)' }}>
+                Registrar compra
+              </h3>
+            </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>
+                Descripci贸n
+              </label>
+              <input
+                type="text"
+                value={descripcionCompra}
+                onChange={e => setDescripcionCompra(e.target.value)}
+                placeholder="Descripci贸n de la compra"
+                style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
+              />
+            </div>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>
+                Monto
+              </label>
+              <input
+                type="number"
+                value={montoCompra}
+                onChange={e => setMontoCompra(parseFloat(e.target.value) || 0)}
+                placeholder="0"
+                style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                onClick={() => handleRegistrarCompra(showCompraModal)}
+                style={{
+                  flex: 1,
+                  padding: '0.875rem',
+                  background: '#d97706',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 700
+                }}
+              >
+                Registrar
+              </button>
+              <button
+                onClick={() => {
+                  setShowCompraModal(null);
+                  setMontoCompra(0);
+                  setDescripcionCompra('');
+                }}
+                style={{
+                  flex: 1,
+                  padding: '0.875rem',
+                  background: 'var(--color-surface-2)',
+                  color: 'var(--color-text)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 700
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de detalle */}
+      {showDetalleModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '20px',
+            padding: '2rem',
+            maxWidth: '600px',
+            maxHeight: '80vh',
+            overflow: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text)' }}>
+                Detalle del Proveedor
+              </h3>
+              <button
+                onClick={() => { setShowDetalleModal(null); setDetalleProveedor(null); }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-text)',
+                  cursor: 'pointer',
+                  padding: '0.5rem'
+                }}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {loadingDetalle ? (
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>
+                Cargando informaci贸n...
+              </div>
+            ) : detalleProveedor ? (
+              <div>
+                {/* Informaci贸n del proveedor */}
+                <div style={{ background: 'var(--color-surface-2)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                  <h4 style={{ margin: '0 0 1rem 0', color: 'var(--color-text)' }}>Informaci贸n</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.875rem' }}>
+                    <div><strong>Nombre:</strong> {detalleProveedor.nombre}</div>
+                    <div><strong>NIT:</strong> {detalleProveedor.nit || '-'}</div>
+                    <div><strong>Tel茅fono:</strong> {detalleProveedor.telefono || '-'}</div>
+                    <div><strong>Email:</strong> {detalleProveedor.email || '-'}</div>
+                    <div><strong>Ciudad:</strong> {detalleProveedor.ciudad || '-'}</div>
+                    <div><strong>Direcci贸n:</strong> {detalleProveedor.direccion || '-'}</div>
+                    <div><strong>Contacto:</strong> {detalleProveedor.contacto || '-'}</div>
+                    <div><strong>Estado:</strong> {detalleProveedor.activo !== false ? 'ACTIVO' : 'INACTIVO'}</div>
+                  </div>
+                </div>
+
+                {/* Deuda */}
+                <div style={{ background: (detalleProveedor.deudaActual || 0) > 0 ? '#fef3c7' : '#dcfce7', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                  <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--color-text)' }}>Estado de Cuenta</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', fontSize: '0.875rem' }}>
+                    <div>
+                      <div style={{ color: 'var(--color-text-muted)' }}>Deuda Total</div>
+                      <div style={{ fontWeight: 700, color: '#dc2626' }}>{formatNum(detalleProveedor.deudaTotal || 0)}</div>
+                    </div>
+                    <div>
+                      <div style={{ color: 'var(--color-text-muted)' }}>Total Pagado</div>
+                      <div style={{ fontWeight: 700, color: '#16a34a' }}>{formatNum(detalleProveedor.totalPagado || 0)}</div>
+                    </div>
+                    <div>
+                      <div style={{ color: 'var(--color-text-muted)' }}>Deuda Actual</div>
+                      <div style={{ fontWeight: 700, color: (detalleProveedor.deudaActual || 0) > 0 ? '#dc2626' : '#16a34a' }}>{formatNum(detalleProveedor.deudaActual || 0)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Compras */}
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h4 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-text)' }}>Compras Registradas</h4>
+                  <div style={{ background: 'var(--color-surface-2)', padding: '1rem', borderRadius: '8px' }}>
+                    {detalleProveedor.compras && detalleProveedor.compras.length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        {detalleProveedor.compras.map((compra: any, idx: number) => (
+                          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', background: 'var(--color-surface)', borderRadius: '4px' }}>
+                            <div>
+                              <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{compra.descripcion}</div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                                {new Date(compra.fecha).toLocaleDateString('es-CO')}
+                              </div>
+                            </div>
+                            <div style={{ fontWeight: 700, color: '#dc2626' }}>
+                              {formatNum(compra.monto)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '1rem' }}>
+                        No hay compras registradas
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Pagos */}
+                <div>
+                  <h4 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-text)' }}>Pagos Realizados</h4>
+                  <div style={{ background: 'var(--color-surface-2)', padding: '1rem', borderRadius: '8px' }}>
+                    {detalleProveedor.pagos && detalleProveedor.pagos.length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        {detalleProveedor.pagos.map((pago: any, idx: number) => (
+                          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', background: 'var(--color-surface)', borderRadius: '4px' }}>
+                            <div>
+                              <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                                {new Date(pago.fecha).toLocaleDateString('es-CO')}
+                              </div>
+                              {pago.nota && <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{pago.nota}</div>}
+                            </div>
+                            <div style={{ fontWeight: 700, color: '#16a34a' }}>
+                              {formatNum(pago.monto)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '1rem' }}>
+                        No hay pagos registrados
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>
+                No se pudo cargar la informaci贸n
+              </div>
+            )}
           </div>
         </div>
       )}

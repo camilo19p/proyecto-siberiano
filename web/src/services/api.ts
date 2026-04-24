@@ -186,6 +186,12 @@ export interface Cliente {
   saldo: number;
   estado: 'ACTIVO' | 'INACTIVO';
   cupoUtilizado?: number;
+  deudaTotal?: number;
+  totalPagado?: number;
+  deudaActual?: number;
+  diasMora?: number;
+  facturas?: any[];
+  pagos?: any[];
 }
 
 const CLIENTES_KEY = 'clientes';
@@ -194,6 +200,30 @@ export const clienteService = {
   async getClientes(): Promise<Cliente[]> {
     try {
       const res = await api.get('/clientes');
+      return res.data;
+    } catch (err) {
+      throw new Error(toErrorMessage(err));
+    }
+  },
+  async getClienteById(id: string): Promise<Cliente> {
+    try {
+      const res = await api.get(`/clientes/${id}`);
+      return res.data;
+    } catch (err) {
+      throw new Error(toErrorMessage(err));
+    }
+  },
+  async getStats(): Promise<{ totalClientes: number; clientesActivos: number; clientesConDeuda: number; totalDeuda: number }> {
+    try {
+      const res = await api.get('/clientes/stats');
+      return res.data;
+    } catch (err) {
+      throw new Error(toErrorMessage(err));
+    }
+  },
+  async getClientesConDeuda(): Promise<Cliente[]> {
+    try {
+      const res = await api.get('/clientes/deuda');
       return res.data;
     } catch (err) {
       throw new Error(toErrorMessage(err));
@@ -231,6 +261,14 @@ export const clienteService = {
   async updateEstado(id: string, estado: boolean): Promise<Cliente> {
     try {
       const res = await api.patch(`/clientes/${id}/estado`, { estado });
+      return res.data;
+    } catch (err) {
+      throw new Error(toErrorMessage(err));
+    }
+  },
+  async registrarPago(id: string, monto: number, nota?: string): Promise<any> {
+    try {
+      const res = await api.post(`/clientes/${id}/pagos`, { clienteId: parseInt(id), monto, nota });
       return res.data;
     } catch (err) {
       throw new Error(toErrorMessage(err));
@@ -412,18 +450,38 @@ export interface CierreCaja {
 }
 
 export interface Proveedor {
-  id: string;
+  id: number | string;
   nombre: string;
-  nit: string;
-  telefono: string;
+  nit?: string;
+  telefono?: string;
+  telefono2?: string;
   email?: string;
   ciudad?: string;
-  direccion: string;
-  deudaActual: number;
-  diasEnMora: number;
-  estado: 'ACTIVO' | 'INACTIVO';
+  direccion?: string;
+  contacto?: string;
+  deudaActual?: number;
+  deudaTotal?: number;
+  totalPagado?: number;
+  diasEnMora?: number;
+  diasMora?: number;
+  activo?: boolean;
+  estado?: 'ACTIVO' | 'INACTIVO';
   createdAt?: string;
   updatedAt?: string;
+  compras?: Array<{
+    id: number;
+    proveedorId: number;
+    monto: number;
+    descripcion: string;
+    fecha: string;
+  }>;
+  pagos?: Array<{
+    id: number;
+    proveedorId: number;
+    monto: number;
+    fecha: string;
+    nota?: string;
+  }>;
 }
 
 export const cajaService = {
@@ -514,9 +572,25 @@ export const proveedorService = {
       throw new Error(toErrorMessage(err));
     }
   },
-  async registrarPago(id: string, monto: number): Promise<Proveedor> {
+  async registrarPago(id: string, monto: number, nota?: string): Promise<any> {
     try {
-      const res = await api.post(`/proveedores/${id}/pago`, { monto });
+      const res = await api.post(`/proveedores/${id}/pagos`, { monto, nota });
+      return res.data;
+    } catch (err) {
+      throw new Error(toErrorMessage(err));
+    }
+  },
+  async getProveedorById(id: string): Promise<Proveedor> {
+    try {
+      const res = await api.get(`/proveedores/${id}`);
+      return res.data;
+    } catch (err) {
+      throw new Error(toErrorMessage(err));
+    }
+  },
+  async registrarCompra(id: string, monto: number, descripcion: string, fecha?: string): Promise<any> {
+    try {
+      const res = await api.post(`/proveedores/${id}/compras`, { monto, descripcion, fecha });
       return res.data;
     } catch (err) {
       throw new Error(toErrorMessage(err));

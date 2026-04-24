@@ -332,11 +332,13 @@ export function POS() {
       // Sincronizar venta con el servidor
       const facturaData = {
         numero: `POS-${Date.now()}`,
-        cliente_id: selectedCliente?.id ? selectedCliente.id.toString() : undefined,
+        clienteId: selectedCliente?.id ? parseInt(selectedCliente.id) : undefined,
         monto_total: total,
-        estado: 'COMPLETADA',
+        estado: 'APROBADO',
         userId,
         iva: 0,
+        credito: paymentMethod === 'FIADO',
+        metodoPago: paymentMethod,
         items: cart.map(item => ({
           producto_id: item.product.id.toString(),
           cantidad: item.quantity,
@@ -366,23 +368,13 @@ export function POS() {
       else if (paymentMethod === 'FIADO') newDeps.fiado += total;
       setDepositos(newDeps);
 
-      // Actualizar deuda del cliente si es fiado
-      if (paymentMethod === 'FIADO' && selectedCliente) {
-        const clientesActualizados = clientes.map(c =>
-          c.id === selectedCliente.id 
-            ? { ...c, saldo: c.saldo + total }
-            : c
-        );
-        setClientes(clientesActualizados);
-        localStorage.setItem('clientes_list', JSON.stringify(clientesActualizados));
-      }
-
       setLastSale(newSale);
       setShowTicket(true);
-      showToast(`Venta completada - Factura #${facturaResponse.numero}`);
+      showToast(`Venta completada - Factura #${facturaResponse.numero || 'N/A'}`);
       setCart([]);
       setAmountReceived(0);
       setDescuento(0);
+      setSelectedCliente(undefined);
     } catch (error) {
       showToast(`Error al registrar venta: ${(error as Error).message}`, 'error');
       console.error('Error en venta:', error);
@@ -399,7 +391,7 @@ export function POS() {
 
   const handleConfirmSale = async () => {
     if (paymentMethod === 'FIADO' && !selectedCliente) {
-      showToast('Selecciona un cliente para venta a credito', 'error');
+      showToast('Debes seleccionar un cliente para pagar con FIADO', 'error');
       return;
     }
     if (paymentMethod === 'EFECTIVO' && isAmountInsufficient) {
@@ -660,163 +652,163 @@ export function POS() {
             </div>
           )}
         </div>
+      </div>
 
-        {/* Carrito */}
-        <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', overflow: 'hidden', flex: 1 }}>
-          {/* Header */}
-          <div style={{ padding: '1rem', background: 'var(--color-surface-2)', borderBottom: '1px solid var(--color-border)' }}>
-            <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>Carrito</h2>
-          </div>
+      {/* Carrito */}
+      <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', overflow: 'hidden', flex: 1 }}>
+        {/* Header */}
+        <div style={{ padding: '1rem', background: 'var(--color-surface-2)', borderBottom: '1px solid var(--color-border)' }}>
+          <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>Carrito</h2>
+        </div>
 
-          {/* Items */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {cart.length === 0 ? (
-              <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', paddingTop: '2rem' }}>
-                <ShoppingCart size={32} style={{ opacity: 0.5, margin: '0 auto 0.5rem' }} />
-                <p style={{ margin: 0, fontSize: '0.875rem' }}>Carrito vac�o</p>
-              </div>
-            ) : (
-              cart.map(item => (
-                <div key={item.product.id} style={{ background: 'var(--color-surface-2)', padding: '0.75rem', borderRadius: '6px' }}>
-                  <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.25rem' }}>{item.product.name}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <button onClick={() => handleDecreaseQuantity(item.product.id)} style={{ padding: '0.25rem 0.5rem', background: '#f5c800', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>-</button>
-                      <span style={{ minWidth: '2rem', textAlign: 'center', fontWeight: 600 }}>{item.quantity}</span>
-                      <button onClick={() => handleIncreaseQuantity(item.product.id)} style={{ padding: '0.25rem 0.5rem', background: '#f5c800', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>+</button>
-                    </div>
-                    <button onClick={() => handleRemoveFromCart(item.product.id)} style={{ padding: '0.25rem 0.5rem', background: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                      <Trash2 size={14} />
-                    </button>
+        {/* Items */}
+        <div style={{ flex: 1, overflow: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {cart.length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', paddingTop: '2rem' }}>
+              <ShoppingCart size={32} style={{ opacity: 0.5, margin: '0 auto 0.5rem' }} />
+              <p style={{ margin: 0, fontSize: '0.875rem' }}>Carrito vac�o</p>
+            </div>
+          ) : (
+            cart.map(item => (
+              <div key={item.product.id} style={{ background: 'var(--color-surface-2)', padding: '0.75rem', borderRadius: '6px' }}>
+                <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.25rem' }}>{item.product.name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <button onClick={() => handleDecreaseQuantity(item.product.id)} style={{ padding: '0.25rem 0.5rem', background: '#f5c800', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>-</button>
+                    <span style={{ minWidth: '2rem', textAlign: 'center', fontWeight: 600 }}>{item.quantity}</span>
+                    <button onClick={() => handleIncreaseQuantity(item.product.id)} style={{ padding: '0.25rem 0.5rem', background: '#f5c800', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>+</button>
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textAlign: 'right' }}>
-                    {formatNum(item.subtotal)}
-                  </div>
+                  <button onClick={() => handleRemoveFromCart(item.product.id)} style={{ padding: '0.25rem 0.5rem', background: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                    <Trash2 size={14} />
+                  </button>
                 </div>
-              ))
-            )}
-          </div>
-
-          {/* Descuento y Totales */}
-          <div style={{ padding: '1rem', background: 'var(--color-surface-2)', borderTop: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>Descuento %</label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={descuento}
-                onChange={(e) => setDescuento(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: '4px',
-                  fontSize: '0.875rem',
-                  background: 'var(--color-surface)',
-                  color: 'var(--color-text)'
-                }}
-              />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
-              <span>Subtotal:</span>
-              <span style={{ fontWeight: 600 }}>{formatNum(subtotal)}</span>
-            </div>
-            {descuento > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: '#10b981' }}>
-                <span>Descuento ({descuento}%):</span>
-                <span style={{ fontWeight: 600 }}>-{formatNum(descuentoMonto)}</span>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textAlign: 'right' }}>
+                  {formatNum(item.subtotal)}
+                </div>
               </div>
-            )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 700, paddingTop: '0.5rem', borderTop: '1px solid var(--color-border)' }}>
-              <span>Total:</span>
-              <span style={{ color: '#f5c800' }}>{formatNum(total)}</span>
+            ))
+          )}
+        </div>
+
+        {/* Descuento y Totales */}
+        <div style={{ padding: '1rem', background: 'var(--color-surface-2)', borderTop: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>Descuento %</label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={descuento}
+              onChange={(e) => setDescuento(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+              style={{
+                width: '100%',
+                padding: '0.5rem',
+                border: '1px solid var(--color-border)',
+                borderRadius: '4px',
+                fontSize: '0.875rem',
+                background: 'var(--color-surface)',
+                color: 'var(--color-text)'
+              }}
+            />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+            <span>Subtotal:</span>
+            <span style={{ fontWeight: 600 }}>{formatNum(subtotal)}</span>
+          </div>
+          {descuento > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: '#10b981' }}>
+              <span>Descuento ({descuento}%):</span>
+              <span style={{ fontWeight: 600 }}>-{formatNum(descuentoMonto)}</span>
             </div>
-          </div>
-
-          {/* Metodo de pago - Botones */}
-          <div style={{ padding: '1rem', borderTop: '1px solid var(--color-border)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-            {(['EFECTIVO', 'NEQUI', 'TRANSFERENCIA', 'FIADO'] as const).map((method) => {
-              const isActive = paymentMethod === method;
-              const colors = getPaymentMethodColor(method);
-              return (
-                <button
-                  key={method}
-                  onClick={() => setPaymentMethod(method)}
-                  style={{
-                    padding: '0.5rem',
-                    background: isActive ? colors.bg : 'var(--color-surface)',
-                    color: isActive ? colors.text : 'var(--color-text)',
-                    border: `2px solid ${isActive ? colors.bg : 'var(--color-border)'}`,
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    fontSize: '0.75rem'
-                  }}
-                >
-                  {method}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Botones */}
-          <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', borderTop: '1px solid var(--color-border)' }}>
-            <button
-              onClick={() => setShowConfirmation(true)}
-              disabled={cart.length === 0}
-              style={{
-                padding: '0.75rem',
-                background: cart.length === 0 ? '#ccc' : '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: cart.length === 0 ? 'not-allowed' : 'pointer',
-                fontWeight: 600,
-                fontSize: '0.875rem'
-              }}
-            >
-              Pagar (F2)
-            </button>
-            <button
-              onClick={handleClearCart}
-              disabled={cart.length === 0}
-              style={{
-                padding: '0.75rem',
-                background: cart.length === 0 ? '#ccc' : '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: cart.length === 0 ? 'not-allowed' : 'pointer',
-                fontWeight: 600,
-                fontSize: '0.875rem'
-              }}
-            >
-              Limpiar (ESC)
-            </button>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 700, paddingTop: '0.5rem', borderTop: '1px solid var(--color-border)' }}>
+            <span>Total:</span>
+            <span style={{ color: '#f5c800' }}>{formatNum(total)}</span>
           </div>
         </div>
 
-        {/* Panel de Depositos */}
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', padding: '1rem' }}>
-          <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)' }}>Depositos del dia</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.8rem' }}>
-            <div style={{ background: 'var(--color-surface-2)', borderRadius: '6px', padding: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--color-text-muted)' }}>EFECTIVO</span>
-              <span style={{ color: '#F5C800', fontWeight: 700 }}>{formatNum(depositos.efectivo)}</span>
-            </div>
-            <div style={{ background: 'var(--color-surface-2)', borderRadius: '6px', padding: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--color-text-muted)' }}>NEQUI</span>
-              <span style={{ color: '#7C3AED', fontWeight: 700 }}>{formatNum(depositos.nequi)}</span>
-            </div>
-            <div style={{ background: 'var(--color-surface-2)', borderRadius: '6px', padding: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--color-text-muted)' }}>TRANSFERENCIA</span>
-              <span style={{ color: '#2563EB', fontWeight: 700 }}>{formatNum(depositos.transferencia)}</span>
-            </div>
-            <div style={{ background: 'var(--color-surface-2)', borderRadius: '6px', padding: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--color-text-muted)' }}>FIADO</span>
-              <span style={{ color: '#DC2626', fontWeight: 700 }}>{formatNum(depositos.fiado)}</span>
-            </div>
+        {/* Metodo de pago - Botones */}
+        <div style={{ padding: '1rem', borderTop: '1px solid var(--color-border)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+          {(['EFECTIVO', 'NEQUI', 'TRANSFERENCIA', 'FIADO'] as const).map((method) => {
+            const isActive = paymentMethod === method;
+            const colors = getPaymentMethodColor(method);
+            return (
+              <button
+                key={method}
+                onClick={() => setPaymentMethod(method)}
+                style={{
+                  padding: '0.5rem',
+                  background: isActive ? colors.bg : 'var(--color-surface)',
+                  color: isActive ? colors.text : 'var(--color-text)',
+                  border: `2px solid ${isActive ? colors.bg : 'var(--color-border)'}`,
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '0.75rem'
+                }}
+              >
+                {method}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Botones */}
+        <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', borderTop: '1px solid var(--color-border)' }}>
+          <button
+            onClick={() => setShowConfirmation(true)}
+            disabled={cart.length === 0}
+            style={{
+              padding: '0.75rem',
+              background: cart.length === 0 ? '#ccc' : '#10b981',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: cart.length === 0 ? 'not-allowed' : 'pointer',
+              fontWeight: 600,
+              fontSize: '0.875rem'
+            }}
+          >
+            Pagar (F2)
+          </button>
+          <button
+            onClick={handleClearCart}
+            disabled={cart.length === 0}
+            style={{
+              padding: '0.75rem',
+              background: cart.length === 0 ? '#ccc' : '#dc2626',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: cart.length === 0 ? 'not-allowed' : 'pointer',
+              fontWeight: 600,
+              fontSize: '0.875rem'
+            }}
+          >
+            Limpiar (ESC)
+          </button>
+        </div>
+      </div>
+
+      {/* Panel de Depositos */}
+      <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', padding: '1rem' }}>
+        <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)' }}>Depositos del dia</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.8rem' }}>
+          <div style={{ background: 'var(--color-surface-2)', borderRadius: '6px', padding: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ color: 'var(--color-text-muted)' }}>EFECTIVO</span>
+            <span style={{ color: '#F5C800', fontWeight: 700 }}>{formatNum(depositos.efectivo)}</span>
+          </div>
+          <div style={{ background: 'var(--color-surface-2)', borderRadius: '6px', padding: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ color: 'var(--color-text-muted)' }}>NEQUI</span>
+            <span style={{ color: '#7C3AED', fontWeight: 700 }}>{formatNum(depositos.nequi)}</span>
+          </div>
+          <div style={{ background: 'var(--color-surface-2)', borderRadius: '6px', padding: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ color: 'var(--color-text-muted)' }}>TRANSFERENCIA</span>
+            <span style={{ color: '#2563EB', fontWeight: 700 }}>{formatNum(depositos.transferencia)}</span>
+          </div>
+          <div style={{ background: 'var(--color-surface-2)', borderRadius: '6px', padding: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ color: 'var(--color-text-muted)' }}>FIADO</span>
+            <span style={{ color: '#DC2626', fontWeight: 700 }}>{formatNum(depositos.fiado)}</span>
           </div>
         </div>
       </div>

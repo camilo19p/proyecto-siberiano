@@ -1,13 +1,13 @@
 import { Request, Response } from 'express';
-import { ClienteService } from '../services/ClienteService';
+import { ProveedorService } from '../services/ProveedorService';
 
-export class ClienteController {
-  private service = new ClienteService();
+export class ProveedorController {
+  private service = new ProveedorService();
 
   async create(req: Request, res: Response) {
     try {
-      const cliente = await this.service.create(req.body);
-      res.status(201).json(cliente);
+      const proveedor = await this.service.create(req.body);
+      res.status(201).json(proveedor);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
     }
@@ -15,8 +15,8 @@ export class ClienteController {
 
   async getAll(req: Request, res: Response) {
     try {
-      const clientes = await this.service.getAll();
-      res.json(clientes);
+      const proveedores = await this.service.getAll();
+      res.json(proveedores);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }
@@ -24,8 +24,8 @@ export class ClienteController {
 
   async getAllConDeuda(req: Request, res: Response) {
     try {
-      const clientes = await this.service.getAllConDeuda();
-      res.json(clientes);
+      const proveedores = await this.service.getAllConDeuda();
+      res.json(proveedores);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }
@@ -42,8 +42,8 @@ export class ClienteController {
 
   async getById(req: Request, res: Response) {
     try {
-      const cliente = await this.service.getByIdConDeuda(req.params.id);
-      res.json(cliente);
+      const proveedor = await this.service.getById(req.params.id);
+      res.json(proveedor);
     } catch (error) {
       res.status(404).json({ error: (error as Error).message });
     }
@@ -51,8 +51,8 @@ export class ClienteController {
 
   async update(req: Request, res: Response) {
     try {
-      const cliente = await this.service.update(req.params.id, req.body);
-      res.json(cliente);
+      const proveedor = await this.service.update(req.params.id, req.body);
+      res.json(proveedor);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
     }
@@ -60,9 +60,9 @@ export class ClienteController {
 
   async updateEstado(req: Request, res: Response) {
     try {
-      const { estado } = req.body;
-      const cliente = await this.service.updateEstado(req.params.id, estado);
-      res.json(cliente);
+      const { activo } = req.body;
+      const proveedor = await this.service.updateEstado(req.params.id, activo);
+      res.json(proveedor);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
     }
@@ -71,17 +71,28 @@ export class ClienteController {
   async delete(req: Request, res: Response) {
     try {
       await this.service.delete(req.params.id);
-      res.json({ message: 'Cliente eliminado' });
+      res.json({ message: 'Proveedor eliminado' });
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }
   }
 
+  async registrarCompra(req: Request, res: Response) {
+    try {
+      const proveedorId = parseInt(req.params.id);
+      const { monto, descripcion, fecha } = req.body;
+      const compra = await this.service.registrarCompra(proveedorId, monto, descripcion, fecha ? new Date(fecha) : undefined);
+      res.status(201).json(compra);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  }
+
   async registrarPago(req: Request, res: Response) {
     try {
-      const clienteId = parseInt(req.params.id) || req.body.clienteId;
+      const proveedorId = parseInt(req.params.id);
       const { monto, nota } = req.body;
-      const pago = await this.service.registrarPago(clienteId, monto, nota);
+      const pago = await this.service.registrarPago(proveedorId, monto, nota);
       res.status(201).json(pago);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });

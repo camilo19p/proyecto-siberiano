@@ -12,8 +12,8 @@ interface ClienteData {
 export class ClienteService {
   // Validar formato de documento (RUT/Cédula)
   private validateDocumento(documento: string): boolean {
-    // Validación básica de documento (puede mejorar según normativas)
-    return !!documento && documento.length >= 5 && /^[0-9\-]+$/.test(documento);
+    // Validación básica de documento (acepta números, letras y guiones)
+    return !!documento && documento.length >= 3 && /^[a-zA-Z0-9\-]+$/.test(documento);
   }
 
   // Validar email
@@ -68,10 +68,55 @@ export class ClienteService {
 
   async getAll() {
     try {
-      const clientes = await prisma.client.findMany();
-      return clientes;
+      const clientes = await prisma.client.findMany({
+        include: {
+          facturas: { where: { credito: true, estado: { in: ['APROBADO', 'COMPLETADA'] } } },
+          pagos: true
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      // Enriquecer con datos calculados
+      const clientesEnriquecidos = clientes.map((cliente) => {
+        const deudaTotal = cliente.facturas.reduce((sum, f) => sum + f.total, 0);
+        const totalPagado = cliente.pagos.reduce((sum, p) => sum + p.monto, 0);
+        const deudaActual = deudaTotal - totalPagado;
+
+        let diasMora = 0;
+        if (deudaActual > 0 && cliente.facturas.length > 0) {
+          const facturasMasAntigua = cliente.facturas.sort(
+            (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
+          )[0];
+          const ahora = new Date();
+          diasMora = Math.floor(
+            (ahora.getTime() - new Date(facturasMasAntigua.fecha).getTime()) / (1000 * 60 * 60 * 24)
+          );
+        }
+
+        return {
+          id: cliente.id,
+          nombres: cliente.nombres,
+          apellidos: cliente.apellidos,
+          documento: cliente.documento,
+          tipoDocumento: cliente.tipoDocumento,
+          telefono: cliente.telefono,
+          email: cliente.email,
+          ciudad: cliente.ciudad,
+          direccion: cliente.direccion,
+          barrio: cliente.barrio,
+          cupo: cliente.cupo,
+          estado: cliente.estado,
+          createdAt: cliente.createdAt,
+          deudaTotal,
+          totalPagado,
+          deudaActual,
+          diasMora
+        };
+      });
+
+      return clientesEnriquecidos;
     } catch (error) {
-      throw new Error('Error al obtener clientes');
+      throw new Error('Error al obtener clientes: ' + (error as Error).message);
     }
   }
 
@@ -79,7 +124,7 @@ export class ClienteService {
     try {
       const clientes = await prisma.client.findMany({
         include: {
-          facturas: { where: { credito: true, estado: 'APROBADO' } },
+          facturas: { where: { credito: true, estado: { in: ['APROBADO', 'COMPLETADA'] } } },
           pagos: true,
         },
         orderBy: { createdAt: 'desc' },
@@ -103,7 +148,19 @@ export class ClienteService {
         }
 
         return {
-          ...cliente,
+          id: cliente.id,
+          nombres: cliente.nombres,
+          apellidos: cliente.apellidos,
+          documento: cliente.documento,
+          tipoDocumento: cliente.tipoDocumento,
+          telefono: cliente.telefono,
+          email: cliente.email,
+          ciudad: cliente.ciudad,
+          direccion: cliente.direccion,
+          barrio: cliente.barrio,
+          cupo: cliente.cupo,
+          estado: cliente.estado,
+          createdAt: cliente.createdAt,
           deudaTotal,
           totalPagado,
           deudaActual,
@@ -111,7 +168,7 @@ export class ClienteService {
           facturas: undefined,
           pagos: undefined,
         };
-      });
+      }).filter(c => c.deudaActual > 0);
 
       return clientesEnriquecidos;
     } catch (error) {
@@ -227,7 +284,7 @@ export class ClienteService {
       const cliente = await prisma.client.findUnique({
         where: { id: clienteId },
         include: {
-          facturas: { where: { credito: true, estado: 'APROBADO' } },
+          facturas: { where: { credito: true, estado: { in: ['APROBADO', 'COMPLETADA'] } } },
           pagos: true
         }
       });
@@ -263,7 +320,7 @@ export class ClienteService {
     try {
       const clientes = await prisma.client.findMany({
         include: {
-          facturas: { where: { credito: true, estado: 'APROBADO' } },
+          facturas: { where: { credito: true, estado: { in: ['APROBADO', 'COMPLETADA'] } } },
           pagos: true
         }
       });

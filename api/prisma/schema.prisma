@@ -293,3 +293,45 @@ model PagoCliente {
   @@index([clienteId])
   @@index([fecha])
 }
+
+model Proveedor {
+  id            Int             @id @default(autoincrement())
+  nombre        String
+  nit           String?         @unique
+  telefono      String?
+  telefono2     String?
+  email         String?
+  direccion     String?
+  ciudad        String?
+  contacto      String?
+  activo        Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  compras       CompraProveedor[]
+  pagos         PagoProveedor[]
+}
+
+model CompraProveedor {
+  id            Int             @id @default(autoincrement())
+  proveedorId   Int
+  descripcion   String
+  monto         Float
+  fecha         DateTime        @default(now())
+  estado        String          @default("PENDIENTE")
+  proveedor     Proveedor       @relation(fields: [proveedorId], references: [id], onDelete: Cascade)
+  
+  @@index([proveedorId])
+  @@index([fecha])
+}
+
+model PagoProveedor {
+  id            Int             @id @default(autoincrement())
+  proveedorId   Int
+  monto         Float
+  nota          String?
+  fecha         DateTime        @default(now())
+  proveedor     Proveedor       @relation(fields: [proveedorId], references: [id], onDelete: Cascade)
+  
+  @@index([proveedorId])
+  @@index([fecha])
+}

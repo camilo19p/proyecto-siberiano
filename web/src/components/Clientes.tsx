@@ -1,34 +1,21 @@
 import { useState, useEffect, useMemo } from 'react';
 import { User, Search, AlertCircle, Check, Plus, Edit2, Trash2, Clock, DollarSign, X } from 'lucide-react';
-import axios from 'axios';
+import { clienteService, Cliente } from '../services/api';
 
-interface Cliente {
-  id: string;
-  nombres: string;
-  apellidos?: string;
-  documento: string;
-  tipoDocumento: 'CC' | 'NIT' | 'CE' | 'PASAPORTE';
-  telefono?: string;
-  telefonoSecundario?: string;
-  email?: string;
-  ciudad?: string;
-  direccion?: string;
-  barrio?: string;
-  cupo: number;
-  saldo: number;
-  estado: 'ACTIVO' | 'INACTIVO';
-  creadoEn?: string;
+interface Factura {
+  id: number;
+  numero: number;
+  fecha: string;
+  total: number;
+  estado: string;
+  credito: boolean;
 }
 
-interface Compra {
-  id: string;
-  clienteId: string;
+interface PagoCliente {
+  id: number;
+  monto: number;
+  nota?: string;
   fecha: string;
-  productos: { nombre: string; cantidad: number; precio: number; subtotal: number }[];
-  total: number;
-  metodo: 'EFECTIVO' | 'NEQUI' | 'TRANSFERENCIA' | 'FIADO';
-  descuento: number;
-  estado: 'COMPLETADA' | 'PENDIENTE';
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -55,10 +42,10 @@ export function Clientes() {
   const [filterEstado, setFilterEstado] = useState<'TODOS' | 'ACTIVO' | 'INACTIVO' | 'DEUDA'>('TODOS');
   const [currentPage, setCurrentPage] = useState(1);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [historialClienteId, setHistorialClienteId] = useState<string | null>(null);
-  const [compras, setCompras] = useState<Compra[]>([]);
+  const [showDetailPanel, setShowDetailPanel] = useState<string | null>(null);
   const [showPagoModal, setShowPagoModal] = useState<string | null>(null);
   const [montoPago, setMontoPago] = useState(0);
+  const [stats, setStats] = useState({ totalClientes: 0, clientesActivos: 0, clientesConDeuda: 0, totalDeuda: 0 });
 
   const [newCliente, setNewCliente] = useState({
     nombres: '',
@@ -66,52 +53,41 @@ export function Clientes() {
     documento: '',
     tipoDocumento: 'CC' as 'CC' | 'NIT' | 'CE' | 'PASAPORTE',
     telefono: '',
-    telefonoSecundario: '',
     email: '',
     ciudad: '',
     direccion: '',
     barrio: '',
-    cupo: 0
+    cupo: 0,
+    saldo: 0
   });
 
   useEffect(() => {
     loadClientes();
-    loadCompras();
+    loadStats();
   }, []);
 
   const loadClientes = async () => {
     setLoading(true);
     setError(null);
     try {
-      const saved = localStorage.getItem('clientes_list');
-      if (saved) {
-        setClientes(JSON.parse(saved));
-      }
+      const data = await clienteService.getClientes();
+      setClientes(data || []);
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Error al cargar clientes';
       setError(errorMsg);
+      console.error('Error:', e);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadCompras = async () => {
+  const loadStats = async () => {
     try {
-      const saved = localStorage.getItem('compras_list');
-      if (saved) {
-        setCompras(JSON.parse(saved));
-      }
+      const data = await clienteService.getStats();
+      setStats(data);
     } catch (e) {
-      console.error('Error loading compras:', e);
+      console.error('Error cargando stats:', e);
     }
-  };
-
-  const saveToStorage = (data: Cliente[]) => {
-    localStorage.setItem('clientes_list', JSON.stringify(data));
-  };
-
-  const saveCompras = (data: Compra[]) => {
-    localStorage.setItem('compras_list', JSON.stringify(data));
   };
 
   const handleSaveCliente = async () => {
@@ -123,27 +99,22 @@ export function Clientes() {
     try {
       setError(null);
       if (selectedCliente) {
-        const updated = clientes.map(c => 
-          c.id === selectedCliente.id 
-            ? { ...selectedCliente, ...newCliente, estado: selectedCliente.estado }
-            : c
-        );
-        setClientes(updated);
-        saveToStorage(updated);
-        showToast('Cliente actualizado correctamente');
-      } else {
-        const cliente: Cliente = {
-          id: `cliente_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        const updated = await clienteService.updateCliente(selectedCliente.id, {
           ...newCliente,
-          estado: 'ACTIVO',
-          saldo: 0,
-          creadoEn: new Date().toISOString()
-        };
-        const updated = [...clientes, cliente];
-        setClientes(updated);
-        saveToStorage(updated);
-        showToast('Cliente creado correctamente');
+          estado: selectedCliente.estado
+        });
+        if (updated) {
+          setClientes(clientes.map(c => c.id === selectedCliente.id ? updated : c));
+          showToast('Cliente actualizado correctamente');
+        }
+      } else {
+        const created = await clienteService.createCliente(newCliente);
+        if (created) {
+          setClientes([...clientes, created]);
+          showToast('Cliente creado correctamente');
+        }
       }
+      loadStats();
       resetForm();
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Error al guardar cliente';
@@ -151,22 +122,22 @@ export function Clientes() {
     }
   };
 
-  const handleDeleteCliente = (id: string) => {
+  const handleDeleteCliente = async (id: string) => {
     try {
       setError(null);
-      const updated = clientes.filter(c => c.id !== id);
-      setClientes(updated);
-      saveToStorage(updated);
+      await clienteService.deleteCliente(id);
+      setClientes(clientes.filter(c => c.id !== id));
       setConfirmDelete(null);
-      setSelectedCliente(null);
+      setShowDetailPanel(null);
       showToast('Cliente eliminado correctamente');
+      loadStats();
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Error al eliminar cliente';
       setError(errorMsg);
     }
   };
 
-  const handleRegistrarPago = (clienteId: string) => {
+  const handleRegistrarPago = async (clienteId: string) => {
     try {
       if (montoPago <= 0) {
         setError('Ingresa un monto válido');
@@ -174,20 +145,22 @@ export function Clientes() {
       }
 
       const cliente = clientes.find(c => c.id === clienteId);
-      if (!cliente) return;
-
-      if (montoPago > cliente.saldo) {
-        setError('El monto no puede ser mayor a la deuda');
+      if (!cliente || !cliente.deudaActual) {
+        setError('Cliente no encontrado o sin deuda');
         return;
       }
 
-      const updated = clientes.map(c => 
-        c.id === clienteId 
-          ? { ...c, saldo: Math.max(0, c.saldo - montoPago) }
-          : c
-      );
-      setClientes(updated);
-      saveToStorage(updated);
+      if (montoPago > cliente.deudaActual) {
+        setError(`Monto excede deuda actual ($${cliente.deudaActual.toLocaleString()})`);
+        return;
+      }
+
+      await clienteService.registrarPago(clienteId, montoPago);
+      
+      // Recargar datos
+      await loadClientes();
+      await loadStats();
+      
       setShowPagoModal(null);
       setMontoPago(0);
       showToast(`Pago registrado: $${montoPago.toLocaleString()}`);
@@ -206,7 +179,6 @@ export function Clientes() {
       documento: '',
       tipoDocumento: 'CC',
       telefono: '',
-      telefonoSecundario: '',
       email: '',
       ciudad: '',
       direccion: '',
@@ -223,7 +195,6 @@ export function Clientes() {
       documento: cliente.documento,
       tipoDocumento: cliente.tipoDocumento,
       telefono: cliente.telefono || '',
-      telefonoSecundario: cliente.telefonoSecundario || '',
       email: cliente.email || '',
       ciudad: cliente.ciudad || '',
       direccion: cliente.direccion || '',
@@ -231,6 +202,17 @@ export function Clientes() {
       cupo: cliente.cupo
     });
     setShowForm(true);
+  };
+
+  const handleViewDetail = async (cliente: Cliente) => {
+    try {
+      const detalle = await clienteService.getClienteById(cliente.id);
+      setSelectedCliente(detalle);
+      setShowDetailPanel(cliente.id);
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : 'Error al cargar detalle';
+      setError(errorMsg);
+    }
   };
 
   const filteredClientes = useMemo(() => {
@@ -241,7 +223,7 @@ export function Clientes() {
         (c.telefono && c.telefono.includes(search));
       const matchEstado =
         filterEstado === 'TODOS' ||
-        (filterEstado === 'DEUDA' ? c.saldo > 0 : c.estado === filterEstado);
+        (filterEstado === 'DEUDA' ? (c.deudaActual || 0) > 0 : c.estado === filterEstado);
       return matchSearch && matchEstado;
     });
   }, [clientes, search, filterEstado]);
@@ -252,28 +234,6 @@ export function Clientes() {
   useEffect(() => {
     setCurrentPage(1);
   }, [search, filterEstado]);
-
-  const stats = {
-    total: clientes.length,
-    activos: clientes.filter(c => c.estado === 'ACTIVO').length,
-    deuda: clientes.reduce((sum, c) => sum + c.saldo, 0),
-    conCupo: clientes.filter(c => c.cupo > 0).length,
-    conDeuda: clientes.filter(c => c.saldo > 0).length
-  };
-
-  // Obtener compras del cliente seleccionado para historial
-  const comprasCliente = useMemo(() => {
-    if (!historialClienteId) return [];
-    return compras.filter(c => c.clienteId === historialClienteId);
-  }, [compras, historialClienteId]);
-
-  const totalCompradoCliente = useMemo(() => {
-    return comprasCliente.reduce((sum, c) => sum + c.total, 0);
-  }, [comprasCliente]);
-
-  const fiadosPendientes = useMemo(() => {
-    return comprasCliente.filter(c => c.metodo === 'FIADO' && c.estado === 'PENDIENTE');
-  }, [comprasCliente]);
 
   return (
     <div>
@@ -293,22 +253,22 @@ export function Clientes() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '1.5rem', textAlign: 'center' }}>
           <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>TOTAL CLIENTES</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#f5c800' }}>{stats.total}</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#f5c800' }}>{stats.totalClientes}</p>
         </div>
 
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '1.5rem', textAlign: 'center' }}>
           <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>CLIENTES ACTIVOS</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#16a34a' }}>{stats.activos}</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#16a34a' }}>{stats.clientesActivos}</p>
         </div>
 
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '1.5rem', textAlign: 'center' }}>
           <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>CON DEUDA</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#dc2626' }}>{stats.conDeuda}</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#dc2626' }}>{stats.clientesConDeuda}</p>
         </div>
 
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '1.5rem', textAlign: 'center' }}>
           <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>TOTAL DEUDA</p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#dc2626' }}>${stats.deuda.toLocaleString()}</p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: '#dc2626' }}>${stats.totalDeuda.toLocaleString()}</p>
         </div>
       </div>
 
@@ -390,19 +350,6 @@ export function Clientes() {
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Tipo de Documento *</label>
-              <select
-                value={newCliente.tipoDocumento}
-                onChange={e => setNewCliente({...newCliente, tipoDocumento: e.target.value as any})}
-                style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
-              >
-                <option value="CC">Cedula (CC)</option>
-                <option value="NIT">NIT</option>
-                <option value="CE">Cedula Extranjeria</option>
-                <option value="PASAPORTE">Pasaporte</option>
-              </select>
-            </div>
-            <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Documento *</label>
               <input
                 type="text"
@@ -413,22 +360,12 @@ export function Clientes() {
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Telefono *</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Telefono</label>
               <input
                 type="tel"
                 value={newCliente.telefono}
                 onChange={e => setNewCliente({...newCliente, telefono: e.target.value})}
                 placeholder="Telefono principal"
-                style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Telefono 2</label>
-              <input
-                type="tel"
-                value={newCliente.telefonoSecundario}
-                onChange={e => setNewCliente({...newCliente, telefonoSecundario: e.target.value})}
-                placeholder="Telefono secundario"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
@@ -449,16 +386,6 @@ export function Clientes() {
                 value={newCliente.direccion}
                 onChange={e => setNewCliente({...newCliente, direccion: e.target.value})}
                 placeholder="Direccion completa"
-                style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>Barrio</label>
-              <input
-                type="text"
-                value={newCliente.barrio}
-                onChange={e => setNewCliente({...newCliente, barrio: e.target.value})}
-                placeholder="Barrio"
                 style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '1rem', background: 'var(--color-surface-2)', color: 'var(--color-text)' }}
               />
             </div>
@@ -533,12 +460,14 @@ export function Clientes() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: 'var(--color-surface-2)', borderBottom: '1px solid var(--color-border)' }}>
+                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>CODIGO</th>
                     <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>NOMBRE</th>
                     <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>DOCUMENTO</th>
                     <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>TELEFONO</th>
                     <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>CIUDAD</th>
                     <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>CUPO</th>
                     <th style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>DEUDA</th>
+                    <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>MORA</th>
                     <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>ESTADO</th>
                     <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>ACCIONES</th>
                   </tr>
@@ -552,11 +481,14 @@ export function Clientes() {
                         background: idx % 2 === 0 ? 'transparent' : 'var(--color-surface-2)'
                       }}
                     >
+                      <td style={{ padding: '1rem', fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>
+                        {c.id}
+                      </td>
                       <td style={{ padding: '1rem', fontWeight: 600, color: 'var(--color-text)' }}>
                         {c.nombres} {c.apellidos || ''}
                       </td>
                       <td style={{ padding: '1rem', fontSize: '0.875rem', color: 'var(--color-text)' }}>
-                        {c.tipoDocumento} {c.documento}
+                        {c.documento}
                       </td>
                       <td style={{ padding: '1rem', fontSize: '0.875rem', color: 'var(--color-text)' }}>
                         {c.telefono || '-'}
@@ -567,9 +499,11 @@ export function Clientes() {
                       <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: '#2563eb' }}>
                         ${c.cupo.toLocaleString()}
                       </td>
-                      <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: c.saldo > 0 ? '#dc2626' : '#16a34a' }}>
-                        {c.saldo > 0 && <span style={{ background: '#fee2e2', color: '#dc2626', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700 }}>DEBE ${c.saldo.toLocaleString()}</span>}
-                        {c.saldo === 0 && <span style={{ color: '#16a34a' }}>$0</span>}
+                      <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: (c.deudaActual || 0) > 0 ? '#dc2626' : '#16a34a' }}>
+                        {(c.deudaActual || 0) > 0 ? `$${(c.deudaActual || 0).toLocaleString()}` : '$0'}
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: (c.diasMora || 0) > 0 ? '#dc2626' : 'var(--color-text-muted)' }}>
+                        {(c.diasMora || 0) > 0 ? `${c.diasMora}d` : '-'}
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'center' }}>
                         <span style={{
@@ -586,8 +520,8 @@ export function Clientes() {
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'center', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
                         <button
-                          onClick={() => setHistorialClienteId(c.id)}
-                          title="Ver historial"
+                          onClick={() => handleViewDetail(c)}
+                          title="Ver detalle"
                           style={{
                             padding: '0.5rem 0.75rem',
                             background: '#dbeafe',
@@ -603,7 +537,7 @@ export function Clientes() {
                         >
                           <Clock size={14} />
                         </button>
-                        {c.saldo > 0 && (
+                        {(c.deudaActual || 0) > 0 && (
                           <button
                             onClick={() => setShowPagoModal(c.id)}
                             title="Registrar pago"
@@ -799,7 +733,7 @@ export function Clientes() {
                 <>
                   <p style={{ color: 'var(--color-text)', marginBottom: '1rem', fontSize: '0.95rem' }}>
                     <strong>Cliente:</strong> {cliente?.nombres} <br />
-                    <strong>Deuda actual:</strong> <span style={{ color: '#dc2626', fontWeight: 700 }}>${cliente?.saldo.toLocaleString()}</span>
+                    <strong>Deuda actual:</strong> <span style={{ color: '#dc2626', fontWeight: 700 }}>${(cliente?.deudaActual || 0).toLocaleString()}</span>
                   </p>
                   <div style={{ marginBottom: '1.5rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-text)' }}>
@@ -809,7 +743,7 @@ export function Clientes() {
                       type="number"
                       value={montoPago}
                       onChange={e => setMontoPago(parseFloat(e.target.value) || 0)}
-                      max={cliente?.saldo || 0}
+                      max={cliente?.deudaActual || 0}
                       placeholder="0"
                       style={{
                         width: '100%',
@@ -864,17 +798,16 @@ export function Clientes() {
         </div>
       )}
 
-      {/* Panel lateral de historial */}
-      {historialClienteId && (
+      {/* Panel lateral de detalle */}
+      {showDetailPanel && selectedCliente && (
         <div style={{
           position: 'fixed',
           right: 0,
           top: 0,
           bottom: 0,
-          width: '350px',
+          width: '400px',
           background: 'var(--color-surface)',
           border: `1px solid var(--color-border)`,
-          borderRadius: '0',
           boxShadow: '-4px 0 15px rgba(0,0,0,0.3)',
           zIndex: 999,
           display: 'flex',
@@ -883,11 +816,11 @@ export function Clientes() {
         }}>
           {/* Header */}
           <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Clock size={20} /> Historial
+            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-text)' }}>
+              Detalle del Cliente
             </h3>
             <button
-              onClick={() => setHistorialClienteId(null)}
+              onClick={() => setShowDetailPanel(null)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem' }}
             >
               <X size={24} color="var(--color-text)" />
@@ -895,72 +828,72 @@ export function Clientes() {
           </div>
 
           {/* Cliente info */}
-          <div style={{ padding: '1rem', background: 'var(--color-surface-2)', borderBottom: '1px solid var(--color-border)' }}>
-            {(() => {
-              const cliente = clientes.find(c => c.id === historialClienteId);
-              return (
-                <>
-                  <p style={{ margin: '0 0 0.5rem 0', fontWeight: 700, color: 'var(--color-text)' }}>
-                    {cliente?.nombres}
-                  </p>
-                  <p style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-                    Total comprado: <span style={{ color: '#f5c800', fontWeight: 700 }}>${totalCompradoCliente.toLocaleString()}</span>
-                  </p>
-                  <p style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-                    Deuda actual: <span style={{ color: cliente?.saldo ? '#dc2626' : '#16a34a', fontWeight: 700 }}>${cliente?.saldo.toLocaleString()}</span>
-                  </p>
-                </>
-              );
-            })()}
+          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--color-border)' }}>
+            <h4 style={{ margin: '0 0 1rem 0', fontWeight: 700, color: 'var(--color-text)' }}>
+              {selectedCliente.nombres} {selectedCliente.apellidos}
+            </h4>
+            <div style={{ display: 'grid', gap: '0.75rem', fontSize: '0.875rem' }}>
+              <div><strong>Documento:</strong> {selectedCliente.documento}</div>
+              <div><strong>Telefono:</strong> {selectedCliente.telefono || '-'}</div>
+              <div><strong>Email:</strong> {selectedCliente.email || '-'}</div>
+              <div><strong>Direccion:</strong> {selectedCliente.direccion || '-'}</div>
+              <div><strong>Ciudad:</strong> {selectedCliente.ciudad || '-'}</div>
+              <div><strong>Cupo:</strong> ${selectedCliente.cupo.toLocaleString()}</div>
+            </div>
           </div>
 
-          {/* Fiados pendientes */}
-          {fiadosPendientes.length > 0 && (
-            <div style={{ padding: '1rem', background: '#fee2e2', borderBottom: '1px solid var(--color-border)' }}>
-              <p style={{ margin: '0 0 0.75rem 0', fontWeight: 600, color: '#dc2626', fontSize: '0.9rem' }}>
-                📌 FIADOS PENDIENTES ({fiadosPendientes.length})
-              </p>
-              {fiadosPendientes.map(fiado => (
-                <div key={fiado.id} style={{ fontSize: '0.85rem', color: 'var(--color-text)', marginBottom: '0.5rem', padding: '0.5rem', background: 'var(--color-surface)', borderRadius: '4px' }}>
-                  <p style={{ margin: 0, fontWeight: 600 }}>
-                    ${fiado.total.toLocaleString()}
-                  </p>
-                  <p style={{ margin: '0.25rem 0 0 0', color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>
-                    {new Date(fiado.fecha).toLocaleDateString('es-CO')}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Deuda actual */}
+          <div style={{ padding: '1.5rem', background: (selectedCliente.deudaActual || 0) > 0 ? '#fee2e2' : '#dcfce7', borderBottom: '1px solid var(--color-border)' }}>
+            <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: (selectedCliente.deudaActual || 0) > 0 ? '#dc2626' : '#16a34a' }}>
+              Deuda Actual
+            </p>
+            <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.75rem', fontWeight: 700, color: (selectedCliente.deudaActual || 0) > 0 ? '#dc2626' : '#16a34a' }}>
+              ${(selectedCliente.deudaActual || 0).toLocaleString()}
+            </p>
+          </div>
 
-          {/* Lista de compras */}
-          <div style={{ flex: 1, overflow: 'auto', padding: '1rem' }}>
-            {comprasCliente.length === 0 ? (
-              <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.9rem', marginTop: '2rem' }}>
-                Sin compras registradas
+          {/* Facturas */}
+          <div style={{ flex: 1, overflow: 'auto', padding: '1.5rem' }}>
+            <h4 style={{ margin: '0 0 1rem 0', fontWeight: 700, color: 'var(--color-text)', fontSize: '0.95rem' }}>
+              Facturas Fiadas
+            </h4>
+            {!selectedCliente.facturas || selectedCliente.facturas.length === 0 ? (
+              <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
+                Sin facturas fiadas
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {comprasCliente.map(compra => (
-                  <div key={compra.id} style={{ background: 'var(--color-surface-2)', padding: '0.75rem', borderRadius: '8px', borderLeft: `3px solid ${compra.metodo === 'FIADO' ? '#dc2626' : '#16a34a'}` }}>
+                {selectedCliente.facturas.map((factura: any) => (
+                  <div key={factura.id} style={{ background: 'var(--color-surface-2)', padding: '0.75rem', borderRadius: '8px', borderLeft: '3px solid #dc2626' }}>
                     <p style={{ margin: '0 0 0.25rem 0', fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-text)' }}>
-                      ${compra.total.toLocaleString()}
+                      Factura #{factura.numero} - ${factura.total.toLocaleString()}
                     </p>
                     <p style={{ margin: '0.25rem 0', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                      {new Date(compra.fecha).toLocaleDateString('es-CO')}
+                      {new Date(factura.fecha).toLocaleDateString('es-CO')}
                     </p>
-                    <span style={{
-                      display: 'inline-block',
-                      marginTop: '0.25rem',
-                      padding: '0.2rem 0.5rem',
-                      borderRadius: '3px',
-                      fontSize: '0.7rem',
-                      fontWeight: 600,
-                      background: compra.metodo === 'FIADO' ? '#fee2e2' : '#dcfce7',
-                      color: compra.metodo === 'FIADO' ? '#dc2626' : '#16a34a'
-                    }}>
-                      {compra.metodo}
-                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <h4 style={{ margin: '1.5rem 0 1rem 0', fontWeight: 700, color: 'var(--color-text)', fontSize: '0.95rem' }}>
+              Historial de Pagos
+            </h4>
+            {!selectedCliente.pagos || selectedCliente.pagos.length === 0 ? (
+              <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
+                Sin pagos registrados
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {selectedCliente.pagos.map((pago: any) => (
+                  <div key={pago.id} style={{ background: 'var(--color-surface-2)', padding: '0.75rem', borderRadius: '8px', borderLeft: '3px solid #16a34a' }}>
+                    <p style={{ margin: '0 0 0.25rem 0', fontWeight: 600, fontSize: '0.9rem', color: '#16a34a' }}>
+                      ${pago.monto.toLocaleString()}
+                    </p>
+                    <p style={{ margin: '0.25rem 0', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                      {new Date(pago.fecha).toLocaleDateString('es-CO')}
+                    </p>
+                    {pago.nota && <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Nota: {pago.nota}</p>}
                   </div>
                 ))}
               </div>
